@@ -1,0 +1,42 @@
+name: Bindings Check
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  check-bindings:
+    name: Check Go Bindings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Build contracts
+        run: forge build --no-metadata
+
+      - name: Generate bindings
+        run: make bindings
+
+      - name: Check for uncommitted changes
+        run: |
+          if [ -n "$(git status --porcelain pkg/bindings/)" ]; then
+            echo "❌ Bindings are out of date. Please run 'make bindings' and commit the changes."
+            git status --porcelain pkg/bindings/
+            git diff pkg/bindings/
+            exit 1
+          else
+            echo "✅ Bindings are up to date"
+          fi

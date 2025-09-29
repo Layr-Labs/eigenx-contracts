@@ -1,0 +1,4 @@
+{
+	"zeusHost": "https://github.com/Layr-Labs/eigenx-contracts-zeus-metadata",
+	"migrationDirectory": "script/releases"
+}

@@ -1,0 +1,22 @@
+{
+    "ENV": "mainnet-alpha",
+    "COMMIT": "a0b64b91a51446b8e1817b34a0157e2c12d13491",
+    "VERSION": "1.0.4",
+    "DelegationManager": "0x39053D51B77DC0d36036Fc1fCc8Cb819df8Ef37A",
+    "AllocationManager": "0x948a420b8CC1d6BFd0B6087C2E7c344a2CD0bc39",
+    "PermissionController": "0x25E5F8B1E7aDf44518d35D5B2271f114e081f0E5",
+    "KeyRegistrar": "0x54f4bC6bDEbe479173a2bbDc31dD7178408A57A4",
+    "ReleaseManager": "0xeDA3CAd031c0cf367cF3f517Ee0DC98F9bA80C8F",
+    "executorMultisig": "0x369e6F597e22EaB55fFb173C6d9cD234BD699111",
+    "computeOpsMultisig": "0x684cf8978c2815716c85eAa237E311f5a44e9e09",
+    "computeWhitelisterMultisig": "0xDECf19D1551e77DEfBe53eE2c38205A3f852163C",
+    "AppController_Impl": "0xd76024622bA7b65a24E90c51cbdB27977ef470af",
+    "ComputeAVSRegistrar_Impl": "0x5b3d8291DD5d2Da5100b95fB670e77CeBFe8Bd7c",
+    "ComputeOperator_Impl": "0xD25a7489a9b9056788050cD5240E33a9f35831Ed",
+    "AppController_Proxy": "0xc38d35Fc995e75342A21CBd6D770305b142Fbe67",
+    "ComputeAVSRegistrar_Proxy": "0xaFE783e9BcEC2993898E70906434d5bC8de3357b",
+    "ComputeOperator_Proxy": "0x801c1c2Dfab0A6821CA38a08b78A7c7CC81d64d1",
+    "App_Impl": "0xe114F836b09800Ca7eEfa0557e0c27E98d73d047",
+    "App_Beacon": "0xC1E14F82c7F554b8582BB786728f669875b3fC53",
+    "ProxyAdmin": "0x92dd25C0EE0030e3deaB4a4C04f91bd7Ea368B25"
+}

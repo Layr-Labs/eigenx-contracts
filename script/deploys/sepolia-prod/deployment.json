@@ -1,0 +1,22 @@
+{
+    "ENV": "sepolia-prod",
+    "COMMIT": "326921979a095471354b0b8eda9746d4dfa37afc",
+    "VERSION": "1.0.4",
+    "DelegationManager": "0xD4A7E1Bd8015057293f0D0A557088c286942e84b",
+    "AllocationManager": "0x42583067658071247ec8CE0A516A58f682002d07",
+    "PermissionController": "0x44632dfBdCb6D3E21EF613B0ca8A6A0c618F5a37",
+    "KeyRegistrar": "0xA4dB30D08d8bbcA00D40600bee9F029984dB162a",
+    "ReleaseManager": "0x59c8D715DCa616e032B744a753C017c9f3E16bf4",
+    "executorMultisig": "0x4FDA8998EC3b7d4b4A612d45FeB8fB36734470f2",
+    "computeOpsMultisig": "0xb094Ba769b4976Dc37fC689A76675f31bc4923b0",
+    "computeWhitelisterMultisig": "0xb094Ba769b4976Dc37fC689A76675f31bc4923b0",
+    "AppController_Impl": "0xc6AEA3d84D38388325170ACE18c124BA872Ee117",
+    "ComputeAVSRegistrar_Impl": "0x54f46EE6fCc25aC3B49F730C35CCCDCBD3EC6514",
+    "ComputeOperator_Impl": "0xF23607d6527e2f1a24527a85954cc407a0caFAAf",
+    "AppController_Proxy": "0x0dd810a6ffba6a9820a10d97b659f07d8d23d4E2",
+    "ComputeAVSRegistrar_Proxy": "0x7059b1f3eC95375c316e05D261431B6B59CaB1Dc",
+    "ComputeOperator_Proxy": "0xd2080537787b9121B67583b49372f195AE41939C",
+    "App_Impl": "0xc8567CE8cF9158fdB0861de0426087323dcEf7BE",
+    "App_Beacon": "0x1351c0AE90ff4A6881E2B32bdA9666868Abd486c",
+    "ProxyAdmin": "0x2B67FA2e781B5E43fBF314B72772adca4c78Bf69"
+}
