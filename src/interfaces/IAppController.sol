@@ -2,9 +2,16 @@
 pragma solidity ^0.8.27;
 
 import {IReleaseManagerTypes} from "@eigenlayer-contracts/src/contracts/interfaces/IReleaseManager.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IApp} from "./IApp.sol";
 
 interface IAppController {
+    /// @notice Billing rates per token and SKU tier
+    struct BillingRates {
+        uint128 stopped;
+        uint128 running;
+    }
+
     /// @notice Thrown when trying to create an app that already exists
     error AppAlreadyExists();
 
@@ -20,11 +27,23 @@ interface IAppController {
     /// @notice Thrown when trying to operate on an app in the given status
     error InvalidAppStatus();
 
-    /// @notice Thrown when an address has exceeded its maximum active app limit
-    error MaxActiveAppsExceeded();
+    /// @notice Thrown when global maximum vCPU limit has been reached
+    error GlobalMaxVCPUsExceeded();
 
-    /// @notice Thrown when global maximum active app limit has been reached
-    error GlobalMaxActiveAppsExceeded();
+    /// @notice Thrown when trying to use a billing account that doesn't exist
+    error BillingAccountDoesNotExist();
+
+    /// @notice Thrown when trying to use a billing account with wrong token
+    error BillingTokenMismatch();
+
+    /// @notice Thrown when caller is not the billing account owner
+    error NotBillingAccountOwner();
+
+    /// @notice Thrown when SKU rates are not set for a token
+    error SkuRatesNotSet();
+
+    /// @notice Thrown when SKU vCPUs are not configured
+    error SkuVCPUsNotSet();
 
     /// @notice Emitted when a new app is successfully created
     event AppCreated(address indexed creator, IApp indexed app, uint32 operatorSetId);
@@ -44,11 +63,25 @@ interface IAppController {
     /// @notice Emitted when an app is terminated by admin
     event AppTerminatedByAdmin(IApp indexed app);
 
-    /// @notice Emitted when the maximum active apps limit is set for an address
-    event MaxActiveAppsSet(address indexed user, uint32 limit);
+    /// @notice Emitted when the global maximum vCPUs limit is set
+    event MaxGlobalVCPUsSet(uint32 limit);
 
-    /// @notice Emitted when the global maximum active apps limit is set
-    event GlobalMaxActiveAppsSet(uint32 limit);
+    /// @notice Emitted when SKU rates are set for a token and tier
+    event SkuRatesSet(IERC20 indexed token, uint8 indexed skuTier, uint128 runningRate, uint128 stoppedRate);
+
+    /// @notice Emitted when SKU vCPUs are configured
+    event SkuVCPUsSet(uint8 indexed skuTier, uint32 vCPUs);
+
+    /// @notice Emitted when the billing recipient is updated
+    event BillingRecipientSet(address indexed billingRecipient);
+
+    /// @notice Emitted when a billing account is created for an app
+    event BillingAccountCreated(
+        IApp indexed app, uint256 indexed billingAccountId, IERC20 indexed token, uint8 skuTier
+    );
+
+    /// @notice Emitted when an app is added to an existing billing account
+    event AppAddedToBillingAccount(IApp indexed app, uint256 indexed billingAccountId);
 
     /**
      * @notice Enum for app status
@@ -79,12 +112,10 @@ interface IAppController {
         uint32 operatorSetId;
         uint32 latestReleaseBlockNumber;
         AppStatus status;
-    }
-
-    /// @notice User configuration and state
-    struct UserConfig {
-        uint32 maxActiveApps;
-        uint32 activeAppCount;
+        uint8 skuTier;
+        uint256 billingAccountId;
+        IERC20 billingToken;
+        uint128 currentRate;
     }
 
     /**
@@ -94,27 +125,30 @@ interface IAppController {
     function initialize(address admin) external;
 
     /**
-     * @notice Sets the maximum active apps limit for a specific address
-     * @param user The address to set the limit for
-     * @param limit The maximum number of active apps the address can have
+     * @notice Sets the global maximum vCPUs limit
+     * @param limit The maximum number of vCPUs globally
      * @dev Caller must be UAM permissioned for the AppController
      */
-    function setMaxActiveAppsPerUser(address user, uint32 limit) external;
+    function setMaxGlobalVCPUs(uint32 limit) external;
 
     /**
-     * @notice Sets the global maximum active apps limit
-     * @param limit The maximum number of active apps globally
-     * @dev Caller must be UAM permissioned for the AppController
-     */
-    function setMaxGlobalActiveApps(uint32 limit) external;
-
-    /**
-     * @notice Creates a new app instance
+     * @notice Creates a new app instance with billing
      * @param salt The salt to use for the app
      * @param release The release to upgrade to
+     * @param skuTier The SKU tier for billing rates
+     * @param billingToken The token to use for billing payments
+     * @param billingAccountId Billing account ID to use (0 to create new, non-zero to reuse existing)
+     * @param initialDeposit Optional amount to deposit when creating/using billing account (0 to skip)
      * @return app The address of the newly created app
      */
-    function createApp(bytes32 salt, Release calldata release) external returns (IApp app);
+    function createApp(
+        bytes32 salt,
+        Release calldata release,
+        uint8 skuTier,
+        IERC20 billingToken,
+        uint256 billingAccountId,
+        uint128 initialDeposit
+    ) external returns (IApp app);
 
     /**
      * @notice Upgrades an app with a new release to the ReleaseManager
@@ -162,32 +196,6 @@ interface IAppController {
      * @dev Once terminated, no further write operations are allowed
      */
     function terminateAppByAdmin(IApp app) external;
-
-    /**
-     * @notice Gets the maximum global active apps limit
-     * @return The maximum number of active apps globally
-     */
-    function maxGlobalActiveApps() external view returns (uint32);
-
-    /**
-     * @notice Gets the current global active app count
-     * @return The current number of active apps globally
-     */
-    function globalActiveAppCount() external view returns (uint32);
-
-    /**
-     * @notice Gets the maximum active apps for a user
-     * @param user The address to check
-     * @return The maximum number of active apps for the user
-     */
-    function getMaxActiveAppsPerUser(address user) external view returns (uint32);
-
-    /**
-     * @notice Gets the current active app count for a user
-     * @param user The address to check
-     * @return The current number of active apps for the user
-     */
-    function getActiveAppCount(address user) external view returns (uint32);
 
     /**
      * @notice Calculates the app id for a given deployer and salt
@@ -254,4 +262,83 @@ interface IAppController {
      * @return The digest hash
      */
     function calculateApiPermissionDigestHash(bytes4 permission, uint256 expiry) external view returns (bytes32);
+
+    /**
+     * @notice Sets the billing rates for a specific token and SKU tier
+     * @param token The billing token
+     * @param skuTier The SKU tier
+     * @param runningRate The rate per second when app is STARTED
+     * @param stoppedRate The rate per second when app is STOPPED
+     * @dev Caller must be UAM permissioned for the AppController
+     */
+    function setSkuRates(IERC20 token, uint8 skuTier, uint128 runningRate, uint128 stoppedRate) external;
+
+    /**
+     * @notice Sets the address that receives billing payments
+     * @param recipient The billing recipient address
+     * @dev Caller must be UAM permissioned for the AppController
+     */
+    function setBillingRecipient(address recipient) external;
+
+    /**
+     * @notice Creates a new billing account and optionally deposits funds
+     * @param billingToken The token to use for billing payments
+     * @param skuTier The SKU tier for billing rates
+     * @param initialDeposit Optional amount to deposit (0 to skip deposit)
+     * @return billingAccountId The newly created billing account ID
+     */
+    function createBillingAccount(IERC20 billingToken, uint8 skuTier, uint128 initialDeposit)
+        external
+        returns (uint256 billingAccountId);
+
+    /**
+     * @notice Deposits funds into a billing account
+     * @param billingAccountId The billing account ID
+     * @param amount The amount to deposit
+     */
+    function deposit(uint256 billingAccountId, uint128 amount) external;
+
+    /**
+     * @notice Refunds excess funds from a billing account
+     * @param billingAccountId The billing account ID
+     * @param amount The amount to refund
+     */
+    function refund(uint256 billingAccountId, uint128 amount) external;
+
+    /**
+     * @notice Gets billing information for an app
+     * @param app The app to query
+     * @return billingAccountId The billing account ID
+     * @return balance The current balance in the account
+     * @return ratePerSecond The current rate per second
+     * @return depletionTime When the account will run out of funds
+     * @return skuTier The SKU tier
+     * @return token The billing token
+     */
+    function getBillingInfo(IApp app)
+        external
+        view
+        returns (
+            uint256 billingAccountId,
+            uint128 balance,
+            uint128 ratePerSecond,
+            uint256 depletionTime,
+            uint8 skuTier,
+            IERC20 token
+        );
+
+    /**
+     * @notice Gets all apps using a specific billing account
+     * @param billingAccountId The billing account ID
+     * @return apps Array of apps sharing this billing account
+     */
+    function getAppsOnBillingAccount(uint256 billingAccountId) external view returns (IApp[] memory apps);
+
+    /**
+     * @notice Sets the vCPU allocation for a SKU tier
+     * @param skuTier The SKU tier
+     * @param vCPUs The number of vCPUs for this tier
+     * @dev Caller must be UAM permissioned for the AppController
+     */
+    function setSkuVCPUs(uint8 skuTier, uint32 vCPUs) external;
 }

@@ -7,3 +7,6 @@
 [submodule "lib/eigenlayer-middleware"]
 	path = lib/eigenlayer-middleware
 	url = https://github.com/Layr-Labs/eigenlayer-middleware
+[submodule "lib/flow"]
+	path = lib/flow
+	url = https://github.com/sablier-labs/flow

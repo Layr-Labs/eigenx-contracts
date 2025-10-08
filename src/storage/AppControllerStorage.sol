@@ -9,6 +9,8 @@ import {IApp} from "../interfaces/IApp.sol";
 import {IAppController} from "../interfaces/IAppController.sol";
 import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {ISablierFlow} from "@sablier/flow/src/interfaces/ISablierFlow.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 abstract contract AppControllerStorage is IAppController {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -38,31 +40,53 @@ abstract contract AppControllerStorage is IAppController {
     /// @notice The beacon used for creating App proxies
     IBeacon public immutable appBeacon;
 
+    /// @notice The Sablier Flow contract
+    ISablierFlow public immutable flow;
+
     /// @notice Set of all created apps
     EnumerableSet.AddressSet internal _allApps;
 
     /// @notice The mapping of app address to app storage
     mapping(IApp => AppConfig) internal _appConfigs;
 
-    /// @notice User configuration and state
-    mapping(address => UserConfig) internal _userConfigs;
+    /// @dev Reserved storage slots for removed variables (preserves upgrade compatibility)
+    /// Previously: _userConfigs (1 slot), maxGlobalActiveApps + globalActiveAppCount (1 slot)
+    uint256[2] private __deprecated_gap;
 
-    /// @inheritdoc IAppController
-    uint32 public maxGlobalActiveApps;
+    /// RESOURCE TRACKING
 
-    /// @inheritdoc IAppController
-    uint32 public globalActiveAppCount;
+    /// @notice Maximum total vCPUs allowed globally
+    uint32 public maxGlobalVCPUs;
+
+    /// @notice Current total vCPUs allocated globally
+    uint32 public globalVCPUCount;
+
+    /// @notice The address that receives billing payments
+    address public billingRecipient;
+
+    /// @notice vCPU allocation per SKU tier
+    mapping(uint8 skuTier => uint32 vCPUs) public skuVCPUs;
+
+    /// @notice Billing rates per token and SKU tier
+    /// @dev token => skuTier => rates for different app states
+    mapping(IERC20 token => mapping(uint8 skuTier => BillingRates rates)) public billingRates;
+
+    /// @notice Track which apps are using which billing account
+    /// @dev billingAccountId => set of app addresses
+    mapping(uint256 => EnumerableSet.AddressSet) internal _appsOnBillingAccount;
 
     constructor(
         IReleaseManager _releaseManager,
         IComputeOperator _computeOperator,
         IComputeAVSRegistrar _computeAVSRegistrar,
-        IBeacon _appBeacon
+        IBeacon _appBeacon,
+        ISablierFlow _flow
     ) {
         releaseManager = _releaseManager;
         computeOperator = _computeOperator;
         computeAVSRegistrar = _computeAVSRegistrar;
         appBeacon = _appBeacon;
+        flow = _flow;
     }
 
     /**
@@ -70,5 +94,5 @@ abstract contract AppControllerStorage is IAppController {
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
-    uint256[45] private __gap;
+    uint256[41] private __gap;
 }
