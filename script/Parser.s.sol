@@ -36,6 +36,7 @@ contract Parser is Script {
         string avsMetadataURI;
         uint32 maxGlobalActiveApps;
         uint32 adminMaxActiveApps;
+        address billingCore;
     }
 
     struct DeployedContracts {
@@ -54,6 +55,14 @@ contract Parser is Script {
         string memory configPath = string.concat("script/deploys/", environment, "/config.json");
         string memory json = vm.readFile(configPath);
 
+        // Parse billingCore, default to address(0) if not present
+        address billingCoreAddr;
+        try vm.parseJsonAddress(json, ".billingCore") returns (address addr) {
+            billingCoreAddr = addr;
+        } catch {
+            billingCoreAddr = address(0);
+        }
+
         DeployParams memory params = DeployParams({
             version: vm.parseJsonString(json, ".version"),
             delegationManager: IDelegationManager(vm.parseJsonAddress(json, ".delegationManager")),
@@ -66,7 +75,8 @@ contract Parser is Script {
             operatorMetadataURI: vm.parseJsonString(json, ".operatorMetadataURI"),
             avsMetadataURI: vm.parseJsonString(json, ".avsMetadataURI"),
             maxGlobalActiveApps: uint32(vm.parseJsonUint(json, ".maxGlobalActiveApps")),
-            adminMaxActiveApps: uint32(vm.parseJsonUint(json, ".adminMaxActiveApps"))
+            adminMaxActiveApps: uint32(vm.parseJsonUint(json, ".adminMaxActiveApps")),
+            billingCore: billingCoreAddr
         });
 
         return params;

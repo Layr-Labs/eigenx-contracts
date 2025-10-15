@@ -79,6 +79,8 @@ interface IAppController {
         uint32 operatorSetId;
         uint32 latestReleaseBlockNumber;
         AppStatus status;
+        uint16 skuID;           // Billing SKU
+        address account;        // Billing account that pays for this app
     }
 
     /// @notice User configuration and state
@@ -109,12 +111,22 @@ interface IAppController {
     function setMaxGlobalActiveApps(uint32 limit) external;
 
     /**
-     * @notice Creates a new app instance
+     * @notice Creates a new app instance without billing (for backwards compatibility)
      * @param salt The salt to use for the app
      * @param release The release to upgrade to
      * @return app The address of the newly created app
      */
     function createApp(bytes32 salt, Release calldata release) external returns (IApp app);
+
+    /**
+     * @notice Creates a new app instance with billing enabled
+     * @param salt The salt to use for the app
+     * @param release The release to upgrade to
+     * @param skuID The SKU identifier for billing (use 0 to disable billing)
+     * @param account The billing account that will pay for this app
+     * @return app The address of the newly created app
+     */
+    function createApp(bytes32 salt, Release calldata release, uint16 skuID, address account) external returns (IApp app);
 
     /**
      * @notice Upgrades an app with a new release to the ReleaseManager
@@ -162,6 +174,16 @@ interface IAppController {
      * @dev Once terminated, no further write operations are allowed
      */
     function terminateAppByAdmin(IApp app) external;
+
+    /**
+     * @notice Enables billing for an existing app that was created without billing
+     * @param app The app to enable billing for
+     * @param skuID The SKU identifier for billing
+     * @param account The billing account that will pay for this app
+     * @dev Caller must be UAM permissioned for the AppController
+     * @dev App must be active (not terminated) and not already have billing enabled
+     */
+    function enableAppBilling(IApp app, uint16 skuID, address account) external;
 
     /**
      * @notice Gets the maximum global active apps limit

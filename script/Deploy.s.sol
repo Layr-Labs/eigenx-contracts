@@ -66,7 +66,6 @@ contract Deploy is Parser {
         UpgradeableBeacon appBeacon = new UpgradeableBeacon(address(appImpl));
 
         // Deploy implementation contracts
-
         ComputeAVSRegistrar computeAVSRegistrarImpl = new ComputeAVSRegistrar({
             _version: params.version,
             _allocationManager: params.allocationManager,
@@ -82,14 +81,21 @@ contract Deploy is Parser {
             _appController: address(appControllerProxy),
             _computeAVSRegistrar: address(computeAVSRegistrarProxy)
         });
-        AppController appControllerImpl = new AppController({
-            _version: params.version,
-            _permissionController: params.permissionController,
-            _releaseManager: params.releaseManager,
-            _computeAVSRegistrar: IComputeAVSRegistrar(address(computeAVSRegistrarProxy)),
-            _computeOperator: IComputeOperator(address(computeOperatorProxy)),
-            _appBeacon: appBeacon
-        });
+
+        // Deploy AppController in separate scope to avoid stack too deep
+        AppController appControllerImpl;
+        {
+            address billingCore = params.billingCore;
+            appControllerImpl = new AppController(
+                params.version,
+                params.permissionController,
+                params.releaseManager,
+                IComputeAVSRegistrar(address(computeAVSRegistrarProxy)),
+                IComputeOperator(address(computeOperatorProxy)),
+                appBeacon,
+                billingCore
+            );
+        }
 
         // Upgrade proxies using ProxyAdmin
         params.proxyAdmin.upgradeAndCall(
