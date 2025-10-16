@@ -3,7 +3,8 @@ pragma solidity ^0.8.27;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Initializable} from "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin-upgrades/contracts/access/OwnableUpgradeable.sol";
 import {DateTimeLib} from "solady/utils/DateTimeLib.sol";
 import {IBillingCore} from "./interfaces/IBillingCore.sol";
 
@@ -11,34 +12,41 @@ import {IBillingCore} from "./interfaces/IBillingCore.sol";
  * @title BillingCore
  * @notice Central billing system for multi-product usage tracking and payment
  */
-contract BillingCore is Ownable, IBillingCore {
+contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
     using SafeERC20 for IERC20;
 
     // ============================================================================
-    // Immutables & Constants
+    // Immutables & State Variables
     // ============================================================================
 
     IERC20 public immutable paymentToken;
     uint40 public immutable genesisTime;
 
-    // ============================================================================
-    // State
-    // ============================================================================
-
     mapping(address account => Account) public accounts;
     mapping(uint8 productId => Product) public products;
     mapping(address module => uint8) public productIds;
-    mapping(address => mapping(uint8 => mapping(uint40 => uint96))) public spending;
+    mapping(address account => mapping(uint8 productId => mapping(uint40 period => uint96))) public spending;
 
-    uint8 public nextProductId = 1;
+    uint8 public nextProductId;
 
     // ============================================================================
-    // Constructor
+    // Constructor & Initializer
     // ============================================================================
 
-    constructor(address _token) Ownable() {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor(address _token) {
         paymentToken = IERC20(_token);
         genesisTime = uint40(block.timestamp);
+        _disableInitializers();
+    }
+
+    /**
+     * @notice Initialize the BillingCore contract
+     * @param _owner The owner address for the contract
+     */
+    function initialize(address _owner) external initializer {
+        _transferOwnership(_owner);
+        nextProductId = 1;
     }
 
     // ============================================================================
@@ -296,4 +304,15 @@ contract BillingCore is Ownable, IBillingCore {
     function getBalance(address account) external view returns (int96) {
         return accounts[account].balance;
     }
+
+    // ============================================================================
+    // Storage Gap
+    // ============================================================================
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[50] private __gap;
 }
