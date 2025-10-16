@@ -502,63 +502,6 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
     // View Functions
     // ============================================================================
 
-    // function getAppBilling(address app)
-    //     external
-    //     view
-    //     returns (address account, uint16 skuId, uint96 currentRate, bool isRunning, uint96 pendingCharges)
-    // {
-    //     if (!_isAppActive(app)) return (address(0), 0, 0, false, 0);
-
-    //     account = _getAppAccount(app);
-    //     skuId = _getAppSKU(app);
-    //     isRunning = _isAppRunning(app);
-
-    //     SKU memory sku = _getEffectiveSKU(skuId);
-    //     currentRate = isRunning ? sku.runningRate : sku.stoppedRate;
-
-    //     pendingCharges = getPendingCharges(app);
-    // }
-
-    // function getPendingCharges(address app) public view returns (uint96) {
-    //     if (!_isAppActive(app)) return 0;
-
-    //     address account = _getAppAccount(app);
-    //     AccountBilling memory billing_ = accountBilling[account];
-    //     if (billing_.lastSettled == 0) return 0;
-
-    //     uint16 skuId = _getAppSKU(app);
-    //     SKU memory sku = _getEffectiveSKU(skuId);
-
-    //     uint96 rate = _isAppRunning(app) ? sku.runningRate : sku.stoppedRate;
-    //     uint256 elapsed = block.timestamp - billing_.lastSettled;
-
-    //     return uint96(uint256(rate) * elapsed);
-    // }
-
-    // function getAccountRate(address account) external view returns (uint96) {
-    //     uint40 currentPeriod = billing.getCurrentPeriod();
-    //     AccountBilling memory billing_ = accountBilling[account];
-
-    //     // If rates need updating, calculate what they would be
-    //     if (billing_.lastRateUpdate < currentPeriod) {
-    //         uint96 totalRate = 0;
-    //         uint16[] memory skuList = accountSKUs[account];
-
-    //         for (uint256 i = 0; i < skuList.length; i++) {
-    //             uint16 skuId = skuList[i];
-    //             SKU memory sku = _getEffectiveSKU(skuId);
-    //             SKUAppCounts memory counts = accountSKUCounts[account][skuId];
-
-    //             totalRate += uint96(counts.runningCount) * sku.runningRate;
-    //             totalRate += uint96(counts.stoppedCount) * sku.stoppedRate;
-    //         }
-
-    //         return totalRate;
-    //     }
-
-    //     return billing_.totalRate;
-    // }
-
     function getResourceUsage() external view returns (uint16 vcpuUsed, uint16 vmUsed, uint16 vcpuCap, uint16 vmCap) {
         return (
             globalResources.vcpuUsed,
@@ -568,65 +511,20 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
         );
     }
 
-    function getAppDetails(address app)
-        external
-        view
-        returns (address account, uint16 skuId, uint96 currentRate, bool isRunning, bool isActive)
-    {
-        isActive = _isAppActive(app);
-        if (!isActive) return (address(0), 0, 0, false, false);
+    function getPendingChargesForApp(address app) public view returns (uint96) {
+        if (!_isAppActive(app)) return 0;
 
-        account = _getAppAccount(app);
-        skuId = _getAppSKU(app);
-        isRunning = _isAppRunning(app);
+        address account = _getAppAccount(app);
+        AccountBilling memory billing_ = accountBilling[account];
+        if (billing_.lastSettled == 0) return 0;
 
+        uint16 skuId = _getAppSKU(app);
         SKU memory sku = _getEffectiveSKU(skuId);
-        currentRate = isRunning ? sku.runningRate : sku.stoppedRate;
-    }
 
-    function getAccountBreakdown(address account)
-        external
-        view
-        returns (uint96 runningRate, uint96 stoppedRate, uint16 runningCount, uint16 stoppedCount)
-    {
-        uint16[] memory skuList = accountSKUs[account];
+        uint96 rate = _isAppRunning(app) ? sku.runningRate : sku.stoppedRate;
+        uint256 elapsed = block.timestamp - billing_.lastSettled;
 
-        for (uint256 i = 0; i < skuList.length; i++) {
-            uint16 skuId = skuList[i];
-            SKU memory sku = _getEffectiveSKU(skuId);
-            SKUAppCounts memory counts = accountSKUCounts[account][skuId];
-
-            runningRate += uint96(counts.runningCount) * sku.runningRate;
-            stoppedRate += uint96(counts.stoppedCount) * sku.stoppedRate;
-            runningCount += counts.runningCount;
-            stoppedCount += counts.stoppedCount;
-        }
-    }
-
-    /**
-     * @notice Calculate charges that accrued in a specific period window
-     * @param startTime The start of the billing window
-     * @param endTime The end of the billing window
-     * @param rate The rate in effect during this window
-     * @param periodStart The start timestamp of the period
-     * @param periodEnd The end timestamp of the period
-     * @return charges The amount charged during the overlap of billing window and period
-     */
-    function _calculateChargesInPeriod(
-        uint40 startTime,
-        uint40 endTime,
-        uint96 rate,
-        uint40 periodStart,
-        uint40 periodEnd
-    ) internal pure returns (uint96 charges) {
-        // Calculate overlap between [startTime, endTime] and [periodStart, periodEnd]
-        uint40 effectiveStart = startTime > periodStart ? startTime : periodStart;
-        uint40 effectiveEnd = endTime < periodEnd ? endTime : periodEnd;
-
-        if (effectiveEnd <= effectiveStart) return 0;
-
-        uint256 timeInPeriod = effectiveEnd - effectiveStart;
-        return uint96(uint256(rate) * timeInPeriod);
+        return uint96(uint256(rate) * elapsed);
     }
 
     /**
@@ -679,5 +577,31 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
                 break;
             }
         }
+    }
+
+    /**
+     * @notice Calculate charges that accrued in a specific period window
+     * @param startTime The start of the billing window
+     * @param endTime The end of the billing window
+     * @param rate The rate in effect during this window
+     * @param periodStart The start timestamp of the period
+     * @param periodEnd The end timestamp of the period
+     * @return charges The amount charged during the overlap of billing window and period
+     */
+    function _calculateChargesInPeriod(
+        uint40 startTime,
+        uint40 endTime,
+        uint96 rate,
+        uint40 periodStart,
+        uint40 periodEnd
+    ) internal pure returns (uint96 charges) {
+        // Calculate overlap between [startTime, endTime] and [periodStart, periodEnd]
+        uint40 effectiveStart = startTime > periodStart ? startTime : periodStart;
+        uint40 effectiveEnd = endTime < periodEnd ? endTime : periodEnd;
+
+        if (effectiveEnd <= effectiveStart) return 0;
+
+        uint256 timeInPeriod = effectiveEnd - effectiveStart;
+        return uint96(uint256(rate) * timeInPeriod);
     }
 }

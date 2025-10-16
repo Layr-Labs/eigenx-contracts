@@ -2,6 +2,7 @@
 pragma solidity ^0.8.27;
 
 import {IReleaseManagerTypes} from "@eigenlayer-contracts/src/contracts/interfaces/IReleaseManager.sol";
+import {IComputeBilling} from "../billing/interfaces/IComputeBilling.sol";
 import {IApp} from "./IApp.sol";
 
 interface IAppController {
@@ -248,6 +249,20 @@ interface IAppController {
      * @return The latest release block number
      */
     function getAppLatestReleaseBlockNumber(IApp app) external view returns (uint32);
+
+    /**
+     * @notice Gets the SKU for a given app
+     * @param app The app to get the SKU for
+     * @return The SKU
+     */
+    function getAppSKU(IApp app) external view returns (IComputeBilling.SKU memory);
+
+    /**
+     * @notice Gets the billing account for a given app
+     * @param app The app to get the billing account for
+     * @return The billing account
+     */
+    function getAppBillingAccount(IApp app) external view returns (address);
 
     /**
      * @notice Retrieves a paginated list of all apps and their configurations

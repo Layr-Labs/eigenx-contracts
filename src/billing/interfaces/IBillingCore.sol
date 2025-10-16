@@ -92,11 +92,6 @@ interface IBillingCore {
     function withdrawRevenue(uint8 productId) external;
     function setRevenueRecipient(uint8 productId, address recipient) external;
     function genesisTime() external view returns (uint40);
-    function getAccountStatus(address account)
-        external
-        view
-        returns (uint96 balance, uint96 debt, bool canTransact, uint40 lastActive);
-    function hasDebt(address account) external view returns (bool);
     function getBalance(address account) external view returns (int96);
     function getChargesForPeriod(address account, uint40 period) external view returns (ProductCharges[] memory);
     function getEffectiveBalance(address account) external view returns (EffectiveBalance memory);

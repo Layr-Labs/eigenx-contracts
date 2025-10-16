@@ -314,36 +314,7 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
     // ============================================================================
 
     /**
-     * @notice Get account status
-     */
-    function getAccountStatus(address account)
-        external
-        view
-        returns (uint96 balance, uint96 debt, bool canTransact, uint40 lastActive)
-    {
-        Account memory acc = accounts[account];
-
-        if (acc.balance >= 0) {
-            balance = uint96(acc.balance);
-            debt = 0;
-        } else {
-            balance = 0;
-            debt = uint96(-acc.balance);
-        }
-
-        canTransact = acc.balance > 0 && !acc.suspended;
-        lastActive = acc.lastActivity;
-    }
-
-    /**
-     * @notice Helper to check if account has debt
-     */
-    function hasDebt(address account) external view returns (bool) {
-        return accounts[account].balance < 0;
-    }
-
-    /**
-     * @notice Get account's actual balance (can be negative)
+     * @notice Get account's actual balance (can be negative if the account is in debt)
      */
     function getBalance(address account) external view returns (int96) {
         return accounts[account].balance;

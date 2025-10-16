@@ -461,6 +461,16 @@ contract AppController is
     }
 
     /// @inheritdoc IAppController
+    function getAppSKU(IApp app) external view returns (SKU memory) {
+        return skus[_appConfigs[app].skuID];
+    }
+
+    /// @inheritdoc IAppController
+    function getAppBillingAccount(IApp app) external view returns (address) {
+        return _appConfigs[app].account;
+    }
+
+    /// @inheritdoc IAppController
     function getApps(uint256 offset, uint256 limit)
         external
         view

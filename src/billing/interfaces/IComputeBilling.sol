@@ -68,12 +68,4 @@ interface IComputeBilling {
 
     function settleAccount(address account) external;
     function getResourceUsage() external view returns (uint16 vcpuUsed, uint16 vmUsed, uint16 vcpuCap, uint16 vmCap);
-    function getAppDetails(address app)
-        external
-        view
-        returns (address account, uint16 skuId, uint96 currentRate, bool isRunning, bool isActive);
-    function getAccountBreakdown(address account)
-        external
-        view
-        returns (uint96 runningRate, uint96 stoppedRate, uint16 runningCount, uint16 stoppedCount);
 }
