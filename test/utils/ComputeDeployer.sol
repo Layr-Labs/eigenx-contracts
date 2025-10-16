@@ -59,7 +59,7 @@ contract ComputeDeployer is Test {
             avsMetadataURI: "https://example.com/avs-metadata",
             maxGlobalActiveApps: 100,
             adminMaxActiveApps: 100,
-            billingCore: address(0)  // Billing not yet enabled in tests
+            billingCore: address(0) // Billing not yet enabled in tests
         });
 
         Parser.DeployedContracts memory deployed = deployer.deployForTesting(params);

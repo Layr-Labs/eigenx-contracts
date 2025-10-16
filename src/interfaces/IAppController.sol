@@ -79,8 +79,8 @@ interface IAppController {
         uint32 operatorSetId;
         uint32 latestReleaseBlockNumber;
         AppStatus status;
-        uint16 skuID;           // Billing SKU
-        address account;        // Billing account that pays for this app
+        uint16 skuID; // Billing SKU
+        address account; // Billing account that pays for this app
     }
 
     /// @notice User configuration and state
@@ -126,7 +126,9 @@ interface IAppController {
      * @param account The billing account that will pay for this app
      * @return app The address of the newly created app
      */
-    function createApp(bytes32 salt, Release calldata release, uint16 skuID, address account) external returns (IApp app);
+    function createApp(bytes32 salt, Release calldata release, uint16 skuID, address account)
+        external
+        returns (IApp app);
 
     /**
      * @notice Upgrades an app with a new release to the ReleaseManager

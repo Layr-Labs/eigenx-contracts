@@ -21,7 +21,13 @@ import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {ComputeBilling} from "./billing/ComputeBilling.sol";
 import {IApp} from "./interfaces/IApp.sol";
 
-contract AppController is Initializable, SignatureUtilsMixin, PermissionControllerMixin, AppControllerStorage, ComputeBilling {
+contract AppController is
+    Initializable,
+    SignatureUtilsMixin,
+    PermissionControllerMixin,
+    AppControllerStorage,
+    ComputeBilling
+{
     using EnumerableSet for EnumerableSet.AddressSet;
 
     /// MODIFIERS
@@ -103,7 +109,10 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// @inheritdoc IAppController
-    function createApp(bytes32 salt, Release calldata release, uint16 skuID, address account) public returns (IApp app) {
+    function createApp(bytes32 salt, Release calldata release, uint16 skuID, address account)
+        public
+        returns (IApp app)
+    {
         UserConfig storage userConfig = _userConfigs[msg.sender];
 
         // Check global active app limit
@@ -181,7 +190,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
         // If transitioning from STOPPED to STARTED and billing is enabled, update billing rate
         if (config.skuID != 0 && config.status == AppStatus.STOPPED) {
-            _setRunningRate(address(app), config.account, config.skuID);
+            _setRunningRate(address(app), config.account);
         }
 
         _startApp(app);
@@ -195,7 +204,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
         // Update billing rate to stopped rate if billing is enabled
         if (config.skuID != 0) {
-            _setStoppedRate(address(app), config.account, config.skuID);
+            _setStoppedRate(address(app), config.account);
         }
 
         emit AppStopped(app);
@@ -213,6 +222,35 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// INTERNAL FUNCTIONS
+
+    /**
+     * @notice Get the billing account for an app (ComputeBilling abstract function)
+     */
+    function _getAppAccount(address app) internal view override returns (address) {
+        return _appConfigs[IApp(app)].account;
+    }
+
+    /**
+     * @notice Get the SKU ID for an app (ComputeBilling abstract function)
+     */
+    function _getAppSKU(address app) internal view override returns (uint16) {
+        return _appConfigs[IApp(app)].skuID;
+    }
+
+    /**
+     * @notice Check if an app is running (ComputeBilling abstract function)
+     */
+    function _isAppRunning(address app) internal view override returns (bool) {
+        return _appConfigs[IApp(app)].status == AppStatus.STARTED;
+    }
+
+    /**
+     * @notice Check if an app is active (ComputeBilling abstract function)
+     */
+    function _isAppActive(address app) internal view override returns (bool) {
+        AppStatus status = _appConfigs[IApp(app)].status;
+        return status != AppStatus.TERMINATED && status != AppStatus.NONE;
+    }
 
     /**
      * @notice Upgrades an app to a new release by publishing it through the release manager
@@ -248,9 +286,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
         // Remove billing before terminating if billing is enabled
         if (config.skuID != 0) {
-            // Determine if app is currently running or stopped
-            bool isRunning = (config.status == AppStatus.STARTED);
-            _removeBilling(address(app), config.account, config.skuID, isRunning);
+            _removeBilling(address(app), config.account, config.skuID);
         }
 
         config.status = AppStatus.TERMINATED;
@@ -294,10 +330,14 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
      * @dev Caller must be permissioned for the AppController
      * @dev App must be active (not terminated) and not already billed (skuID == 0)
      */
-    function enableAppBilling(IApp app, uint16 skuID, address account) external checkCanCall(address(this)) appIsActive(app) {
+    function enableAppBilling(IApp app, uint16 skuID, address account)
+        external
+        checkCanCall(address(this))
+        appIsActive(app)
+    {
         AppConfig storage config = _appConfigs[app];
-        require(config.skuID == 0, "Billing already enabled");
-        require(skuID != 0, "Invalid SKU");
+        require(config.skuID == 0, AppAlreadyBilled());
+        require(skuID != 0, InvalidSKU());
 
         // Update config
         config.skuID = skuID;
@@ -311,7 +351,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
             // First "start" billing (which registers with running rate)
             _startBilling(address(app), skuID, account);
             // Then immediately switch to stopped rate
-            _setStoppedRate(address(app), account, skuID);
+            _setStoppedRate(address(app), account);
         }
     }
 
@@ -324,7 +364,10 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
      * @param vcpus The number of virtual CPUs required
      * @dev Caller must be permissioned for the AppController
      */
-    function setSKURate(uint16 skuID, string calldata name, uint96 runningRate, uint96 stoppedRate, uint16 vcpus) external checkCanCall(address(this)) {
+    function setSKURate(uint16 skuID, string calldata name, uint96 runningRate, uint96 stoppedRate, uint16 vcpus)
+        external
+        checkCanCall(address(this))
+    {
         _setSKURate(skuID, name, runningRate, stoppedRate, vcpus);
     }
 
@@ -362,11 +405,14 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
      * @dev Caller must be permissioned for the AppController
      * @dev App must be active (not terminated)
      */
-    function changeAppBillingAccount(IApp app, address newAccount) external checkCanCall(address(this)) appIsActive(app) {
+    function changeAppBillingAccount(IApp app, address newAccount)
+        external
+        checkCanCall(address(this))
+        appIsActive(app)
+    {
         AppConfig storage config = _appConfigs[app];
-        bool isRunning = (config.status == AppStatus.STARTED);
 
-        _changeAccount(address(app), config.account, newAccount, config.skuID, isRunning);
+        _changeAccount(address(app), config.account, newAccount);
 
         // Update stored billing account
         config.account = newAccount;

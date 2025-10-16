@@ -83,7 +83,7 @@ contract Deploy is EOADeployer {
             _computeAVSRegistrar: IComputeAVSRegistrar(address(computeAVSRegistrarProxy)),
             _computeOperator: IComputeOperator(address(computeOperatorProxy)),
             _appBeacon: appBeacon,
-            _billingCore: address(0)  // Billing not yet enabled
+            _billingCore: address(0) // Billing not yet enabled
         });
 
         // Upgrade proxies using ProxyAdmin

@@ -1,46 +1,78 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.27;
 
+/**
+ * @title IBillingCore
+ * @notice Interface for central billing system with types, events, and errors
+ */
 interface IBillingCore {
+    // ============================================================================
+    // Data Types
+    // ============================================================================
+
     struct Account {
-        uint128 balance;
-        uint128 totalBurnRate;
-        uint40 lastSettled;
+        int96 balance; // Positive = credit, Negative = debt
+        uint96 totalSpent;
+        uint40 lastActivity;
+        bool suspended;
     }
 
     struct Product {
-        address implementation;
-        uint128 earned;
+        string name;
+        address billingModule;
+        uint96 totalRevenue;
+        bool isActive;
     }
 
-    // Errors
-    error ProductAlreadyAuthorized(address implementation);
-    error ProductNotAuthorized();
-    error LengthMismatch();
-    error NoDebt(address account);
-    error InsufficientEarnings(uint128 available, uint128 requested);
-
+    // ============================================================================
     // Events
-    event Deposited(address indexed user, uint128 amount);
-    event AccountCharged(address indexed account, uint128 amount);
-    event AccountDebtIncurred(address indexed account, uint128 debt);
+    // ============================================================================
+
+    event Deposit(address indexed account, uint96 amount);
+    event Withdrawal(address indexed account, uint96 amount);
+    event Charge(address indexed account, uint8 indexed productId, uint96 amount, uint40 period);
+    event ProductRegistered(uint8 indexed productId, string name, address module);
     event AccountSuspended(address indexed account);
     event AccountResumed(address indexed account);
-    event AccountRateAdjusted(address indexed account, uint128 newTotalRate);
-    event ProductAuthorized(uint8 indexed id, address implementation);
-    event ProductWithdrawal(uint8 indexed productId, uint128 amount);
+    event DebtIncurred(address indexed account, uint96 amount);
+    event DebtPaid(address indexed account, uint96 amount);
 
-    // Streaming pattern - continuous burn rate
-    function adjustAccountRate(address account, uint128 delta, bool increase) external;
-    function settleAccount(address account) external returns (uint128 charged);
+    // ============================================================================
+    // Custom Errors
+    // ============================================================================
 
-    // Consumption pattern - one-time charges
-    function chargeAmount(address account, uint128 amount) external returns (bool success);
+    error InsufficientBalance();
+    error AccountIsSuspended();
+    error AlreadyRegistered();
+    error UnknownProduct();
+    error ProductInactive();
+    error CannotChargeFuturePeriods();
+    error InsufficientRevenue();
+    error NoDebt();
 
-    // Balance management
-    function deposit(uint128 amount) external;
-    function depositFor(address user, uint128 amount) external;
+    // ============================================================================
+    // Functions
+    // ============================================================================
 
-    // Views
-    function checkAccountSolvency(address account) external view returns (bool solvent, uint256 totalOwed, uint256 balance);
+    function deposit(uint96 amount) external;
+    function withdraw(uint96 amount) external;
+    function depositFor(address account, uint96 amount) external;
+    function getCurrentPeriod() external view returns (uint40);
+    function getPeriodForTimestamp(uint40 timestamp) external view returns (uint40);
+    function getCurrentPeriodSpending(address account) external view returns (uint96 total);
+    function getSpendingBreakdown(address account, uint40 period)
+        external
+        view
+        returns (uint8[] memory ids, string[] memory productNames, uint96[] memory amounts);
+    function registerProduct(string calldata name, address module) external returns (uint8);
+    function charge(address account, uint96 amount) external returns (bool);
+    function chargePeriod(address account, uint96 amount, uint40 period) external returns (bool);
+    function withdrawRevenue(uint96 amount) external;
+    function genesisTime() external view returns (uint40);
+    function getAccountStatus(address account)
+        external
+        view
+        returns (uint96 balance, uint96 debt, bool canTransact, uint40 lastActive);
+    function hasDebt(address account) external view returns (bool);
+    function getBalance(address account) external view returns (int96);
 }
