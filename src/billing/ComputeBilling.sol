@@ -2,6 +2,7 @@
 pragma solidity ^0.8.27;
 
 import {IBillingCore} from "./interfaces/IBillingCore.sol";
+import {IBillingModule} from "./interfaces/IBillingModule.sol";
 import {IComputeBilling} from "./interfaces/IComputeBilling.sol";
 import {DateTimeLib} from "solady/utils/DateTimeLib.sol";
 
@@ -9,7 +10,7 @@ import {DateTimeLib} from "solady/utils/DateTimeLib.sol";
  * @title ComputeBilling
  * @notice Continuous billing for compute resources with running/stopped rates and capacity management
  */
-abstract contract ComputeBilling is IComputeBilling {
+abstract contract ComputeBilling is IComputeBilling, IBillingModule {
     IBillingCore public immutable billing;
 
     // ============================================================================
@@ -415,11 +416,14 @@ abstract contract ComputeBilling is IComputeBilling {
 
         uint40 currentPeriod = billing.getCurrentPeriod();
         uint40 lastSettledPeriod = billing.getPeriodForTimestamp(lastSettled);
+        uint40 genesisTime = billing.genesisTime();
 
         // OPTIMIZATION 1: Handle same period (most common case)
         if (currentPeriod == lastSettledPeriod) {
-            uint256 elapsed = currentTime - lastSettled;
-            uint96 amount = uint96(uint256(rate) * elapsed);
+            uint40 periodStart = uint40(DateTimeLib.addMonths(genesisTime, currentPeriod));
+            uint40 periodEnd = uint40(DateTimeLib.addMonths(genesisTime, currentPeriod + 1));
+
+            uint96 amount = _calculateChargesInPeriod(lastSettled, currentTime, rate, periodStart, periodEnd);
 
             if (amount > 0) {
                 billing.chargePeriod(account, amount, currentPeriod);
@@ -428,32 +432,30 @@ abstract contract ComputeBilling is IComputeBilling {
         }
         // OPTIMIZATION 2: Handle crossing one period boundary (common case)
         else if (currentPeriod == lastSettledPeriod + 1) {
-            uint40 genesisTime = billing.genesisTime();
-            uint40 periodBoundary = uint40(DateTimeLib.addMonths(genesisTime, currentPeriod));
-
             // Charge for time in last period
-            uint256 timeInLastPeriod = periodBoundary - lastSettled;
-            if (timeInLastPeriod > 0) {
-                uint96 lastPeriodAmount = uint96(uint256(rate) * timeInLastPeriod);
-                if (lastPeriodAmount > 0) {
-                    billing.chargePeriod(account, lastPeriodAmount, lastSettledPeriod);
-                    emit AppSettled(account, lastPeriodAmount, lastSettledPeriod);
-                }
+            uint40 lastPeriodStart = uint40(DateTimeLib.addMonths(genesisTime, lastSettledPeriod));
+            uint40 lastPeriodEnd = uint40(DateTimeLib.addMonths(genesisTime, lastSettledPeriod + 1));
+
+            uint96 lastPeriodAmount =
+                _calculateChargesInPeriod(lastSettled, currentTime, rate, lastPeriodStart, lastPeriodEnd);
+            if (lastPeriodAmount > 0) {
+                billing.chargePeriod(account, lastPeriodAmount, lastSettledPeriod);
+                emit AppSettled(account, lastPeriodAmount, lastSettledPeriod);
             }
 
             // Charge for time in current period
-            uint256 timeInCurrentPeriod = currentTime - periodBoundary;
-            if (timeInCurrentPeriod > 0) {
-                uint96 currentPeriodAmount = uint96(uint256(rate) * timeInCurrentPeriod);
-                if (currentPeriodAmount > 0) {
-                    billing.chargePeriod(account, currentPeriodAmount, currentPeriod);
-                    emit AppSettled(account, currentPeriodAmount, currentPeriod);
-                }
+            uint40 currentPeriodStart = uint40(DateTimeLib.addMonths(genesisTime, currentPeriod));
+            uint40 currentPeriodEnd = uint40(DateTimeLib.addMonths(genesisTime, currentPeriod + 1));
+
+            uint96 currentPeriodAmount =
+                _calculateChargesInPeriod(lastSettled, currentTime, rate, currentPeriodStart, currentPeriodEnd);
+            if (currentPeriodAmount > 0) {
+                billing.chargePeriod(account, currentPeriodAmount, currentPeriod);
+                emit AppSettled(account, currentPeriodAmount, currentPeriod);
             }
         }
         // OPTIMIZATION 3: Handle multiple periods (rare case, optimized)
         else {
-            uint40 genesisTime = billing.genesisTime();
             _settleMultiplePeriods(
                 account, rate, lastSettled, currentTime, lastSettledPeriod, currentPeriod, genesisTime
             );
@@ -475,29 +477,17 @@ abstract contract ComputeBilling is IComputeBilling {
         uint40 endPeriod,
         uint40 genesisTime
     ) private {
-        // Calculate charges for each period efficiently
-        uint40 periodStart = startTime;
-
+        // Calculate charges for each period using shared helper
         for (uint40 period = startPeriod; period <= endPeriod; period++) {
-            uint40 periodEnd;
+            uint40 periodStart = uint40(DateTimeLib.addMonths(genesisTime, period));
+            uint40 periodEnd = uint40(DateTimeLib.addMonths(genesisTime, period + 1));
 
-            if (period == endPeriod) {
-                periodEnd = endTime;
-            } else {
-                // Only calculate boundary when needed
-                periodEnd = uint40(DateTimeLib.addMonths(genesisTime, period + 1));
+            uint96 periodAmount = _calculateChargesInPeriod(startTime, endTime, rate, periodStart, periodEnd);
+
+            if (periodAmount > 0) {
+                billing.chargePeriod(account, periodAmount, period);
+                emit AppSettled(account, periodAmount, period);
             }
-
-            uint256 timeInPeriod = periodEnd - periodStart;
-            if (timeInPeriod > 0) {
-                uint96 periodAmount = uint96(uint256(rate) * timeInPeriod);
-                if (periodAmount > 0) {
-                    billing.chargePeriod(account, periodAmount, period);
-                    emit AppSettled(account, periodAmount, period);
-                }
-            }
-
-            periodStart = periodEnd;
         }
     }
 
@@ -512,62 +502,62 @@ abstract contract ComputeBilling is IComputeBilling {
     // View Functions
     // ============================================================================
 
-    function getAppBilling(address app)
-        external
-        view
-        returns (address account, uint16 skuId, uint96 currentRate, bool isRunning, uint96 pendingCharges)
-    {
-        if (!_isAppActive(app)) return (address(0), 0, 0, false, 0);
+    // function getAppBilling(address app)
+    //     external
+    //     view
+    //     returns (address account, uint16 skuId, uint96 currentRate, bool isRunning, uint96 pendingCharges)
+    // {
+    //     if (!_isAppActive(app)) return (address(0), 0, 0, false, 0);
 
-        account = _getAppAccount(app);
-        skuId = _getAppSKU(app);
-        isRunning = _isAppRunning(app);
+    //     account = _getAppAccount(app);
+    //     skuId = _getAppSKU(app);
+    //     isRunning = _isAppRunning(app);
 
-        SKU memory sku = _getEffectiveSKU(skuId);
-        currentRate = isRunning ? sku.runningRate : sku.stoppedRate;
+    //     SKU memory sku = _getEffectiveSKU(skuId);
+    //     currentRate = isRunning ? sku.runningRate : sku.stoppedRate;
 
-        pendingCharges = getPendingCharges(app);
-    }
+    //     pendingCharges = getPendingCharges(app);
+    // }
 
-    function getPendingCharges(address app) public view returns (uint96) {
-        if (!_isAppActive(app)) return 0;
+    // function getPendingCharges(address app) public view returns (uint96) {
+    //     if (!_isAppActive(app)) return 0;
 
-        address account = _getAppAccount(app);
-        AccountBilling memory billing_ = accountBilling[account];
-        if (billing_.lastSettled == 0) return 0;
+    //     address account = _getAppAccount(app);
+    //     AccountBilling memory billing_ = accountBilling[account];
+    //     if (billing_.lastSettled == 0) return 0;
 
-        uint16 skuId = _getAppSKU(app);
-        SKU memory sku = _getEffectiveSKU(skuId);
+    //     uint16 skuId = _getAppSKU(app);
+    //     SKU memory sku = _getEffectiveSKU(skuId);
 
-        uint96 rate = _isAppRunning(app) ? sku.runningRate : sku.stoppedRate;
-        uint256 elapsed = block.timestamp - billing_.lastSettled;
+    //     uint96 rate = _isAppRunning(app) ? sku.runningRate : sku.stoppedRate;
+    //     uint256 elapsed = block.timestamp - billing_.lastSettled;
 
-        return uint96(uint256(rate) * elapsed);
-    }
+    //     return uint96(uint256(rate) * elapsed);
+    // }
 
-    function getAccountRate(address account) external view returns (uint96) {
-        uint40 currentPeriod = billing.getCurrentPeriod();
-        AccountBilling memory billing_ = accountBilling[account];
+    // function getAccountRate(address account) external view returns (uint96) {
+    //     uint40 currentPeriod = billing.getCurrentPeriod();
+    //     AccountBilling memory billing_ = accountBilling[account];
 
-        // If rates need updating, calculate what they would be
-        if (billing_.lastRateUpdate < currentPeriod) {
-            uint96 totalRate = 0;
-            uint16[] memory skuList = accountSKUs[account];
+    //     // If rates need updating, calculate what they would be
+    //     if (billing_.lastRateUpdate < currentPeriod) {
+    //         uint96 totalRate = 0;
+    //         uint16[] memory skuList = accountSKUs[account];
 
-            for (uint256 i = 0; i < skuList.length; i++) {
-                uint16 skuId = skuList[i];
-                SKU memory sku = _getEffectiveSKU(skuId);
-                SKUAppCounts memory counts = accountSKUCounts[account][skuId];
+    //         for (uint256 i = 0; i < skuList.length; i++) {
+    //             uint16 skuId = skuList[i];
+    //             SKU memory sku = _getEffectiveSKU(skuId);
+    //             SKUAppCounts memory counts = accountSKUCounts[account][skuId];
 
-                totalRate += uint96(counts.runningCount) * sku.runningRate;
-                totalRate += uint96(counts.stoppedCount) * sku.stoppedRate;
-            }
+    //             totalRate += uint96(counts.runningCount) * sku.runningRate;
+    //             totalRate += uint96(counts.stoppedCount) * sku.stoppedRate;
+    //         }
 
-            return totalRate;
-        }
+    //         return totalRate;
+    //     }
 
-        return billing_.totalRate;
-    }
+    //     return billing_.totalRate;
+    // }
 
     function getResourceUsage() external view returns (uint16 vcpuUsed, uint16 vmUsed, uint16 vcpuCap, uint16 vmCap) {
         return (
@@ -611,6 +601,69 @@ abstract contract ComputeBilling is IComputeBilling {
             runningCount += counts.runningCount;
             stoppedCount += counts.stoppedCount;
         }
+    }
+
+    /**
+     * @notice Calculate charges that accrued in a specific period window
+     * @param startTime The start of the billing window
+     * @param endTime The end of the billing window
+     * @param rate The rate in effect during this window
+     * @param periodStart The start timestamp of the period
+     * @param periodEnd The end timestamp of the period
+     * @return charges The amount charged during the overlap of billing window and period
+     */
+    function _calculateChargesInPeriod(
+        uint40 startTime,
+        uint40 endTime,
+        uint96 rate,
+        uint40 periodStart,
+        uint40 periodEnd
+    ) internal pure returns (uint96 charges) {
+        // Calculate overlap between [startTime, endTime] and [periodStart, periodEnd]
+        uint40 effectiveStart = startTime > periodStart ? startTime : periodStart;
+        uint40 effectiveEnd = endTime < periodEnd ? endTime : periodEnd;
+
+        if (effectiveEnd <= effectiveStart) return 0;
+
+        uint256 timeInPeriod = effectiveEnd - effectiveStart;
+        return uint96(uint256(rate) * timeInPeriod);
+    }
+
+    /**
+     * @notice Get charges for an account in a specific period (IBillingModule interface)
+     * @param account The account to query
+     * @param period The period to query
+     * @return amount Charges accrued in that period (whether settled or not)
+     */
+    function getChargesForPeriod(address account, uint40 period) external view override returns (uint96 amount) {
+        AccountBilling memory billing_ = accountBilling[account];
+        if (billing_.lastSettled == 0 || billing_.totalRate == 0) return 0;
+
+        uint40 currentTime = uint40(block.timestamp);
+        uint40 genesisTime = billing.genesisTime();
+
+        // Calculate period boundaries
+        uint40 periodStart = uint40(DateTimeLib.addMonths(genesisTime, period));
+        uint40 periodEnd = uint40(DateTimeLib.addMonths(genesisTime, period + 1));
+
+        // Use shared helper to calculate charges in this period
+        return _calculateChargesInPeriod(billing_.lastSettled, currentTime, billing_.totalRate, periodStart, periodEnd);
+    }
+
+    /**
+     * @notice Get total outstanding charges not yet charged to BillingCore (IBillingModule interface)
+     * @param account The account to query
+     * @return amount Total charges accumulated since last settlement
+     */
+    function getOutstandingCharges(address account) external view override returns (uint96 amount) {
+        AccountBilling memory billing_ = accountBilling[account];
+        if (billing_.lastSettled == 0 || billing_.totalRate == 0) return 0;
+
+        uint40 currentTime = uint40(block.timestamp);
+        if (currentTime <= billing_.lastSettled) return 0;
+
+        uint256 elapsed = currentTime - billing_.lastSettled;
+        return uint96(uint256(billing_.totalRate) * elapsed);
     }
 
     // ============================================================================

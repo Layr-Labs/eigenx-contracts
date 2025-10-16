@@ -2,13 +2,14 @@
 pragma solidity ^0.8.27;
 
 import {IBillingCore} from "./interfaces/IBillingCore.sol";
+import {IBillingModule} from "./interfaces/IBillingModule.sol";
 import {IUsageBilling} from "./interfaces/IUsageBilling.sol";
 
 /**
  * @title UsageBilling
  * @notice Billing for metered usage that accumulates token costs over a period
  */
-abstract contract UsageBilling is IUsageBilling {
+abstract contract UsageBilling is IUsageBilling, IBillingModule {
     IBillingCore public immutable billing;
 
     // ============================================================================
@@ -139,6 +140,10 @@ abstract contract UsageBilling is IUsageBilling {
         }
     }
 
+    // ============================================================================
+    // View Functions
+    // ============================================================================
+
     /**
      * @notice Check if a period is settled for an account
      */
@@ -146,33 +151,40 @@ abstract contract UsageBilling is IUsageBilling {
         return periodData[account][period].settled;
     }
 
-    // ============================================================================
-    // View Functions
-    // ============================================================================
-
     /**
-     * @notice Get usage amount and settlement status for an account in a specific period
+     * @notice Get charges for an account in a specific period (IBillingModule interface)
+     * @param account The account to query
+     * @param period The period to query charges for
+     * @return amount Recorded usage amount for that period (whether or not settled)
      */
-    function getAccountUsage(address account, uint40 period) public view returns (uint96 amount, bool settled) {
-        PeriodData memory data = periodData[account][period];
-        amount = data.amount;
-        settled = data.settled;
+    function getChargesForPeriod(address account, uint40 period) external view override returns (uint96 amount) {
+        return periodData[account][period].amount;
     }
 
     /**
-     * @notice Get usage amounts and settlement status for multiple accounts in a specific period
+     * @notice Get total outstanding charges not yet charged to BillingCore (IBillingModule interface)
+     * @param account The account to query
+     * @return amount Total charges across all unsettled periods
      */
-    function getAccountUsages(address[] calldata accounts, uint40 period)
-        external
-        view
-        returns (uint96[] memory amounts, bool[] memory settled)
-    {
-        uint256 len = accounts.length;
-        amounts = new uint96[](len);
-        settled = new bool[](len);
+    function getOutstandingCharges(address account) external view override returns (uint96 amount) {
+        uint40 currentPeriod = billing.getCurrentPeriod();
 
-        for (uint256 i = 0; i < len; i++) {
-            (amounts[i], settled[i]) = getAccountUsage(accounts[i], period);
+        // Work backward from current period until we hit a settled period
+        // This is more efficient as we only iterate through recent unsettled periods
+        for (uint40 period = currentPeriod; period >= 0; period--) {
+            PeriodData storage data = periodData[account][period];
+
+            if (data.settled) {
+                // Stop when we hit a settled period
+                break;
+            }
+
+            if (data.amount > 0) {
+                amount += data.amount;
+            }
+
+            // Prevent underflow on period = 0
+            if (period == 0) break;
         }
     }
 }

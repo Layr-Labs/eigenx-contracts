@@ -7,6 +7,7 @@ import {Initializable} from "@openzeppelin-upgrades/contracts/proxy/utils/Initia
 import {OwnableUpgradeable} from "@openzeppelin-upgrades/contracts/access/OwnableUpgradeable.sol";
 import {DateTimeLib} from "solady/utils/DateTimeLib.sol";
 import {IBillingCore} from "./interfaces/IBillingCore.sol";
+import {IBillingModule} from "./interfaces/IBillingModule.sol";
 
 /**
  * @title BillingCore
@@ -170,11 +171,27 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
         require(productIds[module] == 0, AlreadyRegistered());
 
         uint8 id = nextProductId++;
-        products[id] = Product({name: name, billingModule: module, totalRevenue: 0, isActive: true});
+        products[id] = Product({
+            name: name,
+            billingModule: module,
+            revenueRecipient: address(0),
+            unclaimedRevenue: 0,
+            isActive: true
+        });
         productIds[module] = id;
 
         emit ProductRegistered(id, name, module);
         return id;
+    }
+
+    /**
+     * @notice Set the revenue recipient address for a product
+     * @param productId The product ID
+     * @param recipient The address that will receive withdrawn revenue
+     */
+    function setRevenueRecipient(uint8 productId, address recipient) external onlyOwner {
+        require(productId > 0 && productId < nextProductId, UnknownProduct());
+        products[productId].revenueRecipient = recipient;
     }
 
     /**
@@ -227,7 +244,7 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
         // Track actual payment
         if (actualPaid > 0) {
             acc.totalSpent += actualPaid;
-            products[productId].totalRevenue += actualPaid;
+            products[productId].unclaimedRevenue += actualPaid;
             spending[account][productId][period] += actualPaid;
             emit Charge(account, productId, actualPaid, period);
         }
@@ -247,22 +264,49 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
         return fullyPaid;
     }
 
-    // TODO: We must be able to fetch pending charges (usage or pending compute charges, from the product in a standardized way)
+    /**
+     * @notice Get charges for an account across all products for a specific period
+     * @param account The account to query
+     * @param period The period to query
+     * @return charges Array of charges broken down by product
+     */
+    function getChargesForPeriod(address account, uint40 period)
+        external
+        view
+        returns (ProductCharges[] memory charges)
+    {
+        uint8 productCount = nextProductId - 1;
+        charges = new ProductCharges[](productCount);
 
-    // TODO: The product shouldn't call this:
+        for (uint8 i = 0; i < productCount; i++) {
+            uint8 id = i + 1;
+
+            Product storage product = products[id];
+            charges[i] = ProductCharges({
+                productId: id,
+                productName: product.name,
+                amount: IBillingModule(product.billingModule).getChargesForPeriod(account, period)
+            });
+        }
+    }
 
     /**
-     * @notice Withdraw revenue for a product
+     * @notice Withdraw all revenue for a product to its configured recipient
+     * @dev Anyone can call this function to push revenue to the recipient
+     * @param productId The product ID to withdraw revenue for
      */
-    function withdrawRevenue(uint96 amount) external {
-        uint8 productId = productIds[msg.sender];
-        require(productId != 0, UnknownProduct());
+    function withdrawRevenue(uint8 productId) external {
+        require(productId > 0 && productId < nextProductId, UnknownProduct());
 
         Product storage product = products[productId];
-        require(product.totalRevenue >= amount, InsufficientRevenue());
+        require(product.revenueRecipient != address(0), "No revenue recipient set");
+        require(product.unclaimedRevenue > 0, InsufficientRevenue());
 
-        product.totalRevenue -= amount;
-        paymentToken.safeTransfer(msg.sender, amount);
+        uint96 amount = product.unclaimedRevenue;
+        product.unclaimedRevenue = 0;
+
+        paymentToken.safeTransfer(product.revenueRecipient, amount);
+        emit RevenueWithdrawn(productId, product.revenueRecipient, amount);
     }
 
     // ============================================================================
@@ -303,6 +347,37 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
      */
     function getBalance(address account) external view returns (int96) {
         return accounts[account].balance;
+    }
+
+    /**
+     * @notice Get effective balance after accounting for outstanding charges
+     * @param account The account to query
+     * @return result Comprehensive balance data including outstanding charges breakdown
+     */
+    function getEffectiveBalance(address account) external view returns (EffectiveBalance memory result) {
+        result.balance = accounts[account].balance;
+
+        uint8 productCount = nextProductId - 1;
+        result.breakdown = new ProductOutstanding[](productCount);
+
+        // Query each product for outstanding charges
+        for (uint8 i = 0; i < productCount; i++) {
+            uint8 id = i + 1;
+            Product storage product = products[id];
+
+            uint96 outstanding = 0;
+            if (product.billingModule != address(0)) {
+                outstanding = IBillingModule(product.billingModule).getOutstandingCharges(account);
+            }
+
+            result.breakdown[i] = ProductOutstanding({productId: id, productName: product.name, outstanding: outstanding});
+
+            result.outstandingCharges += outstanding;
+        }
+
+        // Calculate effective balance
+        result.effectiveBalance = result.balance - int96(result.outstandingCharges);
+        result.willCoverCharges = result.effectiveBalance >= 0;
     }
 
     // ============================================================================

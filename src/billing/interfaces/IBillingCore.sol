@@ -20,8 +20,29 @@ interface IBillingCore {
     struct Product {
         string name;
         address billingModule;
-        uint96 totalRevenue;
+        address revenueRecipient;
+        uint96 unclaimedRevenue;
         bool isActive;
+    }
+
+    struct ProductCharges {
+        uint8 productId;
+        string productName;
+        uint96 amount;
+    }
+
+    struct EffectiveBalance {
+        int96 balance;
+        uint96 outstandingCharges;
+        int96 effectiveBalance;
+        bool willCoverCharges;
+        ProductOutstanding[] breakdown;
+    }
+
+    struct ProductOutstanding {
+        uint8 productId;
+        string productName;
+        uint96 outstanding;
     }
 
     // ============================================================================
@@ -36,6 +57,7 @@ interface IBillingCore {
     event AccountResumed(address indexed account);
     event DebtIncurred(address indexed account, uint96 amount);
     event DebtPaid(address indexed account, uint96 amount);
+    event RevenueWithdrawn(uint8 indexed productId, address indexed recipient, uint96 amount);
 
     // ============================================================================
     // Custom Errors
@@ -67,7 +89,8 @@ interface IBillingCore {
     function registerProduct(string calldata name, address module) external returns (uint8);
     function charge(address account, uint96 amount) external returns (bool);
     function chargePeriod(address account, uint96 amount, uint40 period) external returns (bool);
-    function withdrawRevenue(uint96 amount) external;
+    function withdrawRevenue(uint8 productId) external;
+    function setRevenueRecipient(uint8 productId, address recipient) external;
     function genesisTime() external view returns (uint40);
     function getAccountStatus(address account)
         external
@@ -75,4 +98,6 @@ interface IBillingCore {
         returns (uint96 balance, uint96 debt, bool canTransact, uint40 lastActive);
     function hasDebt(address account) external view returns (bool);
     function getBalance(address account) external view returns (int96);
+    function getChargesForPeriod(address account, uint40 period) external view returns (ProductCharges[] memory);
+    function getEffectiveBalance(address account) external view returns (EffectiveBalance memory);
 }

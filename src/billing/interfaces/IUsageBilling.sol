@@ -41,9 +41,4 @@ interface IUsageBilling {
     function settlePeriod(address account, uint40 period, uint96 finalAmount) external;
     function settlePeriodBatch(address[] calldata accounts, uint40 period, uint96[] calldata amounts) external;
     function isPeriodSettled(address account, uint40 period) external view returns (bool);
-    function getAccountUsage(address account, uint40 period) external view returns (uint96 amount, bool settled);
-    function getAccountUsages(address[] calldata accounts, uint40 period)
-        external
-        view
-        returns (uint96[] memory amounts, bool[] memory settled);
 }
