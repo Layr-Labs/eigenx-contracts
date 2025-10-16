@@ -26,7 +26,7 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
     mapping(address account => Account) public accounts;
     mapping(uint8 productId => Product) public products;
     mapping(address module => uint8) public productIds;
-    mapping(address account => mapping(uint8 productId => mapping(uint40 period => uint96))) public spending;
+    mapping(address account => mapping(uint8 productId => mapping(uint40 period => uint96))) public settledCharges;
 
     uint8 public nextProductId;
 
@@ -90,26 +90,6 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
     }
 
     /**
-     * @notice Internal deposit logic
-     */
-    function _deposit(address from, address to, uint96 amount) internal {
-        Account storage account = accounts[to];
-
-        int96 previousBalance = account.balance;
-        account.balance += int96(amount);
-        account.lastActivity = uint40(block.timestamp);
-
-        // Auto-unsuspend if debt is paid off
-        if (previousBalance < 0 && account.balance >= 0 && account.suspended) {
-            account.suspended = false;
-            emit AccountResumed(to);
-        }
-
-        paymentToken.safeTransferFrom(from, address(this), amount);
-        emit Deposit(to, amount);
-    }
-
-    /**
      * @notice Withdraw tokens from account
      */
     function withdraw(uint96 amount) external {
@@ -123,41 +103,6 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
 
         paymentToken.safeTransfer(msg.sender, amount);
         emit Withdrawal(msg.sender, amount);
-    }
-
-    // ============================================================================
-    // Spending Visibility
-    // ============================================================================
-
-    /**
-     * @notice Get total spending across all products for current period
-     */
-    function getCurrentPeriodSpending(address account) external view returns (uint96 total) {
-        uint40 period = getCurrentPeriod();
-        for (uint8 i = 1; i < nextProductId; i++) {
-            total += spending[account][i][period];
-        }
-    }
-
-    /**
-     * @notice Get breakdown of spending by product for a period
-     */
-    function getSpendingBreakdown(address account, uint40 period)
-        external
-        view
-        returns (uint8[] memory productIds_, string[] memory productNames, uint96[] memory amounts)
-    {
-        uint8 productCount = nextProductId - 1;
-        productIds_ = new uint8[](productCount);
-        productNames = new string[](productCount);
-        amounts = new uint96[](productCount);
-
-        for (uint8 i = 0; i < productCount; i++) {
-            uint8 id = i + 1;
-            productIds_[i] = id;
-            productNames[i] = products[id].name;
-            amounts[i] = spending[account][id][period];
-        }
     }
 
     // ============================================================================
@@ -245,7 +190,7 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
         if (actualPaid > 0) {
             acc.totalSpent += actualPaid;
             products[productId].unclaimedRevenue += actualPaid;
-            spending[account][productId][period] += actualPaid;
+            settledCharges[account][productId][period] += actualPaid;
             emit Charge(account, productId, actualPaid, period);
         }
 
@@ -262,32 +207,6 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
         }
 
         return fullyPaid;
-    }
-
-    /**
-     * @notice Get charges for an account across all products for a specific period
-     * @param account The account to query
-     * @param period The period to query
-     * @return charges Array of charges broken down by product
-     */
-    function getChargesForPeriod(address account, uint40 period)
-        external
-        view
-        returns (ProductCharges[] memory charges)
-    {
-        uint8 productCount = nextProductId - 1;
-        charges = new ProductCharges[](productCount);
-
-        for (uint8 i = 0; i < productCount; i++) {
-            uint8 id = i + 1;
-
-            Product storage product = products[id];
-            charges[i] = ProductCharges({
-                productId: id,
-                productName: product.name,
-                amount: IBillingModule(product.billingModule).getChargesForPeriod(account, period)
-            });
-        }
     }
 
     /**
@@ -349,6 +268,79 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
         // Calculate effective balance
         result.effectiveBalance = result.balance - int96(result.outstandingCharges);
         result.willCoverCharges = result.effectiveBalance >= 0;
+    }
+
+    /**
+     * @notice Get accrued charges (settled + unsettled) for an account across all products for a specific period
+     * @dev Queries each billing module for their reported charges for the period
+     * @param account The account to query
+     * @param period The period to query
+     * @return charges Array of charges broken down by product
+     */
+    function getAccruedChargesForPeriod(address account, uint40 period)
+        external
+        view
+        returns (ProductCharges[] memory charges)
+    {
+        uint8 productCount = nextProductId - 1;
+        charges = new ProductCharges[](productCount);
+
+        for (uint8 i = 0; i < productCount; i++) {
+            uint8 id = i + 1;
+
+            Product storage product = products[id];
+            charges[i] = ProductCharges({
+                productId: id,
+                productName: product.name,
+                amount: IBillingModule(product.billingModule).getChargesForPeriod(account, period)
+            });
+        }
+    }
+
+    /**
+     * @notice Get breakdown of settled charges by product for a period
+     * @dev Returns what has actually been paid/settled for the period
+     */
+    function getSettledChargesForPeriod(address account, uint40 period)
+        external
+        view
+        returns (uint8[] memory productIds_, string[] memory productNames, uint96[] memory amounts)
+    {
+        uint8 productCount = nextProductId - 1;
+        productIds_ = new uint8[](productCount);
+        productNames = new string[](productCount);
+        amounts = new uint96[](productCount);
+
+        for (uint8 i = 0; i < productCount; i++) {
+            uint8 id = i + 1;
+            productIds_[i] = id;
+            productNames[i] = products[id].name;
+            amounts[i] = settledCharges[account][id][period];
+        }
+    }
+
+    // ============================================================================
+    // Internal Functions
+    // ============================================================================
+
+    /**
+     * @notice Internal deposit logic
+     */
+    function _deposit(address from, address to, uint96 amount) internal {
+        Account storage account = accounts[to];
+
+        int96 previousBalance = account.balance;
+        account.balance += int96(amount);
+        account.lastActivity = uint40(block.timestamp);
+
+        // Auto-unsuspend if debt is paid off
+        if (previousBalance < 0 && account.balance >= 0 && account.suspended) {
+            account.suspended = false;
+            emit AccountResumed(to);
+        }
+
+        paymentToken.safeTransferFrom(from, address(this), amount);
+        emit Deposit(to, amount);
     }
 
     // ============================================================================

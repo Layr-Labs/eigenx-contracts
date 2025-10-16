@@ -81,8 +81,8 @@ interface IBillingCore {
     function depositFor(address account, uint96 amount) external;
     function getCurrentPeriod() external view returns (uint40);
     function getPeriodForTimestamp(uint40 timestamp) external view returns (uint40);
-    function getCurrentPeriodSpending(address account) external view returns (uint96 total);
-    function getSpendingBreakdown(address account, uint40 period)
+    function getAccruedChargesForPeriod(address account, uint40 period) external view returns (ProductCharges[] memory);
+    function getSettledChargesForPeriod(address account, uint40 period)
         external
         view
         returns (uint8[] memory ids, string[] memory productNames, uint96[] memory amounts);
@@ -93,6 +93,5 @@ interface IBillingCore {
     function setRevenueRecipient(uint8 productId, address recipient) external;
     function genesisTime() external view returns (uint40);
     function getBalance(address account) external view returns (int96);
-    function getChargesForPeriod(address account, uint40 period) external view returns (ProductCharges[] memory);
     function getEffectiveBalance(address account) external view returns (EffectiveBalance memory);
 }
