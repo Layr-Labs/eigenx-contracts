@@ -14,6 +14,9 @@ interface IBillingCore {
         int96 balance; // Can go negative (debt)
         uint96 totalSpent; // Lifetime spending tracker
         bool suspended; // True when balance < 0
+        bool withdrawalRequested; // True when withdrawal requested
+        uint40 withdrawalRequestPeriod; // Period when withdrawal requested
+        uint40 withdrawalRequestTimestamp; // Exact timestamp when withdrawal was requested
     }
 
     struct Product {
@@ -53,6 +56,8 @@ interface IBillingCore {
     event RevenueWithdrawn(uint8 indexed productId, address indexed recipient, uint96 amount);
     event ProductDeactivated(uint8 indexed productId, uint40 indexed deactivatedAtPeriod);
     event ProductReactivated(uint8 indexed productId);
+    event WithdrawalRequested(address indexed account, uint40 indexed requestPeriod, uint256 requestTimestamp);
+    event WithdrawalRequestCancelled(address indexed account);
 
     // ============================================================================
     // Custom Errors
@@ -67,6 +72,10 @@ interface IBillingCore {
     error ModuleAlreadyRegistered();
     error ProductInactive();
     error NoRevenueRecipient();
+    error WithdrawalAlreadyRequested();
+    error NoWithdrawalRequest();
+    error HasActiveResources();
+    error WithdrawalNotCleared();
 
     // ============================================================================
     // Functions
@@ -75,6 +84,8 @@ interface IBillingCore {
     // Account Management
     function deposit(uint96 amount) external;
     function depositFor(address account, uint96 amount) external;
+    function requestWithdrawal() external;
+    function cancelWithdrawalRequest() external;
     function withdraw(uint96 amount) external;
 
     // Period Management
@@ -97,6 +108,9 @@ interface IBillingCore {
     function getBalance(address account) external view returns (int96);
     function isAccountSuspended(address account) external view returns (bool);
     function getAccount(address account) external view returns (int96 balance, uint96 totalSpent, bool suspended);
+    function hasWithdrawalRequest(address account) external view returns (bool);
+    function getWithdrawalRequestPeriod(address account) external view returns (uint40);
+    function getWithdrawalRequestTimestamp(address account) external view returns (uint40);
     function getProduct(uint8 productId)
         external
         view

@@ -96,6 +96,43 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
     }
 
     /**
+     * @notice Request withdrawal - marks current period as final billing period
+     */
+    function requestWithdrawal() external {
+        Account storage acc = accounts[msg.sender];
+        require(!acc.withdrawalRequested, WithdrawalAlreadyRequested());
+
+        // Check no active resources across all products
+        for (uint8 productId = 1; productId < nextProductId; productId++) {
+            Product storage product = products[productId];
+            if (product.active) {
+                require(IBillingModule(product.module).getActiveResourceCount(msg.sender) == 0, HasActiveResources());
+            }
+        }
+
+        uint40 currentPeriod = getCurrentPeriod();
+        acc.withdrawalRequested = true;
+        acc.withdrawalRequestPeriod = currentPeriod;
+        acc.withdrawalRequestTimestamp = uint40(block.timestamp);
+
+        emit WithdrawalRequested(msg.sender, currentPeriod, block.timestamp);
+    }
+
+    /**
+     * @notice Cancel withdrawal request
+     */
+    function cancelWithdrawalRequest() external {
+        Account storage acc = accounts[msg.sender];
+        require(acc.withdrawalRequested, NoWithdrawalRequest());
+
+        acc.withdrawalRequested = false;
+        acc.withdrawalRequestPeriod = 0;
+        acc.withdrawalRequestTimestamp = 0;
+
+        emit WithdrawalRequestCancelled(msg.sender);
+    }
+
+    /**
      * @notice Withdraw tokens from your account
      */
     function withdraw(uint96 amount) external {
@@ -103,6 +140,16 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
 
         Account storage acc = accounts[msg.sender];
         require(!acc.suspended, AccountIsSuspended());
+
+        // Withdrawal request is mandatory
+        require(acc.withdrawalRequested, NoWithdrawalRequest());
+
+        // Must wait until next period after request
+        require(getCurrentPeriod() > acc.withdrawalRequestPeriod, InvalidPeriod());
+
+        // Check withdrawal is cleared (period settled, no resources, no activity since request)
+        require(_isWithdrawalCleared(msg.sender), WithdrawalNotCleared());
+
         require(acc.balance >= int96(amount), InsufficientBalance());
 
         acc.balance -= int96(amount);
@@ -269,6 +316,27 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
     }
 
     /**
+     * @notice Check if account has withdrawal request
+     */
+    function hasWithdrawalRequest(address account) external view returns (bool) {
+        return accounts[account].withdrawalRequested;
+    }
+
+    /**
+     * @notice Get withdrawal request period
+     */
+    function getWithdrawalRequestPeriod(address account) external view returns (uint40) {
+        return accounts[account].withdrawalRequestPeriod;
+    }
+
+    /**
+     * @notice Get withdrawal request timestamp
+     */
+    function getWithdrawalRequestTimestamp(address account) external view returns (uint40) {
+        return accounts[account].withdrawalRequestTimestamp;
+    }
+
+    /**
      * @notice Get product details
      */
     function getProduct(uint8 productId)
@@ -334,6 +402,34 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
 
         paymentToken.safeTransferFrom(from, address(this), amount);
         emit Deposit(to, amount);
+    }
+
+    function _isWithdrawalCleared(address account) internal view returns (bool) {
+        Account memory acc = accounts[account];
+
+        // Check that withdrawal request period is settled across all products
+        // AND that no active resources exist
+        // AND that no activity occurred after withdrawal request
+        for (uint8 productId = 1; productId < nextProductId; productId++) {
+            Product storage product = products[productId];
+            IBillingModule module = IBillingModule(product.module);
+
+            // Check period is settled
+            (, bool settled) = module.getChargesForPeriod(account, acc.withdrawalRequestPeriod);
+            if (!settled) return false;
+
+            // Verify no active resources remain
+            if (product.active && module.getActiveResourceCount(account) > 0) {
+                return false;
+            }
+
+            // Verify no activity after withdrawal request
+            uint40 lastActivity = module.getLastActivityTimestamp(account);
+            if (lastActivity > acc.withdrawalRequestTimestamp) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // ============================================================================

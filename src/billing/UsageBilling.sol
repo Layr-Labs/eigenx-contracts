@@ -203,4 +203,22 @@ abstract contract UsageBilling is IBillingModule, IUsageBilling {
         PeriodUsage memory usage = periodUsage[account][period];
         return (usage.amount, usage.settled);
     }
+
+    /**
+     * @notice Get the count of active resources for an account
+     * @dev Virtual function to be implemented by inheriting contracts
+     * @param account The account to check
+     * @return The number of active resources (e.g. VMs, API keys, etc)
+     */
+    function getActiveResourceCount(address account) external view virtual returns (uint256);
+
+    /**
+     * @notice Get the timestamp of the last resource change for an account
+     * @dev Virtual function to be implemented by inheriting contracts
+     * @dev Should return the timestamp of the last time resources were added/removed (e.g., API key changes)
+     * @dev NOT for usage recording - only for resource state changes
+     * @param account The account to check
+     * @return The timestamp of the last resource modification
+     */
+    function getLastActivityTimestamp(address account) external view virtual returns (uint40);
 }

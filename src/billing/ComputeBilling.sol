@@ -175,6 +175,8 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
 
         // Update account state (app starts in running state)
         AccountState storage state = accountState[account];
+
+        state.totalVMCount++;
         state.totalRunningRate += sku.runningRate;
         if (state.lastUpdate == 0) {
             state.lastUpdate = uint40(block.timestamp);
@@ -249,6 +251,7 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
         AccountState storage state = accountState[account];
         SKUAppCounts storage counts = accountSKUCounts[account][skuId];
 
+        state.totalVMCount--;
         if (isRunning) {
             state.totalRunningRate -= sku.runningRate;
             counts.runningCount--;
@@ -535,5 +538,23 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
 
         // Future periods have no charges
         return (0, false);
+    }
+
+    /**
+     * @notice Get the count of active resources for an account
+     * @param account The account to check
+     * @return The number of active VM instances (running + stopped)
+     */
+    function getActiveResourceCount(address account) public view returns (uint256) {
+        return accountState[account].totalVMCount;
+    }
+
+    /**
+     * @notice Get the timestamp of the last activity for an account
+     * @param account The account to check
+     * @return The timestamp of the last billing-related activity
+     */
+    function getLastActivityTimestamp(address account) public view returns (uint40) {
+        return accountState[account].lastUpdate;
     }
 }

@@ -20,6 +20,7 @@ interface IComputeBilling {
     }
 
     struct AccountState {
+        uint16 totalVMCount; // Total number of VMs (running + stopped)
         uint96 totalRunningRate; // Total rate for running apps
         uint96 totalStoppedRate; // Total rate for stopped apps
         uint40 lastUpdate; // Last time charges were accrued

@@ -14,4 +14,18 @@ interface IBillingModule {
      * @return settled Whether the charges have been settled
      */
     function getChargesForPeriod(address account, uint40 period) external view returns (uint96 amount, bool settled);
+
+    /**
+     * @notice Get the count of active resources for an account
+     * @param account The account to check
+     * @return The number of active resources (e.g. VMs, API keys, etc)
+     */
+    function getActiveResourceCount(address account) external view returns (uint256);
+
+    /**
+     * @notice Get the timestamp of the last activity for an account
+     * @param account The account to check
+     * @return The timestamp of the last billing-related activity
+     */
+    function getLastActivityTimestamp(address account) external view returns (uint40);
 }
