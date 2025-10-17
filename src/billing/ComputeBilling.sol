@@ -384,6 +384,7 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
 
     /**
      * @notice Change billing account for an app
+     * TODO: We need an approval system for billing account transfers to be safe
      */
     function _changeAccount(address app, address oldAccount, address newAccount) internal {
         require(_isAppActive(app), AppNotBilled());

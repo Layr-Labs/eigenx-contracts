@@ -117,6 +117,9 @@ contract AppController is
     {
         UserConfig storage userConfig = _userConfigs[msg.sender];
 
+        // For now, the billing account must be the app creator
+        require(account == msg.sender, InvalidAccount());
+
         // Check global active app limit
         require(globalActiveAppCount < maxGlobalActiveApps, GlobalMaxActiveAppsExceeded());
         // Check user active app limit
@@ -264,6 +267,23 @@ contract AppController is
         config.skuID = newSKUID;
     }
 
+    // TODO: We need an approval system for billing account transfers to be safe
+    // /**
+    //  * @notice Changes the billing account for an app
+    //  * @param app The app to change the billing account for
+    //  * @param newAccount The new billing account address
+    //  * @dev Caller must be permissioned for the AppController
+    //  * @dev App must be active (not terminated)
+    //  */
+    // function changeAppBillingAccount(IApp app, address newAccount) external checkCanCall(address(app)) appIsActive(app) {
+    //     AppConfig storage config = _appConfigs[app];
+
+    //     _changeAccount(address(app), config.account, newAccount);
+
+    //     // Update stored billing account
+    //     config.account = newAccount;
+    // }
+
     /// INTERNAL FUNCTIONS
 
     /**
@@ -382,6 +402,9 @@ contract AppController is
         require(config.skuID == 0, AppAlreadyBilled());
         require(skuID != 0, InvalidSKU());
 
+        // For now, the billing account must be the app creator
+        require(config.creator == account, InvalidAccount());
+
         // Update config
         config.skuID = skuID;
         config.account = account;
@@ -424,22 +447,6 @@ contract AppController is
      */
     function setResourceCap(uint16 vcpuCap, uint16 vmInstanceCap) external checkCanCall(address(this)) {
         _setResourceCap(vcpuCap, vmInstanceCap);
-    }
-
-    /**
-     * @notice Changes the billing account for an app
-     * @param app The app to change the billing account for
-     * @param newAccount The new billing account address
-     * @dev Caller must be permissioned for the AppController
-     * @dev App must be active (not terminated)
-     */
-    function changeAppBillingAccount(IApp app, address newAccount) external appIsActive(app) {
-        AppConfig storage config = _appConfigs[app];
-
-        _changeAccount(address(app), config.account, newAccount);
-
-        // Update stored billing account
-        config.account = newAccount;
     }
 
     /**

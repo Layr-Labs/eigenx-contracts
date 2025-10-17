@@ -19,18 +19,14 @@ Pre-billing apps can be migrated via `enableAppBilling()`:
 - High-value customers: longer grace period or permanent exemption (set `skuID = 0`)
 - Low-value customers: email notice, enable billing after 2-3 months
 
-### 3. Flexible Billing Account Ownership
-App deployer ≠ billing account owner:
+### 3. Decentralized Billing
+App deployer ≠ billing account owner. This enables community-funded apps where payment responsibility is separated from app control.
 
-**Functions**:
 - `createApp(skuID, account)` - deployer specifies billing account upfront
-- `changeAppBillingAccount(app, newAccount)` - transfer app to different account later
+- `changeAppBillingAccount(app, newAccount)` - transfer billing to different account
+- `depositFor(account, amount)` - anyone can fund any account
 
-**Use case - Community-funded apps**:
-- Set billing account to smart contract that allows anyone to deposit
-- Users not vulnerable to dev rug (stop paying) - community can force payment via `depositFor(account, amount)`
-
-**P1 feature**: `depositFor()` allows anyone to pay on behalf of any account.
+**Community-funded pattern**: Set billing account to a smart contract that accepts community deposits. Community can ensure service continues via `depositFor()`, even if original deployer stops participating.
 
 ### 4. Single Account Model
 One billing account pays for all products (Compute, AI, etc.). This is a product decision contingent on technical feasibility.
@@ -192,6 +188,14 @@ Example:
 - Removes billing, frees resources
 - App owner must call `unsuspendApp(app)` after paying debt
 - Checks minimum deposit requirement before restarting
+
+### Withdrawal Policy (TODO)
+
+**Current issue**: Withdrawals are currently allowed while unsettled charges exist, particularly problematic for metered products (AI, usage-based services) where charges accrue but haven't been settled yet.
+
+**Options under consideration**:
+1. **Lock withdrawals** - Require users to unsubscribe from all products AND wait for final billing period settlement before allowing withdrawals
+2. **Remove withdrawals completely** - Simpler implementation but carries UX/legal risks that may not be acceptable to customers who expect access to prepaid funds
 
 ## Key Functions
 
