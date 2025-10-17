@@ -10,16 +10,16 @@ Customers expect the ability to:
 
 ## Core Product Decisions
 
-### USDC Only
-The system uses USDC as the single payment token. Multi-currency support is out of scope.
+### Single Account Per User
+One billing account pays for all products a user consumes (Compute, AI, etc.). This simplifies the experience - one balance to manage, one place to see all spending, easy cross-product cost analysis.
 
 ### Anyone Can Pay for Any App
 Anyone can deposit funds to pay for someone else's app via `depositFor(account, amount)`. To prevent misuse, we use **segmented accounts** - dedicated accounts that can only pay for specific apps and cannot withdraw funds.
 
 This segmentation happens at the account level (not per individual resource) because tracking individual resources in a shared billing contract is too gas-intensive. The infrastructure for this is built but not yet enabled.
 
-### Single Account Per User
-One billing account pays for all products a user consumes (Compute, AI, etc.). This simplifies the experience - one balance to manage, one place to see all spending, easy cross-product cost analysis.
+### USDC Only
+The system uses USDC as the single payment token. Multi-currency support is out of scope.
 
 ## System Architecture
 
