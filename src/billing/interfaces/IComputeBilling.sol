@@ -39,12 +39,11 @@ interface IComputeBilling {
     // Events
     // ============================================================================
 
-    event AppStarted(address indexed app, address indexed account, uint16 skuId, uint96 rate);
-    event AppStopped(address indexed app, address indexed account);
-    event AppSettled(address indexed app, uint96 amount, uint40 period);
-    event AppStateChanged(address indexed app, bool isRunning, uint96 newRate);
-    event AppTerminated(address indexed app);
-    event SKURatesSet(uint16 indexed skuID, string name, uint96 runningRate, uint96 stoppedRate, uint16 vcpus);
+    event BillingStarted(address indexed app, address indexed account, uint16 skuId, uint96 rate);
+    event BillingSettled(address indexed account, uint96 amount, uint40 period);
+    event BillingRateChanged(address indexed app, bool isRunning, uint96 newRate);
+    event BillingRemoved(address indexed app);
+    event SKURatesSet(uint16 indexed skuID, uint40 effectivePeriod, string name, uint96 runningRate, uint96 stoppedRate, uint16 vcpus);
     event ResourceCapSet(uint16 vcpuCap, uint16 vmInstanceCap);
 
     // ============================================================================

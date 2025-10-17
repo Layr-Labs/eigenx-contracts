@@ -240,6 +240,13 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
     }
 
     /**
+     * @notice Check if an account is suspended
+     */
+    function isAccountSuspended(address account) external view returns (bool) {
+        return accounts[account].suspended;
+    }
+
+    /**
      * @notice Get effective balance after accounting for outstanding charges
      * @param account The account to query
      * @return result Comprehensive balance data including outstanding charges breakdown

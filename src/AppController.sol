@@ -34,8 +34,10 @@ contract AppController is
 
     /// @notice Modifier to ensure app is not in the given status
     modifier appIsActive(IApp app) {
-        require(_appConfigs[app].status != AppStatus.TERMINATED, InvalidAppStatus());
-        require(_appConfigs[app].status != AppStatus.NONE, InvalidAppStatus());
+        AppStatus status = _appConfigs[app].status;
+        require(status != AppStatus.TERMINATED, InvalidAppStatus());
+        require(status != AppStatus.NONE, InvalidAppStatus());
+        require(status != AppStatus.SUSPENDED, InvalidAppStatus());
         _;
     }
 
@@ -221,6 +223,45 @@ contract AppController is
         emit AppTerminatedByAdmin(app);
     }
 
+    /**
+     * @notice Unsuspends a suspended app after billing issues are resolved
+     * @param app The app to unsuspend
+     * @dev Caller must be permissioned for the app (app admin can call)
+     * @dev Restarts billing and sets app to STARTED state
+     */
+    function unsuspendApp(IApp app) external checkCanCall(address(app)) {
+        AppConfig storage config = _appConfigs[app];
+        require(config.status == AppStatus.SUSPENDED, InvalidAppStatus());
+
+        // Check that account has paid their debt
+        require(!billing.isAccountSuspended(config.account), AccountStillSuspended());
+
+        // Restart billing in STARTED state (same as createApp)
+        if (config.skuID != 0) {
+            _startBilling(address(app), config.skuID, config.account);
+        }
+
+        config.status = AppStatus.STARTED;
+        emit AppUnsuspended(app);
+    }
+
+    /**
+     * @notice Changes the SKU for an app
+     * @param app The app to change the SKU for
+     * @param newSKUID The new SKU identifier
+     * @dev Caller must be permissioned for the AppController
+     * @dev App must be active (not terminated)
+     */
+    function changeAppSKU(IApp app, uint16 newSKUID) external checkCanCall(address(app)) appIsActive(app) {
+        AppConfig storage config = _appConfigs[app];
+        bool isRunning = (config.status == AppStatus.STARTED);
+
+        _changeSKU(address(app), config.account, config.skuID, newSKUID, isRunning);
+
+        // Update stored SKU
+        config.skuID = newSKUID;
+    }
+
     /// INTERNAL FUNCTIONS
 
     /**
@@ -249,7 +290,7 @@ contract AppController is
      */
     function _isAppActive(address app) internal view override returns (bool) {
         AppStatus status = _appConfigs[IApp(app)].status;
-        return status != AppStatus.TERMINATED && status != AppStatus.NONE;
+        return status != AppStatus.TERMINATED && status != AppStatus.NONE && status != AppStatus.SUSPENDED;
     }
 
     /**
@@ -343,14 +384,10 @@ contract AppController is
         config.skuID = skuID;
         config.account = account;
 
-        // Start billing based on current app state
-        if (config.status == AppStatus.STARTED) {
-            _startBilling(address(app), skuID, account);
-        } else if (config.status == AppStatus.STOPPED) {
-            // For stopped apps, we need to register them with the stopped rate
-            // First "start" billing (which registers with running rate)
-            _startBilling(address(app), skuID, account);
-            // Then immediately switch to stopped rate
+        _startBilling(address(app), skuID, account);
+
+        // Set stopped rate if app is stopped
+        if (config.status == AppStatus.STOPPED) {
             _setStoppedRate(address(app), account);
         }
     }
@@ -382,23 +419,6 @@ contract AppController is
     }
 
     /**
-     * @notice Changes the SKU for an app
-     * @param app The app to change the SKU for
-     * @param newSKUID The new SKU identifier
-     * @dev Caller must be permissioned for the AppController
-     * @dev App must be active (not terminated)
-     */
-    function changeAppSKU(IApp app, uint16 newSKUID) external checkCanCall(address(app)) appIsActive(app) {
-        AppConfig storage config = _appConfigs[app];
-        bool isRunning = (config.status == AppStatus.STARTED);
-
-        _changeSKU(address(app), config.account, config.skuID, newSKUID, isRunning);
-
-        // Update stored SKU
-        config.skuID = newSKUID;
-    }
-
-    /**
      * @notice Changes the billing account for an app
      * @param app The app to change the billing account for
      * @param newAccount The new billing account address
@@ -407,7 +427,6 @@ contract AppController is
      */
     function changeAppBillingAccount(IApp app, address newAccount)
         external
-        checkCanCall(address(this))
         appIsActive(app)
     {
         AppConfig storage config = _appConfigs[app];
@@ -416,6 +435,23 @@ contract AppController is
 
         // Update stored billing account
         config.account = newAccount;
+    }
+
+    /**
+     * @notice Suspends an app due to billing issues
+     * @param app The app to suspend
+     * @dev Caller must be permissioned for the AppController (platform admin only)
+     * @dev Removes billing completely and frees resources
+     */
+    function suspendApp(IApp app) external checkCanCall(address(this)) appIsActive(app) {
+        // Remove billing completely (frees resources, stops charges)
+        AppConfig storage config = _appConfigs[app];
+        if (config.skuID != 0) {
+            _removeBilling(address(app), config.account, config.skuID);
+        }
+
+        config.status = AppStatus.SUSPENDED;
+        emit AppSuspended(app);
     }
 
     /// VIEW FUNCTIONS

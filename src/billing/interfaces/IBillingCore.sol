@@ -93,5 +93,6 @@ interface IBillingCore {
     function setRevenueRecipient(uint8 productId, address recipient) external;
     function genesisTime() external view returns (uint40);
     function getBalance(address account) external view returns (int96);
+    function isAccountSuspended(address account) external view returns (bool);
     function getEffectiveBalance(address account) external view returns (EffectiveBalance memory);
 }

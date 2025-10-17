@@ -27,6 +27,9 @@ interface IAppController {
     /// @notice Thrown when global maximum active app limit has been reached
     error GlobalMaxActiveAppsExceeded();
 
+    /// @notice Thrown when trying to resume an app but billing account is still suspended
+    error AccountStillSuspended();
+
     /// @notice Emitted when a new app is successfully created
     event AppCreated(address indexed creator, IApp indexed app, uint32 operatorSetId);
 
@@ -45,6 +48,12 @@ interface IAppController {
     /// @notice Emitted when an app is terminated by admin
     event AppTerminatedByAdmin(IApp indexed app);
 
+    /// @notice Emitted when an app is suspended due to billing issues
+    event AppSuspended(IApp indexed app);
+
+    /// @notice Emitted when a suspended app is unsuspended after payment
+    event AppUnsuspended(IApp indexed app);
+
     /// @notice Emitted when the maximum active apps limit is set for an address
     event MaxActiveAppsSet(address indexed user, uint32 limit);
 
@@ -58,8 +67,8 @@ interface IAppController {
         NONE, // App has not been created yet
         STARTED, // App is has been started
         STOPPED, // App is has been stopped but can be restarted
-        TERMINATED // App is permanently terminated
-
+        TERMINATED, // App is permanently terminated
+        SUSPENDED // App is suspended due to billing issues
     }
 
     /**

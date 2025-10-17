@@ -64,7 +64,7 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
 
         skuChangeEffectivePeriod[skuID] = nextPeriod;
 
-        emit SKURatesSet(skuID, name, runningRate, stoppedRate, vcpus);
+        emit SKURatesSet(skuID, nextPeriod, name, runningRate, stoppedRate, vcpus);
     }
 
     /**
@@ -186,7 +186,7 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
         // Update rate
         billing_.totalRate += sku.runningRate;
 
-        emit AppStarted(app, account, skuID, sku.runningRate);
+        emit BillingStarted(app, account, skuID, sku.runningRate);
     }
 
     /**
@@ -212,7 +212,7 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
         AccountBilling storage billing_ = accountBilling[account];
         billing_.totalRate = billing_.totalRate - sku.stoppedRate + sku.runningRate;
 
-        emit AppStateChanged(app, true, sku.runningRate);
+        emit BillingRateChanged(app, true, sku.runningRate);
     }
 
     /**
@@ -238,7 +238,7 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
         AccountBilling storage billing_ = accountBilling[account];
         billing_.totalRate = billing_.totalRate - sku.runningRate + sku.stoppedRate;
 
-        emit AppStateChanged(app, false, sku.stoppedRate);
+        emit BillingRateChanged(app, false, sku.stoppedRate);
     }
 
     /**
@@ -273,7 +273,7 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
             _removeSKUFromAccount(account, skuID);
         }
 
-        emit AppTerminated(app);
+        emit BillingRemoved(app);
     }
 
     /**
@@ -418,7 +418,7 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
         uint40 lastSettledPeriod = billing.getPeriodForTimestamp(lastSettled);
         uint40 genesisTime = billing.genesisTime();
 
-        // OPTIMIZATION 1: Handle same period (most common case)
+        // Handle same period (most common case)
         if (currentPeriod == lastSettledPeriod) {
             uint40 periodStart = uint40(DateTimeLib.addMonths(genesisTime, currentPeriod));
             uint40 periodEnd = uint40(DateTimeLib.addMonths(genesisTime, currentPeriod + 1));
@@ -427,10 +427,10 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
 
             if (amount > 0) {
                 billing.chargePeriod(account, amount, currentPeriod);
-                emit AppSettled(account, amount, currentPeriod);
+                emit BillingSettled(account, amount, currentPeriod);
             }
         }
-        // OPTIMIZATION 2: Handle crossing one period boundary (common case)
+        // Handle crossing one period boundary (common case)
         else if (currentPeriod == lastSettledPeriod + 1) {
             // Charge for time in last period
             uint40 lastPeriodStart = uint40(DateTimeLib.addMonths(genesisTime, lastSettledPeriod));
@@ -440,7 +440,7 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
                 _calculateChargesInPeriod(lastSettled, currentTime, rate, lastPeriodStart, lastPeriodEnd);
             if (lastPeriodAmount > 0) {
                 billing.chargePeriod(account, lastPeriodAmount, lastSettledPeriod);
-                emit AppSettled(account, lastPeriodAmount, lastSettledPeriod);
+                emit BillingSettled(account, lastPeriodAmount, lastSettledPeriod);
             }
 
             // Charge for time in current period
@@ -451,10 +451,10 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
                 _calculateChargesInPeriod(lastSettled, currentTime, rate, currentPeriodStart, currentPeriodEnd);
             if (currentPeriodAmount > 0) {
                 billing.chargePeriod(account, currentPeriodAmount, currentPeriod);
-                emit AppSettled(account, currentPeriodAmount, currentPeriod);
+                emit BillingSettled(account, currentPeriodAmount, currentPeriod);
             }
         }
-        // OPTIMIZATION 3: Handle multiple periods (rare case, optimized)
+        // Handle multiple periods (rare case)
         else {
             _settleMultiplePeriods(
                 account, rate, lastSettled, currentTime, lastSettledPeriod, currentPeriod, genesisTime
@@ -486,7 +486,7 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
 
             if (periodAmount > 0) {
                 billing.chargePeriod(account, periodAmount, period);
-                emit AppSettled(account, periodAmount, period);
+                emit BillingSettled(account, periodAmount, period);
             }
         }
     }
