@@ -3,22 +3,15 @@ pragma solidity ^0.8.27;
 
 /**
  * @title IBillingModule
- * @notice Interface for billing modules to expose charges for a period
- * @dev Products can implement this interface to allow BillingCore to query charges
+ * @notice Interface implemented by all billing modules
  */
 interface IBillingModule {
     /**
-     * @notice Get charges for an account in a specific period
+     * @notice Get charges for a specific period
      * @param account The account to query
-     * @param period The period to query charges for
-     * @return amount The total charges for this period (whether or not charged to BillingCore yet)
+     * @param period The period to query
+     * @return amount The charges for this period
+     * @return settled Whether the charges have been settled
      */
-    function getChargesForPeriod(address account, uint40 period) external view returns (uint96 amount);
-
-    /**
-     * @notice Get total outstanding charges that have not been charged to BillingCore yet
-     * @param account The account to query
-     * @return amount The total charges accumulated but not yet charged to BillingCore
-     */
-    function getOutstandingCharges(address account) external view returns (uint96 amount);
+    function getChargesForPeriod(address account, uint40 period) external view returns (uint96 amount, bool settled);
 }

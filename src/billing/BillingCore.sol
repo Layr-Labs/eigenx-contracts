@@ -5,49 +5,46 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Initializable} from "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
 import {OwnableUpgradeable} from "@openzeppelin-upgrades/contracts/access/OwnableUpgradeable.sol";
-import {DateTimeLib} from "solady/utils/DateTimeLib.sol";
-import {IBillingCore} from "./interfaces/IBillingCore.sol";
 import {IBillingModule} from "./interfaces/IBillingModule.sol";
+import {IBillingCore} from "./interfaces/IBillingCore.sol";
+import {DateTimeLib} from "solady/utils/DateTimeLib.sol";
 
 /**
  * @title BillingCore
  * @notice Central billing system for multi-product usage tracking and payment
+ * @dev All products use the same settlement pattern: accumulate then settle by period
  */
 contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
     using SafeERC20 for IERC20;
 
     // ============================================================================
-    // Immutables & State Variables
+    // State
     // ============================================================================
 
     IERC20 public immutable paymentToken;
     uint40 public immutable genesisTime;
 
-    mapping(address account => Account) public accounts;
-    mapping(uint8 productId => Product) public products;
-    mapping(address module => uint8) public productIds;
-    mapping(address account => mapping(uint8 productId => mapping(uint40 period => uint96))) public settledCharges;
+    mapping(address => Account) public accounts;
+    mapping(uint8 => Product) public products;
+    mapping(address => uint8) public moduleToProductId;
 
     uint8 public nextProductId;
 
     // ============================================================================
-    // Constructor & Initializer
+    // Constructor & Initialization
     // ============================================================================
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(address _token) {
+        _disableInitializers();
+
         paymentToken = IERC20(_token);
         genesisTime = uint40(block.timestamp);
-        _disableInitializers();
     }
 
-    /**
-     * @notice Initialize the BillingCore contract
-     * @param _owner The owner address for the contract
-     */
     function initialize(address _owner) external initializer {
         _transferOwnership(_owner);
-        nextProductId = 1;
+        nextProductId = 1; // Start at 1, 0 means unknown
     }
 
     // ============================================================================
@@ -55,179 +52,172 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
     // ============================================================================
 
     /**
-     * @notice Get current period based on calendar months elapsed since genesis
+     * @notice Get current period (months since genesis)
      */
     function getCurrentPeriod() public view returns (uint40) {
-        return getPeriodForTimestamp(uint40(block.timestamp));
+        return uint40(DateTimeLib.diffMonths(genesisTime, block.timestamp));
     }
 
     /**
-     * @notice Get the period for a specific timestamp
-     * @param timestamp The timestamp to calculate the period for
-     * @return The period number (months since genesis)
+     * @notice Get period for a specific timestamp
      */
     function getPeriodForTimestamp(uint40 timestamp) public view returns (uint40) {
         if (timestamp < genesisTime) return 0;
-        return uint40(DateTimeLib.diffMonths(genesisTime, uint256(timestamp)));
+        return uint40(DateTimeLib.diffMonths(genesisTime, timestamp));
+    }
+
+    /**
+     * @notice Get start and end timestamps for a period
+     */
+    function getPeriodBounds(uint40 period) public view returns (uint40 start, uint40 end) {
+        start = uint40(DateTimeLib.addMonths(genesisTime, period));
+        end = uint40(DateTimeLib.addMonths(genesisTime, period + 1));
     }
 
     // ============================================================================
-    // Customer Functions
+    // Account Management
     // ============================================================================
 
     /**
-     * @notice Deposit tokens to account
+     * @notice Deposit tokens to your account
      */
     function deposit(uint96 amount) external {
+        require(amount != 0, ZeroAmount());
         _deposit(msg.sender, msg.sender, amount);
     }
 
     /**
-     * @notice Deposit tokens for another account
+     * @notice Deposit tokens to another account
      */
     function depositFor(address account, uint96 amount) external {
+        require(amount != 0, ZeroAmount());
+        require(account != address(0), InvalidAddress());
         _deposit(msg.sender, account, amount);
     }
 
     /**
-     * @notice Withdraw tokens from account
+     * @notice Withdraw tokens from your account
      */
     function withdraw(uint96 amount) external {
-        Account storage account = accounts[msg.sender];
+        require(amount != 0, ZeroAmount());
 
-        require(!account.suspended, AccountIsSuspended());
-        require(account.balance >= int96(amount), InsufficientBalance());
+        Account storage acc = accounts[msg.sender];
+        require(!acc.suspended, AccountIsSuspended());
+        require(acc.balance >= int96(amount), InsufficientBalance());
 
-        account.balance -= int96(amount);
-        account.lastActivity = uint40(block.timestamp);
+        acc.balance -= int96(amount);
 
         paymentToken.safeTransfer(msg.sender, amount);
         emit Withdrawal(msg.sender, amount);
     }
 
     // ============================================================================
-    // Product Functions
+    // Product Management
     // ============================================================================
 
     /**
      * @notice Register a new product/service
      */
-    function registerProduct(string calldata name, address module) external onlyOwner returns (uint8) {
-        require(productIds[module] == 0, AlreadyRegistered());
+    function registerProduct(string calldata name, address module) external onlyOwner returns (uint8 productId) {
+        require(module != address(0), InvalidAddress());
+        require(moduleToProductId[module] == 0, ModuleAlreadyRegistered());
 
-        uint8 id = nextProductId++;
-        products[id] = Product({
+        productId = nextProductId++;
+
+        products[productId] = Product({
             name: name,
-            billingModule: module,
+            module: module,
             revenueRecipient: address(0),
             unclaimedRevenue: 0,
-            isActive: true
+            active: true
         });
-        productIds[module] = id;
 
-        emit ProductRegistered(id, name, module);
-        return id;
+        moduleToProductId[module] = productId;
+
+        emit ProductRegistered(productId, name, module);
     }
 
     /**
-     * @notice Set the revenue recipient address for a product
-     * @param productId The product ID
-     * @param recipient The address that will receive withdrawn revenue
+     * @notice Set revenue recipient for a product
      */
     function setRevenueRecipient(uint8 productId, address recipient) external onlyOwner {
-        require(productId > 0 && productId < nextProductId, UnknownProduct());
+        require(productId != 0 && productId < nextProductId, UnknownProduct());
         products[productId].revenueRecipient = recipient;
-
-        emit RevenueRecipientSet(productId, recipient);
     }
 
     /**
-     * @notice Charge an account for product usage (attributes to current period)
-     * @param account The account to charge
-     * @param amount The amount to charge
-     * @return fullyPaid Whether the full amount was paid
+     * @notice Withdraw revenue for a product
      */
-    function charge(address account, uint96 amount) external returns (bool fullyPaid) {
-        return chargePeriod(account, amount, getCurrentPeriod());
+    function withdrawRevenue(uint8 productId) external {
+        require(productId != 0 && productId < nextProductId, UnknownProduct());
+
+        Product storage product = products[productId];
+        require(product.revenueRecipient != address(0), NoRevenueRecipient());
+
+        uint96 amount = product.unclaimedRevenue;
+        require(amount != 0, ZeroAmount());
+
+        product.unclaimedRevenue = 0;
+        paymentToken.safeTransfer(product.revenueRecipient, amount);
     }
 
     /**
-     * @notice Charge an account for product usage in a specific period
-     * @param account The account to charge
-     * @param amount The amount to charge
-     * @param period The period to attribute the charge to
-     * @return fullyPaid Whether the full amount was paid
+     * @notice Deactivate a product
      */
-    function chargePeriod(address account, uint96 amount, uint40 period) public returns (bool fullyPaid) {
-        uint8 productId = productIds[msg.sender];
+    function deactivateProduct(uint8 productId) external onlyOwner {
+        products[productId].active = false;
+    }
+
+    // ============================================================================
+    // Charging
+    // ============================================================================
+
+    /**
+     * @notice Charge an account for a specific period
+     * @dev Called by billing modules during settlement
+     * @param account Account to charge
+     * @param amount Amount to charge
+     * @param period Period this charge belongs to
+     * @return success Whether account had sufficient balance
+     */
+    function chargePeriod(address account, uint96 amount, uint40 period) external returns (bool success) {
+        if (amount == 0) return true; // No-op for zero charges
+
+        uint8 productId = moduleToProductId[msg.sender];
         require(productId != 0, UnknownProduct());
-        require(products[productId].isActive, ProductInactive());
-        require(period <= getCurrentPeriod(), CannotChargeFuturePeriods());
+
+        // Periods must be in the past (already completed)
+        require(period < getCurrentPeriod(), InvalidPeriod());
 
         Account storage acc = accounts[account];
 
-        // Calculate what can actually be paid
-        uint96 actualPaid;
-        int96 newBalance = acc.balance - int96(amount);
+        // Always charge the full amount (allow negative balance)
+        acc.balance -= int96(amount);
+        acc.totalSpent += amount;
 
-        if (acc.balance >= int96(amount)) {
-            // Full payment
-            actualPaid = amount;
-            fullyPaid = true;
-        } else if (acc.balance > 0) {
-            // Partial payment (use remaining balance)
-            actualPaid = uint96(acc.balance);
-            fullyPaid = false;
-        } else {
-            // No payment (already in debt)
-            actualPaid = 0;
-            fullyPaid = false;
-        }
+        // Track revenue
+        products[productId].unclaimedRevenue += amount;
 
-        // Update account
-        acc.balance = newBalance;
-        acc.lastActivity = uint40(block.timestamp);
+        // Update suspension status
+        bool wasSuspended = acc.suspended;
+        acc.suspended = acc.balance < 0;
 
-        // Track actual payment
-        if (actualPaid > 0) {
-            acc.totalSpent += actualPaid;
-            products[productId].unclaimedRevenue += actualPaid;
-            settledCharges[account][productId][period] += actualPaid;
-            emit Charge(account, productId, actualPaid, period);
-        }
-
-        // Handle suspension
-        if (!fullyPaid && !acc.suspended) {
-            acc.suspended = true;
+        // Emit suspension event if status changed
+        if (!wasSuspended && acc.suspended) {
             emit AccountSuspended(account);
         }
 
-        // Emit debt event if debt increased
-        if (!fullyPaid) {
-            uint96 debtIncurred = amount - actualPaid;
-            emit DebtIncurred(account, debtIncurred);
-        }
+        // Emit charge event with all relevant data
+        emit PeriodCharge(
+            account,
+            productId,
+            period,
+            amount,
+            acc.balance,
+            acc.suspended
+        );
 
-        return fullyPaid;
-    }
-
-    /**
-     * @notice Withdraw all revenue for a product to its configured recipient
-     * @dev Anyone can call this function to push revenue to the recipient
-     * @param productId The product ID to withdraw revenue for
-     */
-    function withdrawRevenue(uint8 productId) external {
-        require(productId > 0 && productId < nextProductId, UnknownProduct());
-
-        Product storage product = products[productId];
-        require(product.revenueRecipient != address(0), "No revenue recipient set");
-        require(product.unclaimedRevenue > 0, InsufficientRevenue());
-
-        uint96 amount = product.unclaimedRevenue;
-        product.unclaimedRevenue = 0;
-
-        paymentToken.safeTransfer(product.revenueRecipient, amount);
-        emit RevenueWithdrawn(productId, product.revenueRecipient, amount);
+        return acc.balance >= 0;
     }
 
     // ============================================================================
@@ -235,96 +225,68 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
     // ============================================================================
 
     /**
-     * @notice Get account's actual balance (can be negative if the account is in debt)
+     * @notice Get account balance
      */
     function getBalance(address account) external view returns (int96) {
         return accounts[account].balance;
     }
 
     /**
-     * @notice Check if an account is suspended
+     * @notice Check if account is suspended
      */
     function isAccountSuspended(address account) external view returns (bool) {
         return accounts[account].suspended;
     }
 
     /**
-     * @notice Get effective balance after accounting for outstanding charges
-     * @param account The account to query
-     * @return result Comprehensive balance data including outstanding charges breakdown
+     * @notice Get account details
      */
-    function getEffectiveBalance(address account) external view returns (EffectiveBalance memory result) {
-        result.balance = accounts[account].balance;
-
-        uint8 productCount = nextProductId - 1;
-        result.breakdown = new ProductOutstanding[](productCount);
-
-        // Query each product for outstanding charges
-        for (uint8 i = 0; i < productCount; i++) {
-            uint8 id = i + 1;
-            Product storage product = products[id];
-
-            uint96 outstanding = 0;
-            if (product.billingModule != address(0)) {
-                outstanding = IBillingModule(product.billingModule).getOutstandingCharges(account);
-            }
-
-            result.breakdown[i] = ProductOutstanding({productId: id, productName: product.name, outstanding: outstanding});
-
-            result.outstandingCharges += outstanding;
-        }
-
-        // Calculate effective balance
-        result.effectiveBalance = result.balance - int96(result.outstandingCharges);
-        result.willCoverCharges = result.effectiveBalance >= 0;
+    function getAccount(address account) external view returns (
+        int96 balance,
+        uint96 totalSpent,
+        bool suspended
+    ) {
+        Account memory acc = accounts[account];
+        return (acc.balance, acc.totalSpent, acc.suspended);
     }
 
     /**
-     * @notice Get accrued charges (settled + unsettled) for an account across all products for a specific period
-     * @dev Queries each billing module for their reported charges for the period
+     * @notice Get product details
+     */
+    function getProduct(uint8 productId) external view returns (
+        string memory name,
+        address module,
+        address revenueRecipient,
+        uint96 unclaimedRevenue,
+        bool active
+    ) {
+        Product memory product = products[productId];
+        return (product.name, product.module, product.revenueRecipient, product.unclaimedRevenue, product.active);
+    }
+
+    /**
+     * @notice Get all charges for a specific period (settled and pending)
      * @param account The account to query
      * @param period The period to query
-     * @return charges Array of charges broken down by product
+     * @return charges Array of charges
      */
-    function getAccruedChargesForPeriod(address account, uint40 period)
-        external
-        view
-        returns (ProductCharges[] memory charges)
-    {
+    function getChargesForPeriod(address account, uint40 period) external view returns (ProductCharges[] memory charges) {
         uint8 productCount = nextProductId - 1;
         charges = new ProductCharges[](productCount);
 
         for (uint8 i = 0; i < productCount; i++) {
             uint8 id = i + 1;
+            Product memory product = products[id];
 
-            Product storage product = products[id];
-            charges[i] = ProductCharges({
-                productId: id,
-                productName: product.name,
-                amount: IBillingModule(product.billingModule).getChargesForPeriod(account, period)
-            });
-        }
-    }
-
-    /**
-     * @notice Get breakdown of settled charges by product for a period
-     * @dev Returns what has actually been paid/settled for the period
-     */
-    function getSettledChargesForPeriod(address account, uint40 period)
-        external
-        view
-        returns (uint8[] memory productIds_, string[] memory productNames, uint96[] memory amounts)
-    {
-        uint8 productCount = nextProductId - 1;
-        productIds_ = new uint8[](productCount);
-        productNames = new string[](productCount);
-        amounts = new uint96[](productCount);
-
-        for (uint8 i = 0; i < productCount; i++) {
-            uint8 id = i + 1;
-            productIds_[i] = id;
-            productNames[i] = products[id].name;
-            amounts[i] = settledCharges[account][id][period];
+            if (product.module != address(0) && product.active) {
+                (uint96 amount, bool isSettled) = IBillingModule(product.module).getChargesForPeriod(account, period);
+                charges[i] = ProductCharges({
+                    productId: id,
+                    productName: product.name,
+                    amount: amount,
+                    settled: isSettled
+                });
+            }
         }
     }
 
@@ -332,19 +294,14 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
     // Internal Functions
     // ============================================================================
 
-    /**
-     * @notice Internal deposit logic
-     */
     function _deposit(address from, address to, uint96 amount) internal {
-        Account storage account = accounts[to];
+        Account storage acc = accounts[to];
 
-        int96 previousBalance = account.balance;
-        account.balance += int96(amount);
-        account.lastActivity = uint40(block.timestamp);
+        acc.balance += int96(amount);
 
-        // Auto-unsuspend if debt is paid off
-        if (previousBalance < 0 && account.balance >= 0 && account.suspended) {
-            account.suspended = false;
+        // Auto-resume if balance becomes positive
+        if (acc.suspended && acc.balance >= 0) {
+            acc.suspended = false;
             emit AccountResumed(to);
         }
 
@@ -356,10 +313,5 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
     // Storage Gap
     // ============================================================================
 
-    /**
-     * @dev This empty reserved space is put in place to allow future versions to add new
-     * variables without shifting down storage in the inheritance chain.
-     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-     */
     uint256[50] private __gap;
 }

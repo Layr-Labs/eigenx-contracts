@@ -176,7 +176,7 @@ contract AppController is
         // Start billing for the app if billing is enabled (apps start in STARTED state)
         if (skuID != 0) {
             _requireMinimumDeposit(account, skuID);
-            _startBilling(address(app), skuID, account);
+            _startBilling(address(app), account, skuID);
         }
     }
 
@@ -196,7 +196,7 @@ contract AppController is
 
         // If transitioning from STOPPED to STARTED and billing is enabled, update billing rate
         if (config.skuID != 0 && config.status == AppStatus.STOPPED) {
-            _setRunningRate(address(app), config.account);
+            _setRunningRate(address(app), config.account, config.skuID);
         }
 
         _startApp(app);
@@ -210,7 +210,7 @@ contract AppController is
 
         // Update billing rate to stopped rate if billing is enabled
         if (config.skuID != 0) {
-            _setStoppedRate(address(app), config.account);
+            _setStoppedRate(address(app), config.account, config.skuID);
         }
 
         emit AppStopped(app);
@@ -238,12 +238,12 @@ contract AppController is
         require(config.status == AppStatus.SUSPENDED, InvalidAppStatus());
 
         // Check that account has paid their debt
-        require(!billing.isAccountSuspended(config.account), AccountStillSuspended());
+        require(!billingCore.isAccountSuspended(config.account), AccountStillSuspended());
 
         // Restart billing in STARTED state (same as createApp)
         if (config.skuID != 0) {
             _requireMinimumDeposit(config.account, config.skuID);
-            _startBilling(address(app), config.skuID, config.account);
+            _startBilling(address(app), config.account, config.skuID);
         }
 
         config.status = AppStatus.STARTED;
@@ -259,12 +259,23 @@ contract AppController is
      */
     function changeAppSKU(IApp app, uint16 newSKUID) external checkCanCall(address(app)) appIsActive(app) {
         AppConfig storage config = _appConfigs[app];
-        bool isRunning = (config.status == AppStatus.STARTED);
+        require(config.skuID != 0, InvalidSKU());
+        require(newSKUID != 0, InvalidSKU());
 
-        _changeSKU(address(app), config.account, config.skuID, newSKUID, isRunning);
+        // Remove billing with old SKU
+        _removeBilling(address(app), config.account, config.skuID);
 
         // Update stored SKU
         config.skuID = newSKUID;
+
+        // Start billing with new SKU
+        _requireMinimumDeposit(config.account, newSKUID);
+        _startBilling(address(app), config.account, newSKUID);
+
+        // If app is stopped, update to stopped rate
+        if (config.status == AppStatus.STOPPED) {
+            _setStoppedRate(address(app), config.account, newSKUID);
+        }
     }
 
     // TODO: We need an approval system for billing account transfers to be safe
@@ -410,16 +421,16 @@ contract AppController is
         config.account = account;
 
         _requireMinimumDeposit(account, skuID);
-        _startBilling(address(app), skuID, account);
+        _startBilling(address(app), account, skuID);
 
         // Set stopped rate if app is stopped
         if (config.status == AppStatus.STOPPED) {
-            _setStoppedRate(address(app), account);
+            _setStoppedRate(address(app), account, skuID);
         }
     }
 
     /**
-     * @notice Sets the billing rates and resource requirements for a SKU
+     * @notice Adds a new SKU with billing rates and resource requirements
      * @param skuID The SKU identifier
      * @param name The human-readable name for the SKU (e.g., "n1-standard-2")
      * @param runningRate The cost per second when app is running
@@ -427,8 +438,9 @@ contract AppController is
      * @param vcpus The number of virtual CPUs required
      * @param minimumDeposit The minimum effective balance required to use this SKU
      * @dev Caller must be permissioned for the AppController
+     * @dev SKU must not already exist (use updateSKURate for existing SKUs)
      */
-    function setSKURate(
+    function addSKU(
         uint16 skuID,
         string calldata name,
         uint96 runningRate,
@@ -436,7 +448,29 @@ contract AppController is
         uint16 vcpus,
         uint96 minimumDeposit
     ) external checkCanCall(address(this)) {
-        _setSKURate(skuID, name, runningRate, stoppedRate, vcpus, minimumDeposit);
+        _addSKU(skuID, name, runningRate, stoppedRate, vcpus, minimumDeposit);
+    }
+
+    /**
+     * @notice Updates an existing SKU's billing rates and resource requirements
+     * @param skuID The SKU identifier
+     * @param name The human-readable name for the SKU (e.g., "n1-standard-2")
+     * @param runningRate The cost per second when app is running
+     * @param stoppedRate The cost per second when app is stopped
+     * @param vcpus The number of virtual CPUs required
+     * @param minimumDeposit The minimum effective balance required to use this SKU
+     * @dev Caller must be permissioned for the AppController
+     * @dev Changes take effect at the next period boundary
+     */
+    function updateSKU(
+        uint16 skuID,
+        string calldata name,
+        uint96 runningRate,
+        uint96 stoppedRate,
+        uint16 vcpus,
+        uint96 minimumDeposit
+    ) external checkCanCall(address(this)) {
+        _updateSKU(skuID, name, runningRate, stoppedRate, vcpus, minimumDeposit);
     }
 
     /**

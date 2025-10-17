@@ -1,132 +1,40 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.27;
 
-import {IBillingCore} from "./interfaces/IBillingCore.sol";
+import {BillingCore} from "./BillingCore.sol";
 import {IBillingModule} from "./interfaces/IBillingModule.sol";
 import {IUsageBilling} from "./interfaces/IUsageBilling.sol";
 
 /**
  * @title UsageBilling
- * @notice Billing for metered usage that accumulates token costs over a period
+ * @notice Usage-based billing with period settlement
+ * @dev Records usage events and settles by period
  */
-abstract contract UsageBilling is IUsageBilling, IBillingModule {
-    IBillingCore public immutable billing;
-
+abstract contract UsageBilling is IBillingModule, IUsageBilling {
     // ============================================================================
     // State
     // ============================================================================
 
-    // Period-specific usage tracking
-    mapping(address account => mapping(uint40 period => PeriodData)) public periodData;
+    BillingCore public immutable billingCore;
 
-    address public usageReporter; // Authorized to report usage costs
-
-    // ============================================================================
-    // Constructor
-    // ============================================================================
-
-    constructor(address _billing) {
-        billing = IBillingCore(_billing);
-    }
+    mapping(address => mapping(uint40 => PeriodUsage)) public periodUsage;
+    mapping(address => bool) public usageReporters;
 
     // ============================================================================
     // Modifiers
     // ============================================================================
 
     modifier onlyReporter() {
-        require(msg.sender == usageReporter, NotAuthorized());
+        require(usageReporters[msg.sender], UnauthorizedReporter());
         _;
     }
 
     // ============================================================================
-    // Usage Recording
+    // Constructor
     // ============================================================================
 
-    /**
-     * @notice Record usage for a specific period
-     * @param account The account to record usage for
-     * @param amount The total usage amount for this period
-     * @param period The period this usage belongs to
-     */
-    function recordUsage(address account, uint96 amount, uint40 period) external onlyReporter {
-        require(!periodData[account][period].settled, PeriodAlreadySettled());
-        require(period <= billing.getCurrentPeriod(), CannotRecordFutureUsage());
-
-        // Track usage for the specific period
-        periodData[account][period].amount = amount;
-
-        emit UsageRecorded(account, amount, period);
-    }
-
-    /**
-     * @notice Record usage for multiple accounts in a specific period
-     * @param accounts Array of account addresses
-     * @param amounts Array of total usage amounts for this period
-     * @param period The period this usage belongs to
-     */
-    function recordBatch(address[] calldata accounts, uint96[] calldata amounts, uint40 period) external onlyReporter {
-        require(accounts.length == amounts.length, LengthMismatch());
-        require(period <= billing.getCurrentPeriod(), CannotRecordFutureUsage());
-
-        for (uint256 i = 0; i < accounts.length; i++) {
-            if (!periodData[accounts[i]][period].settled) {
-                periodData[accounts[i]][period].amount = amounts[i];
-                emit UsageRecorded(accounts[i], amounts[i], period);
-            }
-        }
-    }
-
-    // ============================================================================
-    // Period Finalization and Settlement
-    // ============================================================================
-
-    /**
-     * @notice Settle a period for an account with final usage amount
-     * @param account The account to settle
-     * @param period The period to settle
-     * @param finalAmount The final usage amount for this period
-     */
-    function settlePeriod(address account, uint40 period, uint96 finalAmount) external onlyReporter {
-        require(period < billing.getCurrentPeriod(), CannotSettleCurrentOrFuturePeriods());
-        require(!periodData[account][period].settled, PeriodAlreadySettled());
-
-        // Set the final amount for this period (overwrites any previous recording)
-        periodData[account][period].amount = finalAmount;
-
-        // Automatically charge and mark as settled
-        if (finalAmount > 0) {
-            billing.chargePeriod(account, finalAmount, period);
-        }
-
-        periodData[account][period].settled = true;
-        emit PeriodSettled(account, period, finalAmount);
-    }
-
-    /**
-     * @notice Settle multiple accounts for a period
-     * @param accounts Array of accounts
-     * @param period The period to settle
-     * @param amounts Final usage amounts for each account
-     */
-    function settlePeriodBatch(address[] calldata accounts, uint40 period, uint96[] calldata amounts)
-        external
-        onlyReporter
-    {
-        require(accounts.length == amounts.length, LengthMismatch());
-        require(period < billing.getCurrentPeriod(), CannotSettleCurrentOrFuturePeriods());
-
-        for (uint256 i = 0; i < accounts.length; i++) {
-            if (!periodData[accounts[i]][period].settled) {
-                periodData[accounts[i]][period].amount = amounts[i];
-
-                if (amounts[i] > 0) {
-                    billing.chargePeriod(accounts[i], amounts[i], period);
-                }
-
-                periodData[accounts[i]][period].settled = true;
-                emit PeriodSettled(accounts[i], period, amounts[i]);
-            }
-        }
+    constructor(address _billingCore) {
+        billingCore = BillingCore(_billingCore);
     }
 
     // ============================================================================
@@ -134,11 +42,112 @@ abstract contract UsageBilling is IUsageBilling, IBillingModule {
     // ============================================================================
 
     /**
-     * @notice Set the authorized usage reporter
+     * @notice Set usage reporter authorization
      */
-    function _setUsageReporter(address reporter) internal {
-        usageReporter = reporter;
+    function _setUsageReporter(address reporter, bool authorized) internal {
+        usageReporters[reporter] = authorized;
         emit UsageReporterSet(reporter);
+    }
+
+    // ============================================================================
+    // Usage Recording
+    // ============================================================================
+
+    /**
+     * @notice Record usage for an account in the current period
+     * @dev Accumulates with existing usage
+     */
+    function recordUsage(address account, uint96 amount) external onlyReporter {
+        uint40 currentPeriod = billingCore.getCurrentPeriod();
+        _recordUsageForPeriod(account, amount, currentPeriod);
+    }
+
+    /**
+     * @notice Record usage for a specific period
+     * @dev Can record for current or past periods until settled
+     */
+    function recordUsageForPeriod(address account, uint96 amount, uint40 period) external onlyReporter {
+        require(period <= billingCore.getCurrentPeriod(), InvalidPeriod());
+        _recordUsageForPeriod(account, amount, period);
+    }
+
+    /**
+     * @notice Batch record usage for multiple accounts
+     */
+    function recordUsageBatch(
+        address[] calldata accounts,
+        uint96[] calldata amounts,
+        uint40 period
+    ) external onlyReporter {
+        require(period <= billingCore.getCurrentPeriod(), InvalidPeriod());
+        require(accounts.length == amounts.length, InvalidAmount());
+
+        for (uint256 i = 0; i < accounts.length; i++) {
+            _recordUsageForPeriod(accounts[i], amounts[i], period);
+        }
+    }
+
+    /**
+     * @notice Internal usage recording
+     */
+    function _recordUsageForPeriod(address account, uint96 amount, uint40 period) internal {
+        PeriodUsage storage usage = periodUsage[account][period];
+
+        // Cannot modify after settlement
+        require(!usage.settled, PeriodAlreadySettled());
+
+        // Accumulate usage
+        usage.amount += amount;
+
+        emit UsageRecorded(account, amount, period);
+    }
+
+    // ============================================================================
+    // Period Settlement
+    // ============================================================================
+
+    /**
+     * @notice Settle usage charges for a specific period
+     * @dev Called at period end, same as compute billing
+     */
+    function settlePeriod(address account, uint40 period) external onlyReporter {
+        _settlePeriod(account, period);
+    }
+
+    /**
+     * @notice Batch settle multiple accounts
+     */
+    function settlePeriodBatch(address[] calldata accounts, uint40 period) external onlyReporter {
+        require(period < billingCore.getCurrentPeriod(), InvalidPeriod());
+
+        for (uint256 i = 0; i < accounts.length; i++) {
+            if (!periodUsage[accounts[i]][period].settled) {
+                _settlePeriod(accounts[i], period);
+            }
+        }
+    }
+
+    /**
+     * @notice Internal settlement logic
+     */
+    function _settlePeriod(address account, uint40 period) internal {
+        require(period < billingCore.getCurrentPeriod(), InvalidPeriod());
+
+        PeriodUsage storage usage = periodUsage[account][period];
+        require(!usage.settled, PeriodAlreadySettled());
+
+        uint96 amount = usage.amount;
+
+        // Charge through BillingCore
+        if (amount > 0) {
+            billingCore.chargePeriod(account, amount, period);
+        }
+
+        // Mark as settled
+        usage.settled = true;
+        usage.settledAt = uint40(block.timestamp);
+
+        emit PeriodSettled(account, period, amount);
     }
 
     // ============================================================================
@@ -146,46 +155,53 @@ abstract contract UsageBilling is IUsageBilling, IBillingModule {
     // ============================================================================
 
     /**
-     * @notice Check if a period is settled for an account
+     * @notice Get usage for a specific period
+     */
+    function getUsageForPeriod(address account, uint40 period) external view returns (
+        uint96 amount,
+        bool settled,
+        uint40 settledAt
+    ) {
+        PeriodUsage memory usage = periodUsage[account][period];
+        return (usage.amount, usage.settled, usage.settledAt);
+    }
+
+    /**
+     * @notice Get total unsettled usage across all periods
+     */
+    function getUnsettledUsage(address account) external view returns (uint96 total) {
+        uint40 currentPeriod = billingCore.getCurrentPeriod();
+
+        // Look back through recent periods for unsettled usage
+        // In practice, you'd limit how far back to look
+        for (uint40 period = currentPeriod; period >= 0; period--) {
+            PeriodUsage memory usage = periodUsage[account][period];
+
+            if (!usage.settled && usage.amount > 0) {
+                total += usage.amount;
+            }
+
+            // Prevent underflow and limit lookback
+            if (period == 0 || period < currentPeriod - 12) break; // Max 12 months lookback
+        }
+    }
+
+    /**
+     * @notice Check if a period is settled
      */
     function isPeriodSettled(address account, uint40 period) external view returns (bool) {
-        return periodData[account][period].settled;
+        return periodUsage[account][period].settled;
     }
 
     /**
-     * @notice Get charges for an account in a specific period (IBillingModule interface)
+     * @notice Get charges for a specific period
      * @param account The account to query
-     * @param period The period to query charges for
-     * @return amount Recorded usage amount for that period (whether or not settled)
+     * @param period The period to query
+     * @return amount The usage charges for this period
+     * @return settled Whether the charges have been settled to BillingCore
      */
-    function getChargesForPeriod(address account, uint40 period) external view override returns (uint96 amount) {
-        return periodData[account][period].amount;
-    }
-
-    /**
-     * @notice Get total outstanding charges not yet charged to BillingCore (IBillingModule interface)
-     * @param account The account to query
-     * @return amount Total charges across all unsettled periods
-     */
-    function getOutstandingCharges(address account) external view override returns (uint96 amount) {
-        uint40 currentPeriod = billing.getCurrentPeriod();
-
-        // Work backward from current period until we hit a settled period
-        // This is more efficient as we only iterate through recent unsettled periods
-        for (uint40 period = currentPeriod; period >= 0; period--) {
-            PeriodData storage data = periodData[account][period];
-
-            if (data.settled) {
-                // Stop when we hit a settled period
-                break;
-            }
-
-            if (data.amount > 0) {
-                amount += data.amount;
-            }
-
-            // Prevent underflow on period = 0
-            if (period == 0) break;
-        }
+    function getChargesForPeriod(address account, uint40 period) external view returns (uint96 amount, bool settled) {
+        PeriodUsage memory usage = periodUsage[account][period];
+        return (usage.amount, usage.settled);
     }
 }

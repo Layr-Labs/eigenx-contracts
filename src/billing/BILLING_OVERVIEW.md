@@ -13,13 +13,7 @@ Customers want to:
 ### 1. Payments in USDC Only
 The system uses a single payment token (USDC) hardcoded at deployment. Adding multiple currencies is complex and out of scope.
 
-### 2. Graceful Migration from Free Tier
-Pre-billing apps can be migrated via `enableAppBilling()`:
-- Admin enables billing per-app basis
-- High-value customers: longer grace period or permanent exemption (set `skuID = 0`)
-- Low-value customers: email notice, enable billing after 2-3 months
-
-### 3. Anyone Can Pay for Any App
+### 2. Anyone Can Pay for Any App
 Anyone can deposit funds to pay for someone else's app via `depositFor(account, amount)`.
 
 **Why segmented accounts matter**: Without restrictions, depositing to an account means the owner could:
@@ -40,20 +34,20 @@ This segmentation happens at the **account level** (not resource level) because 
 **Example flow**:
 1. Alice deploys app, bills to herself: `createApp(skuID, aliceAddress)`
 2. App uses Compute + AI → both charge Alice's account
-3. Admin transfers app to restricted account: `enableAppBilling(app, skuID, restrictedAccount)`
+3. Admin transfers app to restricted account for community funding
 4. All products now charge the restricted account
 5. Community calls `depositFor(restrictedAccount, amount)` - funds locked to that app only
 
-### 4. Single Account Model
+### 3. Single Account Model
 One billing account pays for all products (Compute, AI, etc.). This is a product decision contingent on technical feasibility.
 
 **Rationale**:
 - Simplifies customer experience: one balance, one view of spending
 - Enables cross-product cost analysis (see spending distribution)
-- Single `getEffectiveBalance()` call shows position across all services
+- Single balance check shows position across all services
 - Reduces cognitive load vs managing multiple accounts per product
 
-**Technical enabler**: Hub-and-spoke architecture allows multiple product modules to charge the same account via `BillingCore.charge()`.
+**Technical enabler**: Hub-and-spoke architecture allows multiple product modules to charge the same account via `BillingCore.chargePeriod()`.
 
 ## System Architecture
 
@@ -63,14 +57,27 @@ One billing account pays for all products (Compute, AI, etc.). This is a product
 - Single source of truth for accounts and balances
 - Each account has one `int96 balance` (positive = credit, negative = debt)
 - Tracks all registered products (Compute = Product 1, AI = Product 2, etc.)
-- Stores settled charges per account, per product, per period
 - Provides period calculation (calendar months from genesis)
+- Accepts charges from product modules
 
 **Product Modules (Spokes):**
-- `ComputeBilling`: Time-based - continuous accrual, auto-settlement
-- `UsageBilling`: Metered - discrete events, admin-triggered settlement
-- Each module calls `BillingCore.charge()` to deduct from account balance
+- `ComputeBilling`: Time-based continuous accrual with period settlement
+- `UsageBilling`: Metered discrete events with period settlement
+- Each module calls `BillingCore.chargePeriod()` to deduct from account balance
 - Multiple products can charge the same account
+
+### Unified Settlement Pattern
+
+Both ComputeBilling and UsageBilling use the same settlement pattern:
+1. **Accumulate** charges during the period
+2. **Settle** at period end (monthly)
+3. **Charge** BillingCore for the period
+
+This unified approach provides:
+- Predictable monthly billing cycles
+- Consistent behavior across all products
+- Event-based period attribution for analytics
+- Efficient batch settlement operations
 
 ### Key Data Structures
 
@@ -78,8 +85,7 @@ One billing account pays for all products (Compute, AI, etc.). This is a product
 ```solidity
 struct Account {
     int96 balance;        // Can go negative (debt)
-    uint96 totalSpent;
-    uint40 lastActivity;
+    uint96 totalSpent;    // Lifetime spending
     bool suspended;       // True when balance < 0
 }
 ```
@@ -88,21 +94,33 @@ struct Account {
 ```solidity
 struct Product {
     string name;
-    address billingModule;      // ComputeBilling, UsageBilling, etc.
-    address revenueRecipient;
-    uint96 unclaimedRevenue;
-    bool isActive;
+    address module;            // ComputeBilling, UsageBilling, etc.
+    address revenueRecipient;  // Where revenue goes
+    uint96 unclaimedRevenue;   // Revenue waiting to be claimed
+    bool active;
 }
 ```
 
 **SKU (for Compute products):**
 ```solidity
 struct SKU {
-    uint96 runningRate;      // tokens/second
-    uint96 stoppedRate;      // tokens/second
-    uint16 vcpus;
-    uint96 minimumDeposit;   // prevents instant suspension
-    string description;
+    uint96 runningRate;      // tokens/second when app is running
+    uint96 stoppedRate;      // tokens/second when app is stopped
+    uint16 vcpus;            // vCPUs required for resource tracking
+    uint96 minimumDeposit;   // Prevents instant suspension
+    string name;
+    bool active;
+}
+```
+
+**AccountState (for Compute billing):**
+```solidity
+struct AccountState {
+    uint96 totalRunningRate;  // Sum of all running app rates
+    uint96 totalStoppedRate;  // Sum of all stopped app rates
+    uint40 lastUpdate;        // Last time charges were accrued
+    uint96 accruedCharges;    // Charges waiting to be settled
+    uint40 chargesStartTime;  // When current charges started accumulating
 }
 ```
 
@@ -110,150 +128,276 @@ struct SKU {
 
 #### 1. Predict Costs
 
-**Effective Balance** = balance - outstanding charges across ALL products
-
+**Current charges:**
 ```solidity
-getEffectiveBalance(account) → {
-    balance,
-    outstandingCharges,    // sum from all products
-    effectiveBalance,      // balance - outstanding
-    willCoverCharges,
-    breakdown[]            // per-product outstanding
-}
+getOutstandingCharges(account) → uint96  // For ComputeBilling
+getUnsettledUsage(account) → uint96      // For UsageBilling
 ```
 
-BillingCore queries each product module for `getOutstandingCharges(account)`, sums them, and returns breakdown. Customer sees if effective balance covers pending charges before they settle.
+**Period estimates:**
+```solidity
+getChargesForPeriod(account, period) → (amount, settled)
+```
+
+Customers can see accrued charges before they're settled and estimate how long their current balance will last.
 
 #### 2. Per-Product Breakdown
 
-**Settled charges** (historical, stored in BillingCore):
+**Period charges** (queries all product modules):
 ```solidity
-getSettledChargesForPeriod(account, period) → (productIds[], names[], amounts[])
-```
-
-**Accrued charges** (includes unsettled, queries modules):
-```solidity
-getAccruedChargesForPeriod(account, period) → ProductCharges[] {
-    productId, productName, amount
+getChargesForPeriod(account, period) → ProductCharges[] {
+    productId, productName, amount, settled
 }
 ```
 
-Both return arrays indexed by product. Customer can see: "I spent 80% on Compute (Product 1), 15% on AI (Product 2), etc last month."
+Returns charges for each product for a specific period. Customers can see: "I spent 80% on Compute, 15% on AI, 5% on Storage last month."
 
 **Calendar month periods**: Period 0 = deployment month, Period 1 = next month, etc. Natural accounting alignment.
 
 #### 3. Control Spending
 
 - **Prepaid model**: Deposit upfront, charges deduct automatically
-- **Minimum deposits**: Each SKU requires minimum effective balance (prevents instant suspension)
-- **Debt grace period**: Balance can go negative, service continues, time to add funds
+- **Minimum deposits**: Each SKU requires minimum balance (prevents instant suspension)
+- **Debt tolerance**: Balance can go negative, service continues, time to add funds
 - **Resource caps**: Global vCPU/instance limits prevent overprovisioning
 - **Per-product visibility**: Identify and adjust high-cost products
+- **Account suspension**: When balance < 0, withdrawals blocked but services continue
 
-#### 4. Efficient Rate Updates (Constant Gas)
+#### 4. Efficient Rate Updates
 
-**Problem**: Updating rates for all customers = O(n) gas where n = customer count
+**Period-boundary rate changes** ensure accurate billing and rate stability within periods.
 
-**Solution**: Pending rates + lazy evaluation
-
+When admin updates a SKU rate:
 ```solidity
-setSKURate(skuID, ..., runningRate, stoppedRate, vcpus, minimumDeposit)
+_updateSKU(skuId, name, runningRate, stoppedRate, vcpus, minimumDeposit)
 ```
 
-- Stores new rate in `pendingSKUs[skuID]` with `effectivePeriod = nextPeriod`
-- Gas: O(1) regardless of customer count (no iteration)
-- When customer's next settlement occurs, system checks if pending rate should apply
-- Applied per-customer lazily, not upfront
+- Stores new rate in `pendingSKUs[skuId]` with `effectivePeriod = nextPeriod`
+- Gas cost: O(1) - no customer iteration
+- Applied lazily when each customer's SKU is accessed
+- Guarantees rates are constant within any given period
 
-Example:
-- Admin updates SKU 1 rate at t=0 → 50k gas (constant)
-- 1000 customers using SKU 1
-- Each customer's next settlement applies new rate automatically
-- Total cost amortized across customer operations, not paid upfront by admin
+**Benefits**:
+- Admin pays O(1) gas regardless of customer count
+- Customers never see retroactive rate changes mid-period
+- Accurate period charge calculations
+- Cost amortized across customer operations
+
+**New SKUs** apply immediately via:
+```solidity
+_addSKU(skuId, name, runningRate, stoppedRate, vcpus, minimumDeposit)
+```
 
 ### Two Billing Models
 
 #### ComputeBilling (Time-Based)
 
-- **For**: Continuous services (VMs, containers, persistent apps)
-- **Accrual**: Charges = rate × elapsed time since last settlement
-- **Settlement**: Auto-triggered on app state changes (start, stop, terminate)
-- **Cross-period**: Efficiently attributes charges to correct month even when settling across boundaries
-- **User-triggered**: Settlement happens during app lifecycle operations
+**For**: Continuous services (VMs, containers, persistent apps)
+
+**How it works**:
+1. **Accrual**: Charges accumulate continuously based on time × rate
+   - Running apps: charged at `runningRate` tokens/second
+   - Stopped apps: charged at `stoppedRate` tokens/second (lower)
+2. **Settlement**: At period end, settler calls `settlePeriod(account, period)`
+3. **Charge**: Deducts accumulated charges from BillingCore balance
+
+**Features**:
+- Running/stopped rate differential
+- Resource tracking (vCPU and VM instance caps)
+- Minimum deposit requirements per SKU
+- State transitions update rates automatically
+- Batch settlement for efficiency
+
+**Functions**:
+- `accrueCharges(account)` - Update accrued charges to current time
+- `settlePeriod(account, period)` - Settle a specific period
+- `settlePeriodBatch(accounts[], period)` - Batch settle multiple accounts
+- `getOutstandingCharges(account)` - View accrued but unsettled charges
+- `estimateCurrentPeriodCharges(account)` - Estimate current period
 
 #### UsageBilling (Metered)
 
-- **For**: Event-driven services (API calls, data transfer, function executions)
-- **Recording**: Admin calls `recordUsage(account, amount, period)` as events occur
-- **Settlement**: Admin calls `settlePeriod(account, period)` after period ends
-- **Batch operations**: Can settle multiple accounts at once
-- **Admin-triggered**: Explicit settlement by service provider
+**For**: Event-driven services (API calls, data transfer, function executions)
 
-**Key difference**: ComputeBilling = continuous + user-triggered, UsageBilling = discrete + admin-triggered
+**How it works**:
+1. **Recording**: Admin calls `recordUsage(account, amount)` as events occur
+   - Accumulates in `periodUsage[account][period]`
+2. **Settlement**: At period end, admin calls `settlePeriod(account, period)`
+3. **Charge**: Deducts recorded usage from BillingCore balance
 
-### Account vs App Suspension
+**Features**:
+- Record usage for current or specific periods
+- Cannot modify usage after period is settled
+- Batch recording and settlement
+- Track unsettled usage across periods
 
-**Account suspension (automatic):**
+**Functions**:
+- `recordUsage(account, amount)` - Record usage in current period
+- `recordUsageForPeriod(account, amount, period)` - Record for specific period
+- `recordUsageBatch(accounts[], amounts[], period)` - Batch record
+- `settlePeriod(account, period)` - Settle a specific period
+- `settlePeriodBatch(accounts[], period)` - Batch settle
+- `getUsageForPeriod(account, period)` - View usage details
+- `getUnsettledUsage(account)` - Total unsettled across all periods
+
+**Key difference**: Both use period settlement, but ComputeBilling accrues continuously based on time, while UsageBilling records discrete events.
+
+### Period Management
+
+**Periods** are calendar months since genesis:
+- Period 0 = month of contract deployment
+- Period 1 = following month
+- etc.
+
+**Period functions**:
+```solidity
+getCurrentPeriod() → uint40              // Current period number
+getPeriodForTimestamp(timestamp) → uint40  // Period for specific time
+getPeriodBounds(period) → (start, end)     // Timestamps for period
+```
+
+**Settlement timing**:
+- Periods can only be settled AFTER they end (period < currentPeriod)
+- Typically settled at the beginning of the next period
+- Batch operations enable efficient end-of-month settlement
+
+### Account Suspension
+
+**Automatic suspension:**
 - Triggered when balance < 0
 - Blocks withdrawals only
 - Services continue charging (debt increases)
-- Auto-unsuspends when balance >= 0
+- Auto-resumes when balance >= 0 (via deposit)
 
-**App SUSPENDED state (admin action):**
-- Admin calls `suspendApp(app)` for prolonged non-payment
-- Removes billing, frees resources
-- App owner must call `unsuspendApp(app)` after paying debt
-- Checks minimum deposit requirement before restarting
-
-### Withdrawal Policy (TODO)
-
-**Current issue**: Withdrawals are currently allowed while unsettled charges exist, particularly problematic for metered products (AI, usage-based services) where charges accrue but haven't been settled yet.
-
-**Options under consideration**:
-1. **Lock withdrawals** - Require users to unsubscribe from all products AND wait for final billing period settlement before allowing withdrawals
-2. **Remove withdrawals completely** - Simpler implementation but carries UX/legal risks that may not be acceptable to customers who expect access to prepaid funds
+**No service interruption**: Even with negative balance, apps continue running and accruing charges. This provides customers time to add funds without service disruption.
 
 ## Key Functions
 
 ### For Customers
 
-**Check financial position:**
+**Check balance:**
 ```solidity
-getEffectiveBalance(account) → EffectiveBalance
-getBalance(account) → int96
-isAccountSuspended(account) → bool
+getBalance(account) → int96               // Current balance (can be negative)
+isAccountSuspended(account) → bool        // True if balance < 0
+getAccount(account) → (balance, totalSpent, suspended)
 ```
 
 **View charges:**
 ```solidity
-getAccruedChargesForPeriod(account, period) → ProductCharges[]  // includes unsettled
-getSettledChargesForPeriod(account, period) → (ids[], names[], amounts[])  // historical
+// BillingCore - queries all products
+getChargesForPeriod(account, period) → ProductCharges[]
+
+// ComputeBilling
+getOutstandingCharges(account) → uint96
+getChargesForPeriod(account, period) → (amount, settled)
+estimateCurrentPeriodCharges(account) → uint96
+
+// UsageBilling
+getUsageForPeriod(account, period) → (amount, settled, settledAt)
+getUnsettledUsage(account) → uint96
 ```
 
 **Manage balance:**
 ```solidity
-deposit(amount)
-depositFor(account, amount)
-withdraw(amount)
+deposit(amount)                   // Deposit to your account
+depositFor(account, amount)       // Deposit to another account
+withdraw(amount)                  // Withdraw (blocked if suspended)
 ```
 
-### For Admins
+### For Product Admins
 
-**Update rates (O(1) gas):**
+**Manage SKUs (ComputeBilling):**
 ```solidity
-setSKURate(skuID, name, runningRate, stoppedRate, vcpus, minimumDeposit)
-// Takes effect next period, applied lazily per customer
+// Add new SKU (applies immediately)
+_addSKU(skuId, name, runningRate, stoppedRate, vcpus, minimumDeposit)
+
+// Update existing SKU (applies next period)
+_updateSKU(skuId, name, runningRate, stoppedRate, vcpus, minimumDeposit)
+
+// Set resource limits
+_setResourceCap(vcpuCap, vmInstanceCap)
 ```
+
+**Record usage (UsageBilling):**
+```solidity
+recordUsage(account, amount)                           // Current period
+recordUsageForPeriod(account, amount, period)          // Specific period
+recordUsageBatch(accounts[], amounts[], period)        // Batch
+```
+
+**Settle periods:**
+```solidity
+// ComputeBilling
+settlePeriod(account, period)
+settlePeriodBatch(accounts[], period)
+
+// UsageBilling
+settlePeriod(account, period)
+settlePeriodBatch(accounts[], period)
+```
+
+### For Platform Admins
 
 **Manage products:**
 ```solidity
-registerProduct(name, module) → productId
-setRevenueRecipient(productId, recipient)
-withdrawRevenue(productId)
+registerProduct(name, module) → productId    // Register new product module
+setRevenueRecipient(productId, recipient)    // Set where revenue goes
+withdrawRevenue(productId)                   // Claim revenue
+deactivateProduct(productId)                 // Deactivate product
 ```
 
-**Manage apps:**
+**Authorize settlers/reporters:**
 ```solidity
-suspendApp(app)      // Stop billing, free resources
-setResourceCap(vcpuCap, vmInstanceCap)
+_setSettler(address, authorized)         // ComputeBilling
+_setUsageReporter(address, authorized)   // UsageBilling
 ```
+
+## Production Considerations
+
+### Settlement Automation
+
+Period settlement should be automated with a keeper/cron job:
+
+```solidity
+// End-of-month settlement
+contract BillingSettler {
+    function settleLastPeriod() external {
+        uint40 lastPeriod = billingCore.getCurrentPeriod() - 1;
+
+        // Get active accounts (from indexer/database)
+        address[] memory computeAccounts = getActiveComputeAccounts();
+        address[] memory usageAccounts = getActiveUsageAccounts();
+
+        // Batch settle
+        computeBilling.settlePeriodBatch(computeAccounts, lastPeriod);
+        usageBilling.settlePeriodBatch(usageAccounts, lastPeriod);
+    }
+}
+```
+
+### Event-Based Analytics
+
+All charges emit `PeriodCharge` events with full attribution:
+```solidity
+event PeriodCharge(
+    address indexed account,
+    uint8 indexed productId,
+    uint40 indexed period,
+    uint96 amount,
+    int96 newBalance,
+    bool suspended
+);
+```
+
+These events enable rich analytics via subgraph indexing:
+- Historical spending by period
+- Per-product breakdown
+- Account balance over time
+- Suspension events
+
+### Gas Optimization
+
+**Batch operations**: Settle multiple accounts in single transaction
+**Lazy evaluation**: SKU changes applied only when accessed
+**Event-based reporting**: No complex on-chain storage for period tracking
+**Simple charge logic**: Minimal storage operations per settlement

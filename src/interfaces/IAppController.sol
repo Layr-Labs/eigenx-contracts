@@ -30,6 +30,9 @@ interface IAppController {
     /// @notice Thrown when trying to resume an app but billing account is still suspended
     error AccountStillSuspended();
 
+    /// @notice Thrown when trying to enable billing for an app that already has billing
+    error AppAlreadyBilled();
+
     /// @notice Emitted when a new app is successfully created
     event AppCreated(address indexed creator, IApp indexed app, uint32 operatorSetId);
 

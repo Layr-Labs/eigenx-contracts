@@ -11,38 +11,24 @@ interface IBillingCore {
     // ============================================================================
 
     struct Account {
-        int96 balance; // Positive = credit, Negative = debt
-        uint96 totalSpent;
-        uint40 lastActivity;
-        bool suspended;
+        int96 balance;          // Can go negative (debt)
+        uint96 totalSpent;      // Lifetime spending tracker
+        bool suspended;         // True when balance < 0
     }
 
     struct Product {
         string name;
-        address billingModule;
-        address revenueRecipient;
-        uint96 unclaimedRevenue;
-        bool isActive;
+        address module;         // Billing module address
+        address revenueRecipient; // Who can withdraw revenue
+        uint96 unclaimedRevenue;   // Unclaimed revenue for this product
+        bool active;
     }
 
     struct ProductCharges {
         uint8 productId;
         string productName;
         uint96 amount;
-    }
-
-    struct EffectiveBalance {
-        int96 balance;
-        uint96 outstandingCharges;
-        int96 effectiveBalance;
-        bool willCoverCharges;
-        ProductOutstanding[] breakdown;
-    }
-
-    struct ProductOutstanding {
-        uint8 productId;
-        string productName;
-        uint96 outstanding;
+        bool settled;
     }
 
     // ============================================================================
@@ -51,14 +37,17 @@ interface IBillingCore {
 
     event Deposit(address indexed account, uint96 amount);
     event Withdrawal(address indexed account, uint96 amount);
-    event Charge(address indexed account, uint8 indexed productId, uint96 amount, uint40 period);
+    event PeriodCharge(
+        address indexed account,
+        uint8 indexed productId,
+        uint40 indexed period,
+        uint96 amount,
+        int96 newBalance,
+        bool suspended
+    );
     event ProductRegistered(uint8 indexed productId, string name, address module);
     event AccountSuspended(address indexed account);
     event AccountResumed(address indexed account);
-    event DebtIncurred(address indexed account, uint96 amount);
-    event DebtPaid(address indexed account, uint96 amount);
-    event RevenueRecipientSet(uint8 indexed productId, address indexed recipient);
-    event RevenueWithdrawn(uint8 indexed productId, address indexed recipient, uint96 amount);
 
     // ============================================================================
     // Custom Errors
@@ -66,37 +55,48 @@ interface IBillingCore {
 
     error InsufficientBalance();
     error AccountIsSuspended();
-    error AlreadyRegistered();
     error UnknownProduct();
+    error InvalidPeriod();
+    error ZeroAmount();
+    error InvalidAddress();
+    error ModuleAlreadyRegistered();
     error ProductInactive();
-    error CannotChargeFuturePeriods();
-    error InsufficientRevenue();
-    error NoDebt();
+    error NoRevenueRecipient();
 
     // ============================================================================
     // Functions
     // ============================================================================
 
+    // Account Management
     function deposit(uint96 amount) external;
-    function withdraw(uint96 amount) external;
     function depositFor(address account, uint96 amount) external;
+    function withdraw(uint96 amount) external;
+
+    // Period Management
     function getCurrentPeriod() external view returns (uint40);
     function getPeriodForTimestamp(uint40 timestamp) external view returns (uint40);
-    function getAccruedChargesForPeriod(address account, uint40 period)
-        external
-        view
-        returns (ProductCharges[] memory);
-    function getSettledChargesForPeriod(address account, uint40 period)
-        external
-        view
-        returns (uint8[] memory ids, string[] memory productNames, uint96[] memory amounts);
+    function getPeriodBounds(uint40 period) external view returns (uint40 start, uint40 end);
+
+    // Product Management
     function registerProduct(string calldata name, address module) external returns (uint8);
-    function charge(address account, uint96 amount) external returns (bool);
-    function chargePeriod(address account, uint96 amount, uint40 period) external returns (bool);
-    function withdrawRevenue(uint8 productId) external;
     function setRevenueRecipient(uint8 productId, address recipient) external;
+    function withdrawRevenue(uint8 productId) external;
+    function deactivateProduct(uint8 productId) external;
+
+    // Charging
+    function chargePeriod(address account, uint96 amount, uint40 period) external returns (bool);
+
+    // View Functions
     function genesisTime() external view returns (uint40);
     function getBalance(address account) external view returns (int96);
     function isAccountSuspended(address account) external view returns (bool);
-    function getEffectiveBalance(address account) external view returns (EffectiveBalance memory);
+    function getAccount(address account) external view returns (int96 balance, uint96 totalSpent, bool suspended);
+    function getProduct(uint8 productId) external view returns (
+        string memory name,
+        address module,
+        address revenueRecipient,
+        uint96 unclaimedRevenue,
+        bool active
+    );
+    function getChargesForPeriod(address account, uint40 period) external view returns (ProductCharges[] memory);
 }
