@@ -54,6 +54,9 @@ interface IComputeBilling {
     event RateChanged(address indexed app, address indexed account, uint96 oldRate, uint96 newRate);
     event PeriodSettled(address indexed account, uint40 indexed period, uint96 amount);
     event SKUUpdated(uint16 indexed skuId, string name, uint96 rate);
+    event SettlerAuthorizationChanged(address indexed settler, bool authorized);
+    event ResourceCapUpdated(uint16 vcpuCap, uint16 vmInstanceCap);
+    event SKUChangeApplied(uint16 indexed skuId, uint40 indexed effectivePeriod);
 
     // ============================================================================
     // Custom Errors

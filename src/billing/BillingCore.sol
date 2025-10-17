@@ -123,7 +123,6 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
         require(moduleToProductId[module] == 0, ModuleAlreadyRegistered());
 
         productId = nextProductId++;
-
         products[productId] = Product({
             name: name,
             module: module,
@@ -143,6 +142,8 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
     function setRevenueRecipient(uint8 productId, address recipient) external onlyOwner {
         require(productId != 0 && productId < nextProductId, UnknownProduct());
         products[productId].revenueRecipient = recipient;
+
+        emit RevenueRecipientSet(productId, recipient);
     }
 
     /**
@@ -159,6 +160,8 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
 
         product.unclaimedRevenue = 0;
         paymentToken.safeTransfer(product.revenueRecipient, amount);
+
+        emit RevenueWithdrawn(productId, product.revenueRecipient, amount);
     }
 
     /**
@@ -166,6 +169,7 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
      */
     function deactivateProduct(uint8 productId) external onlyOwner {
         products[productId].active = false;
+        emit ProductDeactivated(productId);
     }
 
     // ============================================================================

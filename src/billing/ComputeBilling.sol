@@ -64,6 +64,7 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
      */
     function _setSettler(address settler, bool authorized) internal {
         settlers[settler] = authorized;
+        emit SettlerAuthorizationChanged(settler, authorized);
     }
 
     /**
@@ -122,9 +123,11 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
     function _applyPendingSKUChanges(uint16 skuId) internal returns (bool changed) {
         uint40 currentPeriod = billingCore.getCurrentPeriod();
         if (skuChangeEffectivePeriod[skuId] > 0 && currentPeriod >= skuChangeEffectivePeriod[skuId]) {
+            uint40 effectivePeriod = skuChangeEffectivePeriod[skuId];
             skus[skuId] = pendingSKUs[skuId];
             delete pendingSKUs[skuId];
             delete skuChangeEffectivePeriod[skuId];
+            emit SKUChangeApplied(skuId, effectivePeriod);
             return true;
         }
         return false;
@@ -144,6 +147,7 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
     function _setResourceCap(uint16 vcpuCap, uint16 vmInstanceCap) internal {
         globalResources.vcpuCap = vcpuCap;
         globalResources.vmInstanceCap = vmInstanceCap;
+        emit ResourceCapUpdated(vcpuCap, vmInstanceCap);
     }
 
     // ============================================================================

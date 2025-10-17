@@ -48,6 +48,9 @@ interface IBillingCore {
     event ProductRegistered(uint8 indexed productId, string name, address module);
     event AccountSuspended(address indexed account);
     event AccountResumed(address indexed account);
+    event RevenueRecipientSet(uint8 indexed productId, address indexed recipient);
+    event RevenueWithdrawn(uint8 indexed productId, address indexed recipient, uint96 amount);
+    event ProductDeactivated(uint8 indexed productId);
 
     // ============================================================================
     // Custom Errors
