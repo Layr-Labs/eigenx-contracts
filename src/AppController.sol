@@ -132,31 +132,10 @@ contract AppController is
         // Assign an operator set ID to the app
         uint32 operatorSetId = computeAVSRegistrar.assignOperatorSetId();
 
-        // Fork based on billing status
-        if (skuID != 0) {
-            // Billing-enabled app: Resource caps are checked in _startBilling, skip allowlist
-            // Publish the initial release metadata URI
-            releaseManager.publishMetadataURI(
-                OperatorSet({avs: address(computeAVSRegistrar), id: operatorSetId}), "https://eigencloud.xyz"
-            );
-        } else {
-            // Non-billing app: Use allowlist-based access control
-            // Publish the initial release metadata URI
-            releaseManager.publishMetadataURI(
-                OperatorSet({avs: address(computeAVSRegistrar), id: operatorSetId}), "https://eigencloud.xyz"
-            );
-
-            // Create the operator set
-            computeAVSRegistrar.createOperatorSet(operatorSetId);
-
-            // Add the compute operator to the allowlist
-            computeAVSRegistrar.addOperatorToAllowlist(
-                OperatorSet({avs: address(computeAVSRegistrar), id: operatorSetId}), address(computeOperator)
-            );
-
-            // Register the compute operator for the operator set
-            computeOperator.registerForOperatorSet(operatorSetId);
-        }
+        // Publish the initial release metadata URI
+        releaseManager.publishMetadataURI(
+            OperatorSet({avs: address(computeAVSRegistrar), id: operatorSetId}), "https://eigencloud.xyz"
+        );
 
         // Create app using BeaconProxy
         app = IApp(Create2.deploy(0, _calculateAppMixedSalt(msg.sender, salt), _calculateAppInitCode(msg.sender)));
