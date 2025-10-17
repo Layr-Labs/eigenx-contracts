@@ -21,6 +21,7 @@ interface IUsageBilling {
 
     event UsageRecorded(address indexed account, uint96 amount, uint40 indexed period);
     event PeriodSettled(address indexed account, uint40 indexed period, uint96 amount);
+    event UsageReporterSet(address indexed reporter);
 
     // ============================================================================
     // Custom Errors

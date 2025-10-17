@@ -47,6 +47,7 @@ abstract contract UsageBilling is IUsageBilling, IBillingModule {
      */
     function _setUsageReporter(address reporter) internal {
         usageReporter = reporter;
+        emit UsageReporterSet(reporter);
     }
 
     // ============================================================================
