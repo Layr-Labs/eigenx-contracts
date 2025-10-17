@@ -31,7 +31,7 @@ Anyone can deposit funds to pay for someone else's app via `depositFor(account, 
 - Cannot withdraw funds
 - Cannot own other apps
 
-This segmentation happens at the **account level** (not resource level) because tracking individual resources (apps, API keys, etc.) in the billing contract is too gas-intensive/complex.
+This segmentation happens at the **account level** (not resource level) because tracking individual resources (apps, API keys, etc.) in a billing contract shared by multiple products is too gas-intensive/complex.
 
 **Implementation options**:
 1. **Smart contract account** - lacks withdrawal and multi-app ownership functions
