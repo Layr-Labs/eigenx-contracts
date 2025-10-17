@@ -19,14 +19,30 @@ Pre-billing apps can be migrated via `enableAppBilling()`:
 - High-value customers: longer grace period or permanent exemption (set `skuID = 0`)
 - Low-value customers: email notice, enable billing after 2-3 months
 
-### 3. Decentralized Billing
-App deployer ≠ billing account owner. This enables community-funded apps where payment responsibility is separated from app control.
+### 3. Anyone Can Pay for Any App
+Anyone can deposit funds to pay for someone else's app via `depositFor(account, amount)`.
 
-- `createApp(skuID, account)` - deployer specifies billing account upfront
-- `changeAppBillingAccount(app, newAccount)` - transfer billing to different account
-- `depositFor(account, amount)` - anyone can fund any account
+**Why segmented accounts matter**: Without restrictions, depositing to an account means the owner could:
+- Withdraw your funds
+- Use them to pay for other apps they own
 
-**Community-funded pattern**: Set billing account to a smart contract that accepts community deposits. Community can ensure service continues via `depositFor()`, even if original deployer stops participating.
+**Solution - Segmented, restricted accounts**: Move apps to dedicated accounts that:
+- Only pay for one specific app
+- Cannot withdraw funds
+- Cannot own other apps
+
+This segmentation happens at the **account level** (not resource level) because tracking individual resources (apps, API keys, etc.) in the billing contract is too gas-intensive/complex.
+
+**Implementation options**:
+1. **Smart contract account** - lacks withdrawal and multi-app ownership functions
+2. **Protocol-level restrictions** - built-in controls on certain account types
+
+**Example flow**:
+1. Alice deploys app, bills to herself: `createApp(skuID, aliceAddress)`
+2. App uses Compute + AI → both charge Alice's account
+3. Admin transfers app to restricted account: `enableAppBilling(app, skuID, restrictedAccount)`
+4. All products now charge the restricted account
+5. Community calls `depositFor(restrictedAccount, amount)` - funds locked to that app only
 
 ### 4. Single Account Model
 One billing account pays for all products (Compute, AI, etc.). This is a product decision contingent on technical feasibility.
@@ -122,7 +138,7 @@ getAccruedChargesForPeriod(account, period) → ProductCharges[] {
 }
 ```
 
-Both return arrays indexed by product. Customer can see: "I spent 80% on Compute (Product 1), 15% on Storage (Product 2), 5% on APIs (Product 3) last month."
+Both return arrays indexed by product. Customer can see: "I spent 80% on Compute (Product 1), 15% on AI (Product 2), etc last month."
 
 **Calendar month periods**: Period 0 = deployment month, Period 1 = next month, etc. Natural accounting alignment.
 
