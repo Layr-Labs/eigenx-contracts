@@ -18,8 +18,8 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
     BillingCore public immutable billingCore;
 
     mapping(uint16 => SKU) public skus;
-    mapping(uint16 => SKU) public pendingSKUs;  // SKU changes waiting for next period
-    mapping(uint16 => uint40) public skuChangeEffectivePeriod;  // When pending changes take effect
+    mapping(uint16 => SKU) public pendingSKUs; // SKU changes waiting for next period
+    mapping(uint16 => uint40) public skuChangeEffectivePeriod; // When pending changes take effect
     mapping(address => AccountState) public accountState;
     mapping(address => mapping(uint16 => SKUAppCounts)) public accountSKUCounts;
     mapping(address => mapping(uint40 => PeriodSettlement)) public settlements;
@@ -336,11 +336,8 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
         }
 
         // Mark as settled
-        settlements[account][period] = PeriodSettlement({
-            settled: true,
-            amount: periodCharges,
-            settledAt: uint40(block.timestamp)
-        });
+        settlements[account][period] =
+            PeriodSettlement({settled: true, amount: periodCharges, settledAt: uint40(block.timestamp)});
 
         emit PeriodSettled(account, period, periodCharges);
     }
@@ -380,11 +377,8 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
             }
         }
 
-        settlements[account][period] = PeriodSettlement({
-            settled: true,
-            amount: periodCharges,
-            settledAt: uint40(block.timestamp)
-        });
+        settlements[account][period] =
+            PeriodSettlement({settled: true, amount: periodCharges, settledAt: uint40(block.timestamp)});
 
         emit PeriodSettled(account, period, periodCharges);
     }
@@ -438,7 +432,9 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
         uint96 outstanding = this.getOutstandingCharges(account);
         int96 effectiveBalance = balance - int96(outstanding);
 
-        require(effectiveBalance >= int96(sku.minimumDeposit), InsufficientDeposit(sku.minimumDeposit, effectiveBalance));
+        require(
+            effectiveBalance >= int96(sku.minimumDeposit), InsufficientDeposit(sku.minimumDeposit, effectiveBalance)
+        );
     }
 
     /**
@@ -469,11 +465,11 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
     /**
      * @notice Get settlement details for a period
      */
-    function getSettlement(address account, uint40 period) external view returns (
-        bool settled,
-        uint96 amount,
-        uint40 settledAt
-    ) {
+    function getSettlement(address account, uint40 period)
+        external
+        view
+        returns (bool settled, uint96 amount, uint40 settledAt)
+    {
         PeriodSettlement memory settlement = settlements[account][period];
         return (settlement.settled, settlement.amount, settlement.settledAt);
     }
@@ -487,7 +483,7 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
         if (totalRate == 0) return 0;
 
         uint40 currentPeriod = billingCore.getCurrentPeriod();
-        (uint40 periodStart, ) = billingCore.getPeriodBounds(currentPeriod);
+        (uint40 periodStart,) = billingCore.getPeriodBounds(currentPeriod);
 
         uint40 startTime = state.lastUpdate > periodStart ? state.lastUpdate : periodStart;
         uint256 elapsed = block.timestamp > startTime ? block.timestamp - startTime : 0;
@@ -498,12 +494,11 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
     /**
      * @notice Get resource usage
      */
-    function getResourceUsage() external view returns (
-        uint16 vcpuUsed,
-        uint16 vcpuCap,
-        uint16 vmInstancesUsed,
-        uint16 vmInstanceCap
-    ) {
+    function getResourceUsage()
+        external
+        view
+        returns (uint16 vcpuUsed, uint16 vcpuCap, uint16 vmInstancesUsed, uint16 vmInstanceCap)
+    {
         return (
             globalResources.vcpuUsed,
             globalResources.vcpuCap,

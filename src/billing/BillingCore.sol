@@ -128,7 +128,8 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
             module: module,
             revenueRecipient: address(0),
             unclaimedRevenue: 0,
-            active: true
+            active: true,
+            deactivatedAtPeriod: 0
         });
 
         moduleToProductId[module] = productId;
@@ -168,8 +169,28 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
      * @notice Deactivate a product
      */
     function deactivateProduct(uint8 productId) external onlyOwner {
-        products[productId].active = false;
-        emit ProductDeactivated(productId);
+        require(productId != 0 && productId < nextProductId, UnknownProduct());
+
+        Product storage product = products[productId];
+        product.active = false;
+        product.deactivatedAtPeriod = getCurrentPeriod();
+
+        emit ProductDeactivated(productId, product.deactivatedAtPeriod);
+    }
+
+    /**
+     * @notice Reactivate a product
+     */
+    function reactivateProduct(uint8 productId) external onlyOwner {
+        require(productId != 0 && productId < nextProductId, UnknownProduct());
+
+        Product storage product = products[productId];
+        require(!product.active, ProductInactive());
+
+        product.active = true;
+        product.deactivatedAtPeriod = 0;
+
+        emit ProductReactivated(productId);
     }
 
     // ============================================================================
@@ -193,6 +214,10 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
         // Periods must be in the past (already completed)
         require(period < getCurrentPeriod(), InvalidPeriod());
 
+        // Check if product was deactivated and period is at or after deactivation
+        Product storage product = products[productId];
+        require(product.deactivatedAtPeriod == 0 || period < product.deactivatedAtPeriod, ProductInactive());
+
         Account storage acc = accounts[account];
 
         // Always charge the full amount (allow negative balance)
@@ -200,7 +225,7 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
         acc.totalSpent += amount;
 
         // Track revenue
-        products[productId].unclaimedRevenue += amount;
+        product.unclaimedRevenue += amount;
 
         // Update suspension status
         bool wasSuspended = acc.suspended;
@@ -212,14 +237,7 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
         }
 
         // Emit charge event with all relevant data
-        emit PeriodCharge(
-            account,
-            productId,
-            period,
-            amount,
-            acc.balance,
-            acc.suspended
-        );
+        emit PeriodCharge(account, productId, period, amount, acc.balance, acc.suspended);
 
         return acc.balance >= 0;
     }
@@ -245,11 +263,7 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
     /**
      * @notice Get account details
      */
-    function getAccount(address account) external view returns (
-        int96 balance,
-        uint96 totalSpent,
-        bool suspended
-    ) {
+    function getAccount(address account) external view returns (int96 balance, uint96 totalSpent, bool suspended) {
         Account memory acc = accounts[account];
         return (acc.balance, acc.totalSpent, acc.suspended);
     }
@@ -257,15 +271,27 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
     /**
      * @notice Get product details
      */
-    function getProduct(uint8 productId) external view returns (
-        string memory name,
-        address module,
-        address revenueRecipient,
-        uint96 unclaimedRevenue,
-        bool active
-    ) {
+    function getProduct(uint8 productId)
+        external
+        view
+        returns (
+            string memory name,
+            address module,
+            address revenueRecipient,
+            uint96 unclaimedRevenue,
+            bool active,
+            uint40 deactivatedAtPeriod
+        )
+    {
         Product memory product = products[productId];
-        return (product.name, product.module, product.revenueRecipient, product.unclaimedRevenue, product.active);
+        return (
+            product.name,
+            product.module,
+            product.revenueRecipient,
+            product.unclaimedRevenue,
+            product.active,
+            product.deactivatedAtPeriod
+        );
     }
 
     /**
@@ -274,7 +300,11 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
      * @param period The period to query
      * @return charges Array of charges
      */
-    function getChargesForPeriod(address account, uint40 period) external view returns (ProductCharges[] memory charges) {
+    function getChargesForPeriod(address account, uint40 period)
+        external
+        view
+        returns (ProductCharges[] memory charges)
+    {
         uint8 productCount = nextProductId - 1;
         charges = new ProductCharges[](productCount);
 
@@ -282,15 +312,8 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
             uint8 id = i + 1;
             Product memory product = products[id];
 
-            if (product.module != address(0) && product.active) {
-                (uint96 amount, bool isSettled) = IBillingModule(product.module).getChargesForPeriod(account, period);
-                charges[i] = ProductCharges({
-                    productId: id,
-                    productName: product.name,
-                    amount: amount,
-                    settled: isSettled
-                });
-            }
+            (uint96 amount, bool isSettled) = IBillingModule(product.module).getChargesForPeriod(account, period);
+            charges[i] = ProductCharges({productId: id, productName: product.name, amount: amount, settled: isSettled});
         }
     }
 

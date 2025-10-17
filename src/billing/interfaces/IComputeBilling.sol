@@ -11,25 +11,25 @@ interface IComputeBilling {
     // ============================================================================
 
     struct SKU {
-        uint96 runningRate;    // Tokens per second when running
-        uint96 stoppedRate;    // Tokens per second when stopped
-        uint16 vcpus;          // vCPUs required
+        uint96 runningRate; // Tokens per second when running
+        uint96 stoppedRate; // Tokens per second when stopped
+        uint16 vcpus; // vCPUs required
         uint96 minimumDeposit; // Minimum deposit to start
         string name;
         bool active;
     }
 
     struct AccountState {
-        uint96 totalRunningRate;  // Total rate for running apps
-        uint96 totalStoppedRate;  // Total rate for stopped apps
-        uint40 lastUpdate;        // Last time charges were accrued
-        uint96 accruedCharges;    // Charges waiting to be settled
-        uint40 chargesStartTime;  // When current accrued charges started accumulating
+        uint96 totalRunningRate; // Total rate for running apps
+        uint96 totalStoppedRate; // Total rate for stopped apps
+        uint40 lastUpdate; // Last time charges were accrued
+        uint96 accruedCharges; // Charges waiting to be settled
+        uint40 chargesStartTime; // When current accrued charges started accumulating
     }
 
     struct SKUAppCounts {
-        uint16 runningCount;    // Number of running apps with this SKU
-        uint16 stoppedCount;    // Number of stopped apps with this SKU
+        uint16 runningCount; // Number of running apps with this SKU
+        uint16 stoppedCount; // Number of stopped apps with this SKU
     }
 
     struct Resources {
@@ -85,16 +85,13 @@ interface IComputeBilling {
     // View Functions
     function getOutstandingCharges(address account) external view returns (uint96);
     function isPeriodSettled(address account, uint40 period) external view returns (bool);
-    function getSettlement(address account, uint40 period) external view returns (
-        bool settled,
-        uint96 amount,
-        uint40 settledAt
-    );
+    function getSettlement(address account, uint40 period)
+        external
+        view
+        returns (bool settled, uint96 amount, uint40 settledAt);
     function estimateCurrentPeriodCharges(address account) external view returns (uint96);
-    function getResourceUsage() external view returns (
-        uint16 vcpuUsed,
-        uint16 vcpuCap,
-        uint16 vmInstancesUsed,
-        uint16 vmInstanceCap
-    );
+    function getResourceUsage()
+        external
+        view
+        returns (uint16 vcpuUsed, uint16 vcpuCap, uint16 vmInstancesUsed, uint16 vmInstanceCap);
 }

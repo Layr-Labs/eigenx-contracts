@@ -11,9 +11,9 @@ interface IUsageBilling {
     // ============================================================================
 
     struct PeriodUsage {
-        uint96 amount;      // Total usage for the period
-        bool settled;       // Whether charges have been sent to BillingCore
-        uint40 settledAt;   // When it was settled
+        uint96 amount; // Total usage for the period
+        bool settled; // Whether charges have been sent to BillingCore
+        uint40 settledAt; // When it was settled
     }
 
     // ============================================================================
@@ -47,11 +47,10 @@ interface IUsageBilling {
     function settlePeriodBatch(address[] calldata accounts, uint40 period) external;
 
     // View Functions
-    function getUsageForPeriod(address account, uint40 period) external view returns (
-        uint96 amount,
-        bool settled,
-        uint40 settledAt
-    );
+    function getUsageForPeriod(address account, uint40 period)
+        external
+        view
+        returns (uint96 amount, bool settled, uint40 settledAt);
     function getUnsettledUsage(address account) external view returns (uint96 total);
     function isPeriodSettled(address account, uint40 period) external view returns (bool);
 }

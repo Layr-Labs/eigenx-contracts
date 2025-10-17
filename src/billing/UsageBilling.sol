@@ -74,11 +74,10 @@ abstract contract UsageBilling is IBillingModule, IUsageBilling {
     /**
      * @notice Batch record usage for multiple accounts
      */
-    function recordUsageBatch(
-        address[] calldata accounts,
-        uint96[] calldata amounts,
-        uint40 period
-    ) external onlyReporter {
+    function recordUsageBatch(address[] calldata accounts, uint96[] calldata amounts, uint40 period)
+        external
+        onlyReporter
+    {
         require(period <= billingCore.getCurrentPeriod(), InvalidPeriod());
         require(accounts.length == amounts.length, InvalidAmount());
 
@@ -157,11 +156,11 @@ abstract contract UsageBilling is IBillingModule, IUsageBilling {
     /**
      * @notice Get usage for a specific period
      */
-    function getUsageForPeriod(address account, uint40 period) external view returns (
-        uint96 amount,
-        bool settled,
-        uint40 settledAt
-    ) {
+    function getUsageForPeriod(address account, uint40 period)
+        external
+        view
+        returns (uint96 amount, bool settled, uint40 settledAt)
+    {
         PeriodUsage memory usage = periodUsage[account][period];
         return (usage.amount, usage.settled, usage.settledAt);
     }

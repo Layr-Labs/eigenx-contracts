@@ -11,17 +11,18 @@ interface IBillingCore {
     // ============================================================================
 
     struct Account {
-        int96 balance;          // Can go negative (debt)
-        uint96 totalSpent;      // Lifetime spending tracker
-        bool suspended;         // True when balance < 0
+        int96 balance; // Can go negative (debt)
+        uint96 totalSpent; // Lifetime spending tracker
+        bool suspended; // True when balance < 0
     }
 
     struct Product {
         string name;
-        address module;         // Billing module address
-        address revenueRecipient; // Who can withdraw revenue
-        uint96 unclaimedRevenue;   // Unclaimed revenue for this product
         bool active;
+        uint40 deactivatedAtPeriod; // Period when deactivated (0 = not deactivated)
+        address module; // Billing module address
+        address revenueRecipient; // Who can withdraw revenue
+        uint96 unclaimedRevenue; // Unclaimed revenue for this product
     }
 
     struct ProductCharges {
@@ -50,7 +51,8 @@ interface IBillingCore {
     event AccountResumed(address indexed account);
     event RevenueRecipientSet(uint8 indexed productId, address indexed recipient);
     event RevenueWithdrawn(uint8 indexed productId, address indexed recipient, uint96 amount);
-    event ProductDeactivated(uint8 indexed productId);
+    event ProductDeactivated(uint8 indexed productId, uint40 indexed deactivatedAtPeriod);
+    event ProductReactivated(uint8 indexed productId);
 
     // ============================================================================
     // Custom Errors
@@ -85,6 +87,7 @@ interface IBillingCore {
     function setRevenueRecipient(uint8 productId, address recipient) external;
     function withdrawRevenue(uint8 productId) external;
     function deactivateProduct(uint8 productId) external;
+    function reactivateProduct(uint8 productId) external;
 
     // Charging
     function chargePeriod(address account, uint96 amount, uint40 period) external returns (bool);
@@ -94,12 +97,16 @@ interface IBillingCore {
     function getBalance(address account) external view returns (int96);
     function isAccountSuspended(address account) external view returns (bool);
     function getAccount(address account) external view returns (int96 balance, uint96 totalSpent, bool suspended);
-    function getProduct(uint8 productId) external view returns (
-        string memory name,
-        address module,
-        address revenueRecipient,
-        uint96 unclaimedRevenue,
-        bool active
-    );
+    function getProduct(uint8 productId)
+        external
+        view
+        returns (
+            string memory name,
+            address module,
+            address revenueRecipient,
+            uint96 unclaimedRevenue,
+            bool active,
+            uint40 deactivatedAtPeriod
+        );
     function getChargesForPeriod(address account, uint40 period) external view returns (ProductCharges[] memory);
 }
