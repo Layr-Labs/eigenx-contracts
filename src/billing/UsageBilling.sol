@@ -39,18 +39,6 @@ abstract contract UsageBilling is IUsageBilling, IBillingModule {
     }
 
     // ============================================================================
-    // Admin Functions
-    // ============================================================================
-
-    /**
-     * @notice Set the authorized usage reporter
-     */
-    function _setUsageReporter(address reporter) internal {
-        usageReporter = reporter;
-        emit UsageReporterSet(reporter);
-    }
-
-    // ============================================================================
     // Usage Recording
     // ============================================================================
 
@@ -139,6 +127,18 @@ abstract contract UsageBilling is IUsageBilling, IBillingModule {
                 emit PeriodSettled(accounts[i], period, amounts[i]);
             }
         }
+    }
+
+    // ============================================================================
+    // Admin Functions
+    // ============================================================================
+
+    /**
+     * @notice Set the authorized usage reporter
+     */
+    function _setUsageReporter(address reporter) internal {
+        usageReporter = reporter;
+        emit UsageReporterSet(reporter);
     }
 
     // ============================================================================

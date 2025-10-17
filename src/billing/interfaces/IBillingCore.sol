@@ -82,7 +82,10 @@ interface IBillingCore {
     function depositFor(address account, uint96 amount) external;
     function getCurrentPeriod() external view returns (uint40);
     function getPeriodForTimestamp(uint40 timestamp) external view returns (uint40);
-    function getAccruedChargesForPeriod(address account, uint40 period) external view returns (ProductCharges[] memory);
+    function getAccruedChargesForPeriod(address account, uint40 period)
+        external
+        view
+        returns (ProductCharges[] memory);
     function getSettledChargesForPeriod(address account, uint40 period)
         external
         view

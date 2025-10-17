@@ -7,9 +7,6 @@ Customers want to:
 1. **Predict costs**: Know if their balance will cover their workload across all products
 2. **See per-product breakdown**: Understand charges per product by time period
 3. **Control spending**: Adjust balance/resources when usage changes
-4. **Efficient rate updates**: Admin rate changes in constant gas regardless of customer count
-
-**Single Account Model**: One billing account pays for usage across all products. The account holder sees aggregated balance and per-product cost breakdowns.
 
 ## Product Decisions
 
@@ -23,14 +20,28 @@ Pre-billing apps can be migrated via `enableAppBilling()`:
 - Low-value customers: email notice, enable billing after 2-3 months
 
 ### 3. Flexible Billing Account Ownership
-App deployer ≠ billing account:
-- `createApp(skuID, account)` - deployer specifies billing account
-- `changeAppBillingAccount(app, newAccount)` - transfer app to different account
-- **Use case**: Set billing account to smart contract that allows anyone to pay
-  - Users not vulnerable to dev rug (stop paying) - community can force payment
-  - Or set to restricted contract for exclusive control
+App deployer ≠ billing account owner:
 
-**P1 feature**: Anyone can call `depositFor(account, amount)` to pay on behalf of others.
+**Functions**:
+- `createApp(skuID, account)` - deployer specifies billing account upfront
+- `changeAppBillingAccount(app, newAccount)` - transfer app to different account later
+
+**Use case - Community-funded apps**:
+- Set billing account to smart contract that allows anyone to deposit
+- Users not vulnerable to dev rug (stop paying) - community can force payment via `depositFor(account, amount)`
+
+**P1 feature**: `depositFor()` allows anyone to pay on behalf of any account.
+
+### 4. Single Account Model
+One billing account pays for all products (Compute, AI, etc.). This is a product decision contingent on technical feasibility.
+
+**Rationale**:
+- Simplifies customer experience: one balance, one view of spending
+- Enables cross-product cost analysis (see spending distribution)
+- Single `getEffectiveBalance()` call shows position across all services
+- Reduces cognitive load vs managing multiple accounts per product
+
+**Technical enabler**: Hub-and-spoke architecture allows multiple product modules to charge the same account via `BillingCore.charge()`.
 
 ## System Architecture
 

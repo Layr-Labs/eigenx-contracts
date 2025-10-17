@@ -49,6 +49,17 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
     }
 
     // ============================================================================
+    // External Functions
+    // ============================================================================
+
+    /**
+     * @notice Public settlement function
+     */
+    function settleAccount(address account) external {
+        _settleAccount(account);
+    }
+
+    // ============================================================================
     // Admin Functions
     // ============================================================================
 
@@ -530,11 +541,41 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
         }
     }
 
+    function _removeSKUFromAccount(address account, uint16 skuId) internal {
+        uint16[] storage skuList = accountSKUs[account];
+        for (uint256 i = 0; i < skuList.length; i++) {
+            if (skuList[i] == skuId) {
+                skuList[i] = skuList[skuList.length - 1];
+                skuList.pop();
+                break;
+            }
+        }
+    }
+
     /**
-     * @notice Public settlement function
+     * @notice Calculate charges that accrued in a specific period window
+     * @param startTime The start of the billing window
+     * @param endTime The end of the billing window
+     * @param rate The rate in effect during this window
+     * @param periodStart The start timestamp of the period
+     * @param periodEnd The end timestamp of the period
+     * @return charges The amount charged during the overlap of billing window and period
      */
-    function settleAccount(address account) external {
-        _settleAccount(account);
+    function _calculateChargesInPeriod(
+        uint40 startTime,
+        uint40 endTime,
+        uint96 rate,
+        uint40 periodStart,
+        uint40 periodEnd
+    ) internal pure returns (uint96 charges) {
+        // Calculate overlap between [startTime, endTime] and [periodStart, periodEnd]
+        uint40 effectiveStart = startTime > periodStart ? startTime : periodStart;
+        uint40 effectiveEnd = endTime < periodEnd ? endTime : periodEnd;
+
+        if (effectiveEnd <= effectiveStart) return 0;
+
+        uint256 timeInPeriod = effectiveEnd - effectiveStart;
+        return uint96(uint256(rate) * timeInPeriod);
     }
 
     // ============================================================================
@@ -601,46 +642,5 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
 
         uint256 elapsed = currentTime - billing_.lastSettled;
         return uint96(uint256(billing_.totalRate) * elapsed);
-    }
-
-    // ============================================================================
-    // Internal Helpers
-    // ============================================================================
-
-    function _removeSKUFromAccount(address account, uint16 skuId) internal {
-        uint16[] storage skuList = accountSKUs[account];
-        for (uint256 i = 0; i < skuList.length; i++) {
-            if (skuList[i] == skuId) {
-                skuList[i] = skuList[skuList.length - 1];
-                skuList.pop();
-                break;
-            }
-        }
-    }
-
-    /**
-     * @notice Calculate charges that accrued in a specific period window
-     * @param startTime The start of the billing window
-     * @param endTime The end of the billing window
-     * @param rate The rate in effect during this window
-     * @param periodStart The start timestamp of the period
-     * @param periodEnd The end timestamp of the period
-     * @return charges The amount charged during the overlap of billing window and period
-     */
-    function _calculateChargesInPeriod(
-        uint40 startTime,
-        uint40 endTime,
-        uint96 rate,
-        uint40 periodStart,
-        uint40 periodEnd
-    ) internal pure returns (uint96 charges) {
-        // Calculate overlap between [startTime, endTime] and [periodStart, periodEnd]
-        uint40 effectiveStart = startTime > periodStart ? startTime : periodStart;
-        uint40 effectiveEnd = endTime < periodEnd ? endTime : periodEnd;
-
-        if (effectiveEnd <= effectiveStart) return 0;
-
-        uint256 timeInPeriod = effectiveEnd - effectiveStart;
-        return uint96(uint256(rate) * timeInPeriod);
     }
 }

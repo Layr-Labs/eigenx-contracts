@@ -433,10 +433,7 @@ contract AppController is
      * @dev Caller must be permissioned for the AppController
      * @dev App must be active (not terminated)
      */
-    function changeAppBillingAccount(IApp app, address newAccount)
-        external
-        appIsActive(app)
-    {
+    function changeAppBillingAccount(IApp app, address newAccount) external appIsActive(app) {
         AppConfig storage config = _appConfigs[app];
 
         _changeAccount(address(app), config.account, newAccount);

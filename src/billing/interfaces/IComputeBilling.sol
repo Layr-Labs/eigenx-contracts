@@ -44,7 +44,9 @@ interface IComputeBilling {
     event BillingSettled(address indexed account, uint96 amount, uint40 period);
     event BillingRateChanged(address indexed app, bool isRunning, uint96 newRate);
     event BillingRemoved(address indexed app);
-    event SKURatesSet(uint16 indexed skuID, uint40 effectivePeriod, string name, uint96 runningRate, uint96 stoppedRate, uint16 vcpus);
+    event SKURatesSet(
+        uint16 indexed skuID, uint40 effectivePeriod, string name, uint96 runningRate, uint96 stoppedRate, uint16 vcpus
+    );
     event ResourceCapSet(uint16 vcpuCap, uint16 vmInstanceCap);
 
     // ============================================================================

@@ -69,6 +69,7 @@ interface IAppController {
         STOPPED, // App is has been stopped but can be restarted
         TERMINATED, // App is permanently terminated
         SUSPENDED // App is suspended due to billing issues
+
     }
 
     /**
