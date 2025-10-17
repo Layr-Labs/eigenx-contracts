@@ -57,6 +57,7 @@ interface IBillingCore {
     event AccountResumed(address indexed account);
     event DebtIncurred(address indexed account, uint96 amount);
     event DebtPaid(address indexed account, uint96 amount);
+    event RevenueRecipientSet(uint8 indexed productId, address indexed recipient);
     event RevenueWithdrawn(uint8 indexed productId, address indexed recipient, uint96 amount);
 
     // ============================================================================

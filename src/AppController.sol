@@ -172,6 +172,7 @@ contract AppController is
 
         // Start billing for the app if billing is enabled (apps start in STARTED state)
         if (skuID != 0) {
+            _requireMinimumDeposit(account, skuID);
             _startBilling(address(app), skuID, account);
         }
     }
@@ -238,6 +239,7 @@ contract AppController is
 
         // Restart billing in STARTED state (same as createApp)
         if (config.skuID != 0) {
+            _requireMinimumDeposit(config.account, config.skuID);
             _startBilling(address(app), config.skuID, config.account);
         }
 
@@ -384,6 +386,7 @@ contract AppController is
         config.skuID = skuID;
         config.account = account;
 
+        _requireMinimumDeposit(account, skuID);
         _startBilling(address(app), skuID, account);
 
         // Set stopped rate if app is stopped
@@ -399,13 +402,18 @@ contract AppController is
      * @param runningRate The cost per second when app is running
      * @param stoppedRate The cost per second when app is stopped
      * @param vcpus The number of virtual CPUs required
+     * @param minimumDeposit The minimum effective balance required to use this SKU
      * @dev Caller must be permissioned for the AppController
      */
-    function setSKURate(uint16 skuID, string calldata name, uint96 runningRate, uint96 stoppedRate, uint16 vcpus)
-        external
-        checkCanCall(address(this))
-    {
-        _setSKURate(skuID, name, runningRate, stoppedRate, vcpus);
+    function setSKURate(
+        uint16 skuID,
+        string calldata name,
+        uint96 runningRate,
+        uint96 stoppedRate,
+        uint16 vcpus,
+        uint96 minimumDeposit
+    ) external checkCanCall(address(this)) {
+        _setSKURate(skuID, name, runningRate, stoppedRate, vcpus, minimumDeposit);
     }
 
     /**

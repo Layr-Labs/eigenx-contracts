@@ -14,6 +14,7 @@ interface IComputeBilling {
         uint96 runningRate;
         uint96 stoppedRate;
         uint16 vcpus;
+        uint96 minimumDeposit;
         string description;
     }
 
@@ -60,6 +61,7 @@ interface IComputeBilling {
     error AlreadyStopped();
     error InvalidNewSKU();
     error InvalidAccount();
+    error InsufficientDepositForSKU(uint96 required, int96 available);
 
     // ============================================================================
     // Functions

@@ -137,6 +137,8 @@ contract BillingCore is Initializable, OwnableUpgradeable, IBillingCore {
     function setRevenueRecipient(uint8 productId, address recipient) external onlyOwner {
         require(productId > 0 && productId < nextProductId, UnknownProduct());
         products[productId].revenueRecipient = recipient;
+
+        emit RevenueRecipientSet(productId, recipient);
     }
 
     /**

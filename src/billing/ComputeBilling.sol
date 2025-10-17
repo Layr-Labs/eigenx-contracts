@@ -55,12 +55,23 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
     /**
      * @notice Set SKU rates (takes effect next period)
      */
-    function _setSKURate(uint16 skuID, string calldata name, uint96 runningRate, uint96 stoppedRate, uint16 vcpus)
-        internal
-    {
+    function _setSKURate(
+        uint16 skuID,
+        string calldata name,
+        uint96 runningRate,
+        uint96 stoppedRate,
+        uint16 vcpus,
+        uint96 minimumDeposit
+    ) internal {
         uint40 nextPeriod = billing.getCurrentPeriod() + 1;
 
-        pendingSKUs[skuID] = SKU({runningRate: runningRate, stoppedRate: stoppedRate, description: name, vcpus: vcpus});
+        pendingSKUs[skuID] = SKU({
+            runningRate: runningRate,
+            stoppedRate: stoppedRate,
+            vcpus: vcpus,
+            minimumDeposit: minimumDeposit,
+            description: name
+        });
 
         skuChangeEffectivePeriod[skuID] = nextPeriod;
 
@@ -74,6 +85,34 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
         globalResources.vcpuCap = vcpuCap;
         globalResources.vmInstanceCap = vmInstanceCap;
         emit ResourceCapSet(vcpuCap, vmInstanceCap);
+    }
+
+    /**
+     * @notice Check if account has sufficient deposit to cover SKU minimum
+     * @param account The billing account to check
+     * @param skuID The SKU ID to check minimum deposit for
+     * @dev Checks effective balance (balance - outstanding charges) against SKU minimum
+     */
+    function _requireMinimumDeposit(address account, uint16 skuID) internal view {
+        SKU memory sku = skus[skuID];
+
+        // Skip check if no minimum required
+        if (sku.minimumDeposit == 0) return;
+
+        // Get current balance
+        int96 balance = billing.getBalance(account);
+
+        // Get outstanding charges for this account
+        uint96 outstanding = getOutstandingCharges(account);
+
+        // Calculate effective balance
+        int96 effectiveBalance = balance - int96(outstanding);
+
+        // Require effective balance meets minimum
+        require(
+            effectiveBalance >= int96(sku.minimumDeposit),
+            InsufficientDepositForSKU(sku.minimumDeposit, effectiveBalance)
+        );
     }
 
     // ============================================================================
@@ -553,7 +592,7 @@ abstract contract ComputeBilling is IComputeBilling, IBillingModule {
      * @param account The account to query
      * @return amount Total charges accumulated since last settlement
      */
-    function getOutstandingCharges(address account) external view override returns (uint96 amount) {
+    function getOutstandingCharges(address account) public view override returns (uint96 amount) {
         AccountBilling memory billing_ = accountBilling[account];
         if (billing_.lastSettled == 0 || billing_.totalRate == 0) return 0;
 
