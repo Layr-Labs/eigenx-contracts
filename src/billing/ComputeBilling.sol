@@ -314,8 +314,11 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
         // First accrue any pending charges
         _accrueCharges(account);
 
-        // Calculate what portion belongs to this period
-        uint96 periodCharges = _calculatePeriodCharges(account, period);
+        // Retrieve the time window (start/end timestamps) for this billing period
+        (uint40 periodStart, uint40 periodEnd) = billingCore.getPeriodBounds(period);
+
+        // Calculate what portion of accrued charges belongs to this period
+        uint96 periodCharges = _calculatePeriodCharges(account, periodStart, periodEnd);
 
         if (periodCharges > 0) {
             // Deduct from accrued charges
@@ -332,7 +335,6 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
             billingCore.chargePeriod(account, periodCharges, period);
 
             // Update charges start time if we've fully settled up to this period
-            (, uint40 periodEnd) = billingCore.getPeriodBounds(period);
             if (state.accruedCharges == 0) {
                 state.chargesStartTime = periodEnd;
             }
@@ -351,9 +353,12 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
     function settlePeriodBatch(address[] calldata accounts, uint40 period) external onlySettler {
         require(period < billingCore.getCurrentPeriod(), InvalidPeriod());
 
+        // Retrieve the time window (start/end timestamps) for this billing period
+        (uint40 periodStart, uint40 periodEnd) = billingCore.getPeriodBounds(period);
+
         for (uint256 i = 0; i < accounts.length; i++) {
             if (!settlements[accounts[i]][period].settled) {
-                _settlePeriodForAccount(accounts[i], period);
+                _settlePeriodForAccount(accounts[i], period, periodStart, periodEnd);
             }
         }
     }
@@ -361,10 +366,10 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
     /**
      * @notice Internal settlement helper
      */
-    function _settlePeriodForAccount(address account, uint40 period) internal {
+    function _settlePeriodForAccount(address account, uint40 period, uint40 periodStart, uint40 periodEnd) internal {
         _accrueCharges(account);
 
-        uint96 periodCharges = _calculatePeriodCharges(account, period);
+        uint96 periodCharges = _calculatePeriodCharges(account, periodStart, periodEnd);
 
         if (periodCharges > 0) {
             AccountState storage state = accountState[account];
@@ -374,7 +379,6 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
             billingCore.chargePeriod(account, toCharge, period);
 
             // Update charges start time if we've fully settled up to this period
-            (, uint40 periodEnd) = billingCore.getPeriodBounds(period);
             if (state.accruedCharges == 0) {
                 state.chargesStartTime = periodEnd;
             }
@@ -389,12 +393,12 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
     /**
      * @notice Calculate charges attributable to a specific period
      * @dev Calculates based on when charges started accumulating
+     * @param account The account to calculate charges for
+     * @param periodStart The start timestamp of the period
+     * @param periodEnd The end timestamp of the period
      */
-    function _calculatePeriodCharges(address account, uint40 period) internal view returns (uint96) {
+    function _calculatePeriodCharges(address account, uint40 periodStart, uint40 periodEnd) internal view returns (uint96) {
         AccountState memory state = accountState[account];
-
-        // Get period bounds
-        (uint40 periodStart, uint40 periodEnd) = billingCore.getPeriodBounds(period);
 
         // No charges if account has no activity
         if (state.lastUpdate == 0 || state.chargesStartTime == 0) return 0;
@@ -528,7 +532,8 @@ abstract contract ComputeBilling is IBillingModule, IComputeBilling {
         // For unsettled periods, calculate the portion of accrued charges for this period
         if (period < billingCore.getCurrentPeriod()) {
             // Calculate what portion of accrued charges belongs to this period
-            return (_calculatePeriodCharges(account, period), false);
+            (uint40 periodStart, uint40 periodEnd) = billingCore.getPeriodBounds(period);
+            return (_calculatePeriodCharges(account, periodStart, periodEnd), false);
         }
 
         // For current period, estimate charges
