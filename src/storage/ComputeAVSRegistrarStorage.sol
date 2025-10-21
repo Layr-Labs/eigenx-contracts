@@ -7,7 +7,6 @@ import {IComputeAVSRegistrar} from "../interfaces/IComputeAVSRegistrar.sol";
 
 abstract contract ComputeAVSRegistrarStorage is IComputeAVSRegistrar {
     /// CONSTANTS & IMMUTABLES
-
     /// @dev The PermissionController contract
     IPermissionController public immutable permissionController;
 

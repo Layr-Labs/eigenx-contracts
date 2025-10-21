@@ -101,7 +101,12 @@ contract ComputeAVSRegistrar is SemVerMixin, AVSRegistrar, Allowlist, ComputeAVS
         address, /* avs */
         uint32[] calldata operatorSetIds,
         bytes calldata data
-    ) external virtual override(AVSRegistrar, IAVSRegistrar) onlyAllocationManager {
+    )
+        external
+        virtual
+        override(AVSRegistrar, IAVSRegistrar)
+        onlyAllocationManager
+    {
         _beforeRegisterOperator(operator, operatorSetIds, data);
 
         _afterRegisterOperator(operator, operatorSetIds, data);

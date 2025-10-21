@@ -83,7 +83,9 @@ contract Parser is Script {
             appController: IAppController(vm.parseJsonAddress(json, ".addresses.appController")),
             appControllerImpl: AppController(vm.parseJsonAddress(json, ".addresses.appControllerImpl")),
             computeAVSRegistrar: IComputeAVSRegistrar(vm.parseJsonAddress(json, ".addresses.computeAVSRegistrar")),
-            computeAVSRegistrarImpl: ComputeAVSRegistrar(vm.parseJsonAddress(json, ".addresses.computeAVSRegistrarImpl")),
+            computeAVSRegistrarImpl: ComputeAVSRegistrar(
+                vm.parseJsonAddress(json, ".addresses.computeAVSRegistrarImpl")
+            ),
             computeOperator: IComputeOperator(vm.parseJsonAddress(json, ".addresses.computeOperator")),
             computeOperatorImpl: ComputeOperator(vm.parseJsonAddress(json, ".addresses.computeOperatorImpl"))
         });

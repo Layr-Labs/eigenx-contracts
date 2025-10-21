@@ -154,8 +154,7 @@ contract ComputeAVSRegistrarTest is ComputeDeployer {
             keccak256("test_app"),
             IAppController.Release({
                 rmsRelease: IReleaseManagerTypes.Release({
-                    artifacts: new IReleaseManagerTypes.Artifact[](1),
-                    upgradeByTime: uint32(block.timestamp + 1 days)
+                    artifacts: new IReleaseManagerTypes.Artifact[](1), upgradeByTime: uint32(block.timestamp + 1 days)
                 }),
                 publicEnv: bytes(""),
                 encryptedEnv: bytes("")

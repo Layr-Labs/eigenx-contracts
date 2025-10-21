@@ -61,7 +61,6 @@ interface IAppController {
         STARTED, // App is has been started
         STOPPED, // App is has been stopped but can be restarted
         TERMINATED // App is permanently terminated
-
     }
 
     /**
