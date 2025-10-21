@@ -50,6 +50,9 @@ interface IAppController {
     /// @notice Emitted when the global maximum active apps limit is set
     event GlobalMaxActiveAppsSet(uint32 limit);
 
+    /// @notice Emitted when an app's metadata URI is updated
+    event AppMetadataURIUpdated(IApp indexed app, string metadataURI);
+
     /**
      * @notice Enum for app status
      */
@@ -130,6 +133,15 @@ interface IAppController {
      * @dev The app must not be AppStatus.TERMINATED
      */
     function upgradeApp(IApp app, Release calldata release) external returns (uint256);
+
+    /**
+     * @notice Updates the metadata URI for an app
+     * @param app The app to update the metadata URI for
+     * @param metadataURI The new metadata URI
+     * @dev Caller must be UAM permissioned for the app
+     * @dev The app must not be AppStatus.TERMINATED
+     */
+    function updateAppMetadataURI(IApp app, string calldata metadataURI) external;
 
     /**
      * @notice Starts an app, which starts the instance backing it

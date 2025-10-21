@@ -13,6 +13,7 @@ contract AppControllerTest is ComputeDeployer {
     // Event definitions for testing
     event AppCreated(address indexed creator, IApp indexed app, uint32 operatorSetId);
     event AppTerminatedByAdmin(IApp indexed app);
+    event AppMetadataURIUpdated(IApp indexed app, string metadataURI);
 
     function setUp() public {
         _deployContracts();
@@ -604,6 +605,52 @@ contract AppControllerTest is ComputeDeployer {
         // Verify active app count decreased
         assertEq(appController.getActiveAppCount(developer), 0);
         assertEq(appController.globalActiveAppCount(), 0);
+    }
+
+    // ========== Metadata URI Tests ==========
+
+    function test_updateAppMetadataURI() public {
+        // Create an app
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("metadata_test"), _assembleRelease());
+        _acceptAppAdmin(app);
+
+        string memory newMetadataURI = "https://example.com/metadata";
+
+        // Expect the AppMetadataURIUpdated event
+        vm.expectEmit(true, false, false, true);
+        emit AppMetadataURIUpdated(app, newMetadataURI);
+
+        // Update metadata URI as app admin
+        vm.prank(developer);
+        appController.updateAppMetadataURI(app, newMetadataURI);
+    }
+
+    function test_updateAppMetadataURI_notAuthorized() public {
+        // Create an app as developer
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("metadata_unauthorized"), _assembleRelease());
+
+        // Try to update metadata as unauthorized user
+        vm.prank(user);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.updateAppMetadataURI(app, "https://example.com/metadata");
+    }
+
+    function test_updateAppMetadataURI_terminatedApp() public {
+        // Create an app
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("metadata_terminated"), _assembleRelease());
+        _acceptAppAdmin(app);
+
+        // Terminate the app
+        vm.prank(developer);
+        appController.terminateApp(app);
+
+        // Try to update metadata on terminated app - should revert
+        vm.prank(developer);
+        vm.expectRevert(abi.encodeWithSelector(IAppController.InvalidAppStatus.selector));
+        appController.updateAppMetadataURI(app, "https://example.com/metadata");
     }
 
     function _assembleRelease() internal view returns (IAppController.Release memory) {
