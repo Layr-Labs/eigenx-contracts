@@ -139,7 +139,6 @@ interface IAppController {
      * @param app The app to update the metadata URI for
      * @param metadataURI The new metadata URI
      * @dev Caller must be UAM permissioned for the app
-     * @dev The app must not be AppStatus.TERMINATED
      */
     function updateAppMetadataURI(IApp app, string calldata metadataURI) external;
 

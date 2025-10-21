@@ -139,11 +139,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// @inheritdoc IAppController
-    function updateAppMetadataURI(IApp app, string calldata metadataURI)
-        external
-        checkCanCall(address(app))
-        appIsActive(app)
-    {
+    function updateAppMetadataURI(IApp app, string calldata metadataURI) external checkCanCall(address(app)) {
         emit AppMetadataURIUpdated(app, metadataURI);
     }
 

@@ -647,10 +647,15 @@ contract AppControllerTest is ComputeDeployer {
         vm.prank(developer);
         appController.terminateApp(app);
 
-        // Try to update metadata on terminated app - should revert
+        string memory newMetadataURI = "https://example.com/metadata";
+
+        // Expect the AppMetadataURIUpdated event (should succeed even for terminated app)
+        vm.expectEmit(true, false, false, true);
+        emit AppMetadataURIUpdated(app, newMetadataURI);
+
+        // Update metadata on terminated app - should succeed now
         vm.prank(developer);
-        vm.expectRevert(abi.encodeWithSelector(IAppController.InvalidAppStatus.selector));
-        appController.updateAppMetadataURI(app, "https://example.com/metadata");
+        appController.updateAppMetadataURI(app, newMetadataURI);
     }
 
     function _assembleRelease() internal view returns (IAppController.Release memory) {
