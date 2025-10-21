@@ -8,7 +8,6 @@ import {IComputeOperator} from "../interfaces/IComputeOperator.sol";
 
 abstract contract ComputeOperatorStorage is IComputeOperator {
     /// CONSTANTS & IMMUTABLES
-
     /// @notice The EigenLayer DelegationManager contract
     IDelegationManager public immutable delegationManager;
 

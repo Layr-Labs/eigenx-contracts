@@ -9,7 +9,8 @@ import {SignatureUtilsMixin} from "@eigenlayer-contracts/src/contracts/mixins/Si
 import {IPermissionController} from "@eigenlayer-contracts/src/contracts/interfaces/IPermissionController.sol";
 import {PermissionControllerMixin} from "@eigenlayer-contracts/src/contracts/mixins/PermissionControllerMixin.sol";
 import {
-    IReleaseManager, IReleaseManagerTypes
+    IReleaseManager,
+    IReleaseManagerTypes
 } from "@eigenlayer-contracts/src/contracts/interfaces/IReleaseManager.sol";
 import {OperatorSet} from "@eigenlayer-contracts/src/contracts/libraries/OperatorSetLib.sol";
 import {IComputeAVSRegistrar} from "./interfaces/IComputeAVSRegistrar.sol";
@@ -136,6 +137,11 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         returns (uint256)
     {
         return _upgradeApp(app, release);
+    }
+
+    /// @inheritdoc IAppController
+    function updateAppMetadataURI(IApp app, string calldata metadataURI) external checkCanCall(address(app)) {
+        emit AppMetadataURIUpdated(app, metadataURI);
     }
 
     /// @inheritdoc IAppController

@@ -92,30 +92,32 @@ contract Deploy is Parser {
         });
 
         // Upgrade proxies using ProxyAdmin
-        params.proxyAdmin.upgradeAndCall(
-            ITransparentUpgradeableProxy(address(computeAVSRegistrarProxy)),
-            address(computeAVSRegistrarImpl),
-            abi.encodeCall(ComputeAVSRegistrar.initialize, (params.avsMetadataURI))
-        );
-        params.proxyAdmin.upgradeAndCall(
-            ITransparentUpgradeableProxy(address(computeOperatorProxy)),
-            address(computeOperatorImpl),
-            abi.encodeCall(ComputeOperator.initialize, (params.operatorMetadataURI))
-        );
-        params.proxyAdmin.upgradeAndCall(
-            ITransparentUpgradeableProxy(address(appControllerProxy)),
-            address(appControllerImpl),
-            abi.encodeCall(AppController.initialize, (params.initialOwner))
-        );
+        params.proxyAdmin
+            .upgradeAndCall(
+                ITransparentUpgradeableProxy(address(computeAVSRegistrarProxy)),
+                address(computeAVSRegistrarImpl),
+                abi.encodeCall(ComputeAVSRegistrar.initialize, (params.avsMetadataURI))
+            );
+        params.proxyAdmin
+            .upgradeAndCall(
+                ITransparentUpgradeableProxy(address(computeOperatorProxy)),
+                address(computeOperatorImpl),
+                abi.encodeCall(ComputeOperator.initialize, (params.operatorMetadataURI))
+            );
+        params.proxyAdmin
+            .upgradeAndCall(
+                ITransparentUpgradeableProxy(address(appControllerProxy)),
+                address(appControllerImpl),
+                abi.encodeCall(AppController.initialize, (params.initialOwner))
+            );
 
         // Accept admin role for AppController
         IPermissionController(address(params.permissionController)).acceptAdmin(address(appControllerProxy));
 
         // Set max global active apps and admin user limit
         IAppController(address(appControllerProxy)).setMaxGlobalActiveApps(params.maxGlobalActiveApps);
-        IAppController(address(appControllerProxy)).setMaxActiveAppsPerUser(
-            params.initialOwner, params.adminMaxActiveApps
-        );
+        IAppController(address(appControllerProxy))
+            .setMaxActiveAppsPerUser(params.initialOwner, params.adminMaxActiveApps);
 
         console.log("Proxy Admin:", address(params.proxyAdmin));
         console.log("App Beacon:", address(appBeacon));

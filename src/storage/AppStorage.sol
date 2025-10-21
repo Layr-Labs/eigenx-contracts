@@ -6,7 +6,6 @@ import {IApp} from "../interfaces/IApp.sol";
 
 abstract contract AppStorage is IApp {
     /// CONSTANTS & IMMUTABLES
-
     /// @notice The EigenLayer PermissionController contract
     IPermissionController public immutable permissionController;
 

@@ -37,11 +37,7 @@ contract ComputeOperator is Initializable, SemVerMixin, ComputeOperatorStorage {
     )
         SemVerMixin(_version)
         ComputeOperatorStorage(
-            _delegationManager,
-            _allocationManager,
-            _permissionController,
-            _appController,
-            _computeAVSRegistrar
+            _delegationManager, _allocationManager, _permissionController, _appController, _computeAVSRegistrar
         )
     {
         _disableInitializers();
@@ -51,9 +47,7 @@ contract ComputeOperator is Initializable, SemVerMixin, ComputeOperatorStorage {
     function initialize(string calldata operatorMetadataURI) external initializer {
         // Register as an EigenLayer operator
         delegationManager.registerAsOperator({
-            initDelegationApprover: address(0),
-            allocationDelay: 0,
-            metadataURI: operatorMetadataURI
+            initDelegationApprover: address(0), allocationDelay: 0, metadataURI: operatorMetadataURI
         });
     }
 
@@ -63,9 +57,7 @@ contract ComputeOperator is Initializable, SemVerMixin, ComputeOperatorStorage {
         operatorSetIds[0] = operatorSetId;
 
         IAllocationManagerTypes.RegisterParams memory params = IAllocationManagerTypes.RegisterParams({
-            avs: computeAVSRegistrar,
-            operatorSetIds: operatorSetIds,
-            data: new bytes(0)
+            avs: computeAVSRegistrar, operatorSetIds: operatorSetIds, data: new bytes(0)
         });
 
         allocationManager.registerForOperatorSets(address(this), params);

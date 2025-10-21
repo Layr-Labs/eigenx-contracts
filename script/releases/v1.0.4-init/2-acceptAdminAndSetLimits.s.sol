@@ -19,18 +19,20 @@ contract AcceptAdminAndSetLimits is MultisigBuilder, Deploy {
 
     function _runAsMultisig() internal virtual override prank(Env.computeOpsMultisig()) {
         Env.permissionController().acceptAdmin(address(Env.proxy.appController()));
-        Env.permissionController().setAppointee(
-            address(Env.proxy.appController()),
-            Env.computeWhitelisterMultisig(),
-            address(Env.proxy.appController()),
-            AppController.setMaxGlobalActiveApps.selector
-        );
-        Env.permissionController().setAppointee(
-            address(Env.proxy.appController()),
-            Env.computeWhitelisterMultisig(),
-            address(Env.proxy.appController()),
-            AppController.setMaxActiveAppsPerUser.selector
-        );
+        Env.permissionController()
+            .setAppointee(
+                address(Env.proxy.appController()),
+                Env.computeWhitelisterMultisig(),
+                address(Env.proxy.appController()),
+                AppController.setMaxGlobalActiveApps.selector
+            );
+        Env.permissionController()
+            .setAppointee(
+                address(Env.proxy.appController()),
+                Env.computeWhitelisterMultisig(),
+                address(Env.proxy.appController()),
+                AppController.setMaxActiveAppsPerUser.selector
+            );
         Env.proxy.appController().setMaxGlobalActiveApps(Env.MAX_GLOBAL_ACTIVE_APPS());
     }
 
@@ -45,21 +47,23 @@ contract AcceptAdminAndSetLimits is MultisigBuilder, Deploy {
 
     function _validateSetup() internal view {
         assertTrue(
-            Env.permissionController().canCall(
-                address(Env.proxy.appController()),
-                Env.computeWhitelisterMultisig(),
-                address(Env.proxy.appController()),
-                AppController.setMaxGlobalActiveApps.selector
-            ),
+            Env.permissionController()
+                .canCall(
+                    address(Env.proxy.appController()),
+                    Env.computeWhitelisterMultisig(),
+                    address(Env.proxy.appController()),
+                    AppController.setMaxGlobalActiveApps.selector
+                ),
             "ComputeAdmin not admin"
         );
         assertTrue(
-            Env.permissionController().canCall(
-                address(Env.proxy.appController()),
-                Env.computeWhitelisterMultisig(),
-                address(Env.proxy.appController()),
-                AppController.setMaxActiveAppsPerUser.selector
-            ),
+            Env.permissionController()
+                .canCall(
+                    address(Env.proxy.appController()),
+                    Env.computeWhitelisterMultisig(),
+                    address(Env.proxy.appController()),
+                    AppController.setMaxActiveAppsPerUser.selector
+                ),
             "ComputeAdmin not admin"
         );
         assertEq(
