@@ -139,10 +139,6 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
     /// @inheritdoc IAppController
     function startApp(IApp app) external checkCanCall(address(app)) {
-        // If the app is suspended, re-check limits and increment active app counters
-        if (_appConfigs[app].status == AppStatus.SUSPENDED) {
-            _checkAndIncrementActiveApps(msg.sender);
-        }
         _startApp(app);
     }
 
@@ -219,8 +215,12 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     function _startApp(IApp app) internal {
         AppConfig storage config = _appConfigs[app];
         require(config.status != AppStatus.TERMINATED, InvalidAppStatus());
-        config.status = AppStatus.STARTED;
 
+        // If resuming from suspended, re-check limits and increment active app counters
+        if (config.status == AppStatus.SUSPENDED) {
+            _checkAndIncrementActiveApps(config.creator);
+        }
+        config.status = AppStatus.STARTED;
         emit AppStarted(app);
     }
 

@@ -852,6 +852,41 @@ contract AppControllerTest is ComputeDeployer {
         assertEq(appController.globalActiveAppCount(), 1);
     }
 
+    function test_startApp_fromSuspended_delegatedUser() public {
+        _setGlobalMaxActiveApps(100);
+        _setMaxActiveAppsPerUser(developer, 10);
+
+        // Developer creates an app
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("delegated_suspend"), _assembleRelease());
+
+        address user2 = makeAddr("user2");
+
+        // Developer accepts admin and grants user2 permission via appointee
+        vm.prank(developer);
+        permissionController.acceptAdmin(address(app));
+        vm.prank(developer);
+        permissionController.setAppointee(address(app), user2, address(appController), IAppController.startApp.selector);
+
+        // Developer suspends the app
+        vm.prank(developer);
+        appController.suspendApp(app);
+
+        // Verify counts after suspend
+        assertEq(appController.getActiveAppCount(developer), 0, "Developer count should be 0 after suspend");
+        assertEq(appController.getActiveAppCount(user2), 0, "User2 count should be 0");
+
+        // User2 (delegated) starts the app
+        vm.prank(user2);
+        appController.startApp(app);
+
+        // Developer's count should increase (they're the creator), NOT user2's
+        assertEq(appController.getActiveAppCount(developer), 1, "Developer (creator) count should be 1");
+        assertEq(appController.getActiveAppCount(user2), 0, "User2 (delegated) count should still be 0");
+        assertEq(appController.globalActiveAppCount(), 1, "Global count should be 1");
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.STARTED));
+    }
+
     function test_startApp_fromSuspended_globalLimitReached() public {
         // Setup limits
         _setGlobalMaxActiveApps(1);
