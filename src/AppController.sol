@@ -26,12 +26,9 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
     /// MODIFIERS
 
-    /// @notice Modifier to ensure app is not in the given status
+    /// @notice Modifier to ensure app is in an active status
     modifier appIsActive(IApp app) {
-        AppStatus status = _appConfigs[app].status;
-        require(status != AppStatus.TERMINATED, InvalidAppStatus());
-        require(status != AppStatus.NONE, InvalidAppStatus());
-        require(status != AppStatus.SUSPENDED, InvalidAppStatus());
+        require(_isActive(_appConfigs[app].status), InvalidAppStatus());
         _;
     }
 
@@ -86,8 +83,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
     /// @inheritdoc IAppController
     function setMaxActiveAppsPerUser(address user, uint32 limit) external checkCanCall(address(this)) {
-        _userConfigs[user].maxActiveApps = limit;
-        emit MaxActiveAppsSet(user, limit);
+        _setMaxActiveAppsPerUser(user, limit);
     }
 
     /// @inheritdoc IAppController
@@ -169,11 +165,39 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
     /// @inheritdoc IAppController
     function suspendAppByAdmin(IApp app) external checkCanCall(address(this)) appIsActive(app) {
-        _suspendApp(app);
-        emit AppSuspendedByAdmin(app);
+        _suspendAppByAdmin(app);
+    }
+
+    /// @inheritdoc IAppController
+    function suspend(address account, IApp[] calldata apps) external checkCanCall(address(this)) {
+        // Suspend all provided apps, skipping apps that are already SUSPENDED, TERMINATED, or NONE
+        for (uint256 i = 0; i < apps.length; i++) {
+            IApp app = apps[i];
+            AppConfig memory config = _appConfigs[app];
+
+            // Validate ownership
+            require(config.creator == account, InvalidAppStatus());
+
+            // Only suspend if app is active (STARTED or STOPPED)
+            if (_isActive(config.status)) {
+                _suspendAppByAdmin(app);
+            }
+        }
+
+        // Zero-out the account's max active apps
+        _setMaxActiveAppsPerUser(account, 0);
     }
 
     /// INTERNAL FUNCTIONS
+
+    /**
+     * @notice Checks if an app status is active
+     * @param status The app status to check
+     * @return True if status is STARTED or STOPPED, false otherwise
+     */
+    function _isActive(AppStatus status) internal pure returns (bool) {
+        return status == AppStatus.STARTED || status == AppStatus.STOPPED;
+    }
 
     /**
      * @notice Checks active app limits and increments counters for a user
@@ -206,9 +230,20 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /**
+     * @notice Sets the maximum number of active apps allowed for a user
+     * @param user The user address to set the limit for
+     * @param limit The maximum number of active apps allowed
+     */
+    function _setMaxActiveAppsPerUser(address user, uint32 limit) internal {
+        _userConfigs[user].maxActiveApps = limit;
+        emit MaxActiveAppsSet(user, limit);
+    }
+
+    /**
      * @notice Upgrades an app to a new release by publishing it through the release manager
      * @param app The app instance to upgrade
      * @param release The new release data containing artifacts and metadata
+     * @return releaseId The unique identifier assigned to the published release by the release manager
      */
     function _upgradeApp(IApp app, Release calldata release) internal returns (uint256 releaseId) {
         // Check that the release has exactly one artifact
@@ -248,7 +283,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /**
-     * @notice Suspends an app decrements active app counters
+     * @notice Suspends an app and decrements active app counters
      * @param app The app instance to suspend
      */
     function _suspendApp(IApp app) internal {
@@ -258,9 +293,19 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /**
+     * @notice Suspends an app via admin action, emitting an additional admin event
+     * @param app The app instance to suspend
+     */
+    function _suspendAppByAdmin(IApp app) internal {
+        _suspendApp(app);
+        emit AppSuspendedByAdmin(app);
+    }
+
+    /**
      * @notice Calculates a mixed salt for app deployment using deployer address and provided salt
      * @param deployer The address of the app deployer
      * @param salt The salt value
+     * @return The keccak256 hash of deployer and salt, used for deterministic app address generation
      */
     function _calculateAppMixedSalt(address deployer, bytes32 salt) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(deployer, salt));
@@ -269,6 +314,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     /**
      * @notice Generates the initialization code for deploying a new app using beacon proxy pattern
      * @param deployer The address that will be set as the app owner during initialization
+     * @return The complete bytecode for deploying a BeaconProxy that initializes the app with the deployer
      */
     function _calculateAppInitCode(address deployer) internal view returns (bytes memory) {
         return abi.encodePacked(

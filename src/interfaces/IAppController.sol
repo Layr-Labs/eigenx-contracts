@@ -197,6 +197,15 @@ interface IAppController {
     function suspendAppByAdmin(IApp app) external;
 
     /**
+     * @notice Suspends the provided apps owned by an account and sets their max active apps to 0
+     * @param account The account to suspend
+     * @param apps The apps to suspend (must all be created by account)
+     * @dev Caller must be UAM permissioned for the AppController
+     * @dev Apps already suspended or terminated are silently skipped
+     */
+    function suspend(address account, IApp[] calldata apps) external;
+
+    /**
      * @notice Gets the maximum global active apps limit
      * @return The maximum number of active apps globally
      */
