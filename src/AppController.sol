@@ -193,6 +193,19 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /**
+     * @notice Decrements global and creator active app counters
+     * @param app The app instance to decrement counters for
+     */
+    function _decrementActiveApps(IApp app) internal {
+        // Decrement active app counts to free up capacity
+        globalActiveAppCount--;
+
+        // Decrement the creator's active app count
+        address appCreator = _appConfigs[app].creator;
+        _userConfigs[appCreator].activeAppCount--;
+    }
+
+    /**
      * @notice Upgrades an app to a new release by publishing it through the release manager
      * @param app The app instance to upgrade
      * @param release The new release data containing artifacts and metadata
@@ -230,14 +243,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
      */
     function _terminateApp(IApp app) internal {
         _appConfigs[app].status = AppStatus.TERMINATED;
-
-        // Decrement active app counts to free up capacity
-        globalActiveAppCount--;
-
-        // Decrement the creator's active app count
-        address appCreator = _appConfigs[app].creator;
-        _userConfigs[appCreator].activeAppCount--;
-
+        _decrementActiveApps(app);
         emit AppTerminated(app);
     }
 
@@ -247,14 +253,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
      */
     function _suspendApp(IApp app) internal {
         _appConfigs[app].status = AppStatus.SUSPENDED;
-
-        // Decrement active app counts to free up capacity
-        globalActiveAppCount--;
-
-        // Decrement the creator's active app count
-        address appCreator = _appConfigs[app].creator;
-        _userConfigs[appCreator].activeAppCount--;
-
+        _decrementActiveApps(app);
         emit AppSuspended(app);
     }
 
