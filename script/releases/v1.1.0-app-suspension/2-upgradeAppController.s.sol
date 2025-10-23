@@ -22,11 +22,20 @@ contract UpgradeAppController is MultisigBuilder, DeployAppControllerImpl {
             );
     }
 
+    /// @dev Validate that computeOpsMultisig has admin permissions on AppController
+    function _validatePermissions() internal view {
+        assertTrue(
+            Env.permissionController().isAdmin(address(Env.proxy.appController()), Env.computeOpsMultisig()),
+            "computeOpsMultisig is not admin of AppController"
+        );
+    }
+
     function testScript() public virtual override {
         runAsEOA();
 
         execute();
 
         _validateNewAddresses({afterUpgrade: true});
+        _validatePermissions();
     }
 }
