@@ -44,6 +44,12 @@ interface IAppController {
     /// @notice Emitted when an app is terminated by admin
     event AppTerminatedByAdmin(IApp indexed app);
 
+    /// @notice Emitted when an app is suspended
+    event AppSuspended(IApp indexed app);
+
+    /// @notice Emitted when an app is suspended by admin
+    event AppSuspendedByAdmin(IApp indexed app);
+
     /// @notice Emitted when the maximum active apps limit is set for an address
     event MaxActiveAppsSet(address indexed user, uint32 limit);
 
@@ -58,9 +64,10 @@ interface IAppController {
      */
     enum AppStatus {
         NONE, // App has not been created yet
-        STARTED, // App is has been started
-        STOPPED, // App is has been stopped but can be restarted
-        TERMINATED // App is permanently terminated
+        STARTED, // App has been started
+        STOPPED, // App has been stopped but can be restarted
+        TERMINATED, // App is permanently terminated
+        SUSPENDED // App is suspended and can be started again, but does not have reserved capacity
     }
 
     /**
@@ -172,6 +179,22 @@ interface IAppController {
      * @dev Once terminated, no further write operations are allowed
      */
     function terminateAppByAdmin(IApp app) external;
+
+    /**
+     * @notice Suspends an app, which stops the instance backing it and releases its reserved capacity
+     * @param app The app to suspend
+     * @dev Caller must be UAM permissioned for the app
+     * @dev App must be active
+     */
+    function suspendApp(IApp app) external;
+
+    /**
+     * @notice Suspends an app by admin, which stops the instance backing it and releases its reserved capacity
+     * @param app The app to suspend
+     * @dev Caller must be UAM permissioned for the AppController
+     * @dev App must be active
+     */
+    function suspendAppByAdmin(IApp app) external;
 
     /**
      * @notice Gets the maximum global active apps limit

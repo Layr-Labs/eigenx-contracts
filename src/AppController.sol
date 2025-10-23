@@ -28,8 +28,10 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
     /// @notice Modifier to ensure app is not in the given status
     modifier appIsActive(IApp app) {
-        require(_appConfigs[app].status != AppStatus.TERMINATED, InvalidAppStatus());
-        require(_appConfigs[app].status != AppStatus.NONE, InvalidAppStatus());
+        AppStatus status = _appConfigs[app].status;
+        require(status != AppStatus.TERMINATED, InvalidAppStatus());
+        require(status != AppStatus.NONE, InvalidAppStatus());
+        require(status != AppStatus.SUSPENDED, InvalidAppStatus());
         _;
     }
 
@@ -96,16 +98,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
     /// @inheritdoc IAppController
     function createApp(bytes32 salt, Release calldata release) external returns (IApp app) {
-        UserConfig storage userConfig = _userConfigs[msg.sender];
-
-        // Check global active app limit
-        require(globalActiveAppCount < maxGlobalActiveApps, GlobalMaxActiveAppsExceeded());
-        // Check user active app limit
-        require(userConfig.activeAppCount < userConfig.maxActiveApps, MaxActiveAppsExceeded());
-
-        // Increment active app counts
-        globalActiveAppCount++;
-        userConfig.activeAppCount++;
+        _checkAndIncrementActiveApps(msg.sender);
 
         // Assign an operator set ID to the app
         uint32 operatorSetId = computeAVSRegistrar.assignOperatorSetId();
@@ -146,6 +139,10 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
     /// @inheritdoc IAppController
     function startApp(IApp app) external checkCanCall(address(app)) {
+        // If the app is suspended, re-check limits and increment active app counters
+        if (_appConfigs[app].status == AppStatus.SUSPENDED) {
+            _checkAndIncrementActiveApps(msg.sender);
+        }
         _startApp(app);
     }
 
@@ -169,7 +166,35 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         emit AppTerminatedByAdmin(app);
     }
 
+    /// @inheritdoc IAppController
+    function suspendApp(IApp app) external checkCanCall(address(app)) appIsActive(app) {
+        _suspendApp(app);
+    }
+
+    /// @inheritdoc IAppController
+    function suspendAppByAdmin(IApp app) external checkCanCall(address(this)) appIsActive(app) {
+        _suspendApp(app);
+        emit AppSuspendedByAdmin(app);
+    }
+
     /// INTERNAL FUNCTIONS
+
+    /**
+     * @notice Checks active app limits and increments counters for a user
+     * @param user The user address to check and increment for
+     */
+    function _checkAndIncrementActiveApps(address user) internal {
+        UserConfig storage userConfig = _userConfigs[user];
+
+        // Check global active app limit
+        require(globalActiveAppCount < maxGlobalActiveApps, GlobalMaxActiveAppsExceeded());
+        // Check user active app limit
+        require(userConfig.activeAppCount < userConfig.maxActiveApps, MaxActiveAppsExceeded());
+
+        // Increment active app counts
+        globalActiveAppCount++;
+        userConfig.activeAppCount++;
+    }
 
     /**
      * @notice Upgrades an app to a new release by publishing it through the release manager
@@ -192,7 +217,10 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
      * @param app The app instance to start
      */
     function _startApp(IApp app) internal {
-        _appConfigs[app].status = AppStatus.STARTED;
+        AppConfig storage config = _appConfigs[app];
+        require(config.status != AppStatus.TERMINATED, InvalidAppStatus());
+        config.status = AppStatus.STARTED;
+
         emit AppStarted(app);
     }
 
@@ -211,6 +239,23 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         _userConfigs[appCreator].activeAppCount--;
 
         emit AppTerminated(app);
+    }
+
+    /**
+     * @notice Suspends an app decrements active app counters 
+     * @param app The app instance to suspend
+     */
+    function _suspendApp(IApp app) internal {
+        _appConfigs[app].status = AppStatus.SUSPENDED;
+
+        // Decrement active app counts to free up capacity
+        globalActiveAppCount--;
+
+        // Decrement the creator's active app count
+        address appCreator = _appConfigs[app].creator;
+        _userConfigs[appCreator].activeAppCount--;
+
+        emit AppSuspended(app);
     }
 
     /**
