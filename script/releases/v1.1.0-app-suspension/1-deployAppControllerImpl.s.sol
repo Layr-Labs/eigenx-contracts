@@ -21,7 +21,7 @@ contract DeployAppControllerImpl is EOADeployer {
 
         // Deploy new AppController implementation
         newAppControllerImpl = new AppController({
-            _version: "1.1.0",
+            _version: Env.deployVersion(),
             _permissionController: Env.permissionController(),
             _releaseManager: Env.releaseManager(),
             _computeAVSRegistrar: Env.proxy.computeAVSRegistrar(),
@@ -72,7 +72,7 @@ contract DeployAppControllerImpl is EOADeployer {
             address(Env.releaseManager()),
             "AppController releaseManager mismatch"
         );
-        assertEq(appController.version(), "1.1.0", "AppController version mismatch");
+        assertEq(appController.version(), Env.deployVersion(), "AppController version mismatch");
         assertEq(
             address(appController.computeAVSRegistrar()),
             address(Env.proxy.computeAVSRegistrar()),
