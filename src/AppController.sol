@@ -159,17 +159,10 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// @inheritdoc IAppController
-    function suspendApp(IApp app) external checkCanCall(address(app)) appIsActive(app) {
-        _suspendApp(app);
-    }
+    function suspend(address account, IApp[] calldata apps) external {
+        // Allow account owner to self-suspend or AppController admin to enforce suspension
+        require(msg.sender == account || _checkCanCall(address(this)), InvalidPermissions());
 
-    /// @inheritdoc IAppController
-    function suspendAppByAdmin(IApp app) external checkCanCall(address(this)) appIsActive(app) {
-        _suspendAppByAdmin(app);
-    }
-
-    /// @inheritdoc IAppController
-    function suspend(address account, IApp[] calldata apps) external checkCanCall(address(this)) {
         // Suspend all provided apps, skipping apps that are already SUSPENDED, TERMINATED, or NONE
         for (uint256 i = 0; i < apps.length; i++) {
             IApp app = apps[i];
@@ -180,9 +173,12 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
             // Only suspend if app is active (STARTED or STOPPED)
             if (_isActive(config.status)) {
-                _suspendAppByAdmin(app);
+                _suspendApp(app);
             }
         }
+
+        // Verify all active apps were provided - prevents partial suspension
+        require(_userConfigs[account].activeAppCount == 0, AccountHasActiveApps());
 
         // Zero-out the account's max active apps
         _setMaxActiveAppsPerUser(account, 0);
@@ -290,15 +286,6 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         _appConfigs[app].status = AppStatus.SUSPENDED;
         _decrementActiveApps(app);
         emit AppSuspended(app);
-    }
-
-    /**
-     * @notice Suspends an app via admin action, emitting an additional admin event
-     * @param app The app instance to suspend
-     */
-    function _suspendAppByAdmin(IApp app) internal {
-        _suspendApp(app);
-        emit AppSuspendedByAdmin(app);
     }
 
     /**

@@ -26,6 +26,9 @@ interface IAppController {
     /// @notice Thrown when global maximum active app limit has been reached
     error GlobalMaxActiveAppsExceeded();
 
+    /// @notice Thrown when trying to suspend an account that still has active apps
+    error AccountHasActiveApps();
+
     /// @notice Emitted when a new app is successfully created
     event AppCreated(address indexed creator, IApp indexed app, uint32 operatorSetId);
 
@@ -46,9 +49,6 @@ interface IAppController {
 
     /// @notice Emitted when an app is suspended
     event AppSuspended(IApp indexed app);
-
-    /// @notice Emitted when an app is suspended by admin
-    event AppSuspendedByAdmin(IApp indexed app);
 
     /// @notice Emitted when the maximum active apps limit is set for an address
     event MaxActiveAppsSet(address indexed user, uint32 limit);
@@ -181,26 +181,11 @@ interface IAppController {
     function terminateAppByAdmin(IApp app) external;
 
     /**
-     * @notice Suspends an app, which stops the instance backing it and releases its reserved capacity
-     * @param app The app to suspend
-     * @dev Caller must be UAM permissioned for the app
-     * @dev App must be active
-     */
-    function suspendApp(IApp app) external;
-
-    /**
-     * @notice Suspends an app by admin, which stops the instance backing it and releases its reserved capacity
-     * @param app The app to suspend
-     * @dev Caller must be UAM permissioned for the AppController
-     * @dev App must be active
-     */
-    function suspendAppByAdmin(IApp app) external;
-
-    /**
-     * @notice Suspends the provided apps owned by an account and sets their max active apps to 0
+     * @notice Suspends all active apps for an account and sets their max active apps to 0
      * @param account The account to suspend
-     * @param apps The apps to suspend (must all be created by account)
-     * @dev Caller must be UAM permissioned for the AppController
+     * @param apps The apps to suspend (must all be created by account and include ALL active apps)
+     * @dev Caller must be the account owner or UAM permissioned for the AppController
+     * @dev All active apps (STARTED or STOPPED) must be provided, otherwise reverts with AccountHasActiveApps
      * @dev Apps already suspended or terminated are silently skipped
      */
     function suspend(address account, IApp[] calldata apps) external;
