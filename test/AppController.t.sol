@@ -13,6 +13,8 @@ contract AppControllerTest is ComputeDeployer {
     // Event definitions for testing
     event AppCreated(address indexed creator, IApp indexed app, uint32 operatorSetId);
     event AppTerminatedByAdmin(IApp indexed app);
+    event AppSuspended(IApp indexed app);
+    event AppSuspendedByAdmin(IApp indexed app);
     event AppMetadataURIUpdated(IApp indexed app, string metadataURI);
 
     function setUp() public {
@@ -340,6 +342,21 @@ contract AppControllerTest is ComputeDeployer {
         // Verify status still STARTED
         IAppController.AppStatus statusAfter = appController.getAppStatus(app);
         assertEq(uint256(statusAfter), uint256(IAppController.AppStatus.STARTED));
+    }
+
+    function test_startApp_cannotStartTerminated() public {
+        // Create and terminate an app
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("start_terminated"), _assembleRelease());
+        _acceptAppAdmin(app);
+
+        vm.prank(developer);
+        appController.terminateApp(app);
+
+        // Try to start a terminated app - should fail (new check in _startApp)
+        vm.prank(developer);
+        vm.expectRevert(abi.encodeWithSelector(IAppController.InvalidAppStatus.selector));
+        appController.startApp(app);
     }
 
     function test_terminateApp() public {
@@ -670,5 +687,297 @@ contract AppControllerTest is ComputeDeployer {
             IAppController.Release({rmsRelease: rmsRelease, publicEnv: "", encryptedEnv: ""});
 
         return release;
+    }
+
+    // ========== Suspension Tests ==========
+
+    function test_suspendApp() public {
+        // Create an app
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("suspend_test"), _assembleRelease());
+        _acceptAppAdmin(app);
+
+        // Verify app is started
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.STARTED));
+
+        // Expect the AppSuspended event
+        vm.expectEmit(true, false, false, false);
+        emit AppSuspended(app);
+
+        // Suspend the app
+        vm.prank(developer);
+        appController.suspendApp(app);
+
+        // Verify status changed to SUSPENDED
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.SUSPENDED));
+    }
+
+    function test_suspendApp_notAuthorized() public {
+        // Create an app as developer
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("suspend_unauthorized"), _assembleRelease());
+
+        // Try to suspend as unauthorized user
+        vm.prank(user);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.suspendApp(app);
+    }
+
+    function test_suspendApp_alreadySuspended() public {
+        // Create and suspend an app
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("suspend_already"), _assembleRelease());
+        _acceptAppAdmin(app);
+
+        vm.prank(developer);
+        appController.suspendApp(app);
+
+        // Try to suspend again - should revert (appIsActive modifier checks for SUSPENDED)
+        vm.prank(developer);
+        vm.expectRevert(abi.encodeWithSelector(IAppController.InvalidAppStatus.selector));
+        appController.suspendApp(app);
+    }
+
+    function test_suspendApp_decreasesCapacity() public {
+        // Setup limits
+        _setGlobalMaxActiveApps(100);
+        _setMaxActiveAppsPerUser(user, 10);
+
+        // User creates an app
+        vm.prank(user);
+        IApp app = appController.createApp(keccak256("capacity_suspend"), _assembleRelease());
+
+        // Verify counts increased
+        assertEq(appController.getActiveAppCount(user), 1);
+        assertEq(appController.globalActiveAppCount(), 1);
+
+        // Accept admin to suspend
+        vm.prank(user);
+        permissionController.acceptAdmin(address(app));
+
+        // Suspend the app
+        vm.prank(user);
+        appController.suspendApp(app);
+
+        // Verify counts decreased
+        assertEq(appController.getActiveAppCount(user), 0);
+        assertEq(appController.globalActiveAppCount(), 0);
+    }
+
+    function test_suspendAppByAdmin() public {
+        // Create an app as developer
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("suspend_admin"), _assembleRelease());
+
+        // Expect the AppSuspendedByAdmin event
+        vm.expectEmit(true, false, false, false);
+        emit AppSuspendedByAdmin(app);
+
+        // Suspend app as admin
+        vm.prank(admin);
+        appController.suspendAppByAdmin(app);
+
+        // Verify status changed to SUSPENDED
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.SUSPENDED));
+
+        // Verify capacity was freed
+        assertEq(appController.getActiveAppCount(developer), 0);
+        assertEq(appController.globalActiveAppCount(), 0);
+    }
+
+    function test_suspendAppByAdmin_notAuthorized() public {
+        // Create an app as developer
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("suspend_admin_unauthorized"), _assembleRelease());
+
+        // Try to suspend as unauthorized user (not admin)
+        vm.prank(user);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.suspendAppByAdmin(app);
+    }
+
+    function test_suspendApp_freesUpCapacityForNewApps() public {
+        // Set user to have only 1 active app max
+        _setGlobalMaxActiveApps(100);
+        _setMaxActiveAppsPerUser(user, 1);
+
+        // User creates 1 app (reaches limit)
+        vm.prank(user);
+        IApp app1 = appController.createApp(keccak256("capacity_free_1"), _assembleRelease());
+
+        // Try to create a second app - should fail
+        vm.prank(user);
+        vm.expectRevert(abi.encodeWithSelector(IAppController.MaxActiveAppsExceeded.selector));
+        appController.createApp(keccak256("capacity_free_2"), _assembleRelease());
+
+        // Accept admin and suspend app1
+        vm.prank(user);
+        permissionController.acceptAdmin(address(app1));
+        vm.prank(user);
+        appController.suspendApp(app1);
+
+        // Now user should be able to create a new app
+        vm.prank(user);
+        IApp app2 = appController.createApp(keccak256("capacity_free_2"), _assembleRelease());
+
+        // Verify counts
+        assertEq(appController.getActiveAppCount(user), 1);
+        assertEq(appController.globalActiveAppCount(), 1);
+
+        // Verify app1 is suspended and app2 is started
+        assertEq(uint256(appController.getAppStatus(app1)), uint256(IAppController.AppStatus.SUSPENDED));
+        assertEq(uint256(appController.getAppStatus(app2)), uint256(IAppController.AppStatus.STARTED));
+    }
+
+    function test_startApp_fromSuspended() public {
+        // Create and suspend an app
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("start_suspended"), _assembleRelease());
+        _acceptAppAdmin(app);
+
+        vm.prank(developer);
+        appController.suspendApp(app);
+
+        // Verify app is suspended and capacity is freed
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.SUSPENDED));
+        assertEq(appController.getActiveAppCount(developer), 0);
+
+        // Start the app again
+        vm.prank(developer);
+        appController.startApp(app);
+
+        // Verify app is started and capacity is allocated
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.STARTED));
+        assertEq(appController.getActiveAppCount(developer), 1);
+        assertEq(appController.globalActiveAppCount(), 1);
+    }
+
+    function test_startApp_fromSuspended_globalLimitReached() public {
+        // Setup limits
+        _setGlobalMaxActiveApps(1);
+        _setMaxActiveAppsPerUser(developer, 10);
+
+        // Create and suspend an app
+        vm.prank(developer);
+        IApp app1 = appController.createApp(keccak256("global_limit_1"), _assembleRelease());
+        _acceptAppAdmin(app1);
+        vm.prank(developer);
+        appController.suspendApp(app1);
+
+        // Create another app to fill global capacity
+        vm.prank(developer);
+        appController.createApp(keccak256("global_limit_2"), _assembleRelease());
+
+        // Try to start the suspended app - should fail due to global limit
+        vm.prank(developer);
+        vm.expectRevert(abi.encodeWithSelector(IAppController.GlobalMaxActiveAppsExceeded.selector));
+        appController.startApp(app1);
+    }
+
+    function test_startApp_fromSuspended_userLimitReached() public {
+        // Setup limits
+        _setGlobalMaxActiveApps(100);
+        _setMaxActiveAppsPerUser(developer, 1);
+
+        // Create and suspend an app
+        vm.prank(developer);
+        IApp app1 = appController.createApp(keccak256("user_limit_1"), _assembleRelease());
+        _acceptAppAdmin(app1);
+        vm.prank(developer);
+        appController.suspendApp(app1);
+
+        // Create another app to fill user capacity
+        vm.prank(developer);
+        appController.createApp(keccak256("user_limit_2"), _assembleRelease());
+
+        // Try to start the suspended app - should fail due to user limit
+        vm.prank(developer);
+        vm.expectRevert(abi.encodeWithSelector(IAppController.MaxActiveAppsExceeded.selector));
+        appController.startApp(app1);
+    }
+
+    function test_stopApp_rejectsSuspended() public {
+        // Create and suspend an app
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("stop_suspended"), _assembleRelease());
+        _acceptAppAdmin(app);
+
+        vm.prank(developer);
+        appController.suspendApp(app);
+
+        // Try to stop a suspended app - should fail (appIsActive modifier)
+        vm.prank(developer);
+        vm.expectRevert(abi.encodeWithSelector(IAppController.InvalidAppStatus.selector));
+        appController.stopApp(app);
+    }
+
+    function test_upgradeApp_rejectsSuspended() public {
+        // Create and suspend an app
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("upgrade_suspended"), _assembleRelease());
+        _acceptAppAdmin(app);
+
+        vm.prank(developer);
+        appController.suspendApp(app);
+
+        // Try to upgrade a suspended app - should fail (appIsActive modifier)
+        vm.prank(developer);
+        vm.expectRevert(abi.encodeWithSelector(IAppController.InvalidAppStatus.selector));
+        appController.upgradeApp(app, _assembleRelease());
+    }
+
+    function test_terminateApp_rejectsSuspended() public {
+        // Create and suspend an app
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("terminate_suspended"), _assembleRelease());
+        _acceptAppAdmin(app);
+
+        vm.prank(developer);
+        appController.suspendApp(app);
+
+        // Try to terminate a suspended app - should fail (appIsActive modifier)
+        vm.prank(developer);
+        vm.expectRevert(abi.encodeWithSelector(IAppController.InvalidAppStatus.selector));
+        appController.terminateApp(app);
+    }
+
+    function test_suspendAndRestartCycle() public {
+        // Setup limits
+        _setGlobalMaxActiveApps(100);
+        _setMaxActiveAppsPerUser(developer, 2);
+
+        // Create two apps
+        vm.prank(developer);
+        IApp app1 = appController.createApp(keccak256("cycle_1"), _assembleRelease());
+        _acceptAppAdmin(app1);
+
+        vm.prank(developer);
+        IApp app2 = appController.createApp(keccak256("cycle_2"), _assembleRelease());
+        _acceptAppAdmin(app2);
+
+        // Verify both are active
+        assertEq(appController.getActiveAppCount(developer), 2);
+
+        // Suspend both apps
+        vm.prank(developer);
+        appController.suspendApp(app1);
+        vm.prank(developer);
+        appController.suspendApp(app2);
+
+        // Verify capacity is freed
+        assertEq(appController.getActiveAppCount(developer), 0);
+        assertEq(appController.globalActiveAppCount(), 0);
+
+        // Restart both apps
+        vm.prank(developer);
+        appController.startApp(app1);
+        vm.prank(developer);
+        appController.startApp(app2);
+
+        // Verify capacity is allocated again
+        assertEq(appController.getActiveAppCount(developer), 2);
+        assertEq(appController.globalActiveAppCount(), 2);
+        assertEq(uint256(appController.getAppStatus(app1)), uint256(IAppController.AppStatus.STARTED));
+        assertEq(uint256(appController.getAppStatus(app2)), uint256(IAppController.AppStatus.STARTED));
     }
 }

@@ -242,7 +242,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /**
-     * @notice Suspends an app decrements active app counters 
+     * @notice Suspends an app decrements active app counters
      * @param app The app instance to suspend
      */
     function _suspendApp(IApp app) internal {
