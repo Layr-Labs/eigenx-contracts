@@ -309,6 +309,69 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         );
     }
 
+    /**
+     * @notice Gets filtered apps based on a predicate function
+     * @param predicate The predicate function to apply to each app
+     * @param target The target address to filter by
+     * @param offset The offset to start from
+     * @param limit The maximum number of apps to return
+     * @return apps The filtered apps
+     * @return appConfigsMem The app configs for the filtered apps
+     */
+    function _getFilteredApps(
+        function(IApp, address) view returns (bool) predicate,
+        address target,
+        uint256 offset,
+        uint256 limit
+    ) private view returns (IApp[] memory apps, AppConfig[] memory appConfigsMem) {
+        uint256 totalApps = _allApps.length();
+
+        apps = new IApp[](limit);
+        appConfigsMem = new AppConfig[](limit);
+        uint256 skipped = 0;
+        uint256 found = 0;
+
+        for (uint256 i = 0; i < totalApps && found < limit; i++) {
+            IApp app = IApp(_allApps.at(i));
+            if (predicate(app, target)) {
+                if (skipped < offset) {
+                    skipped++;
+                    continue;
+                }
+
+                apps[found] = app;
+                appConfigsMem[found] = _appConfigs[app];
+                found++;
+            }
+        }
+
+        // Resize arrays to actual number found
+        assembly {
+            mstore(apps, found)
+            mstore(appConfigsMem, found)
+        }
+    }
+
+    /**
+     * @notice Check if address is developer of app
+     * @param app The app to check
+     * @param developer The developer to check
+     * @return True if the developer is the developer of the app
+     */
+    function _isDeveloper(IApp app, address developer) private view returns (bool) {
+        return permissionController.isAdmin(address(app), developer);
+    }
+
+    /**
+     * @notice Check if address is creator of app
+     * @param app The app to check
+     * @param creator The creator to check
+     * @return True if the creator is the creator of the app
+     */
+    function _isCreator(IApp app, address creator) private view returns (bool) {
+        return _appConfigs[app].creator == creator;
+    }
+
     /// VIEW FUNCTIONS
 
     /// @inheritdoc IAppController
@@ -377,31 +440,16 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         view
         returns (IApp[] memory apps, AppConfig[] memory appConfigsMem)
     {
-        uint256 totalApps = _allApps.length();
+        return _getFilteredApps(_isDeveloper, developer, offset, limit);
+    }
 
-        apps = new IApp[](limit);
-        appConfigsMem = new AppConfig[](limit);
-        uint256 skipped = 0;
-        uint256 found = 0;
-        for (uint256 i = 0; i < totalApps && found < limit; i++) {
-            IApp app = IApp(_allApps.at(i));
-            if (permissionController.isAdmin(address(app), developer)) {
-                if (skipped < offset) {
-                    skipped++;
-                    continue;
-                }
-
-                apps[found] = app;
-                appConfigsMem[found] = _appConfigs[app];
-                found++;
-            }
-        }
-
-        // Resize arrays to actual number found
-        assembly {
-            mstore(apps, found)
-            mstore(appConfigsMem, found)
-        }
+    /// @inheritdoc IAppController
+    function getAppsByCreator(address creator, uint256 offset, uint256 limit)
+        external
+        view
+        returns (IApp[] memory apps, AppConfig[] memory appConfigsMem)
+    {
+        return _getFilteredApps(_isCreator, creator, offset, limit);
     }
 
     /// @inheritdoc IAppController

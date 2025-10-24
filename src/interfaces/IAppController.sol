@@ -275,6 +275,19 @@ interface IAppController {
         returns (IApp[] memory, AppConfig[] memory);
 
     /**
+     * @notice Retrieves a paginated list of apps created by the specified address and their configurations
+     * @param creator The address of the creator
+     * @param offset The starting index for pagination (0-based)
+     * @param limit The maximum number of apps to return in this page
+     * @return apps An array of app contract instances
+     * @return configs An array of corresponding app configurations
+     */
+    function getAppsByCreator(address creator, uint256 offset, uint256 limit)
+        external
+        view
+        returns (IApp[] memory, AppConfig[] memory);
+
+    /**
      * @notice Calculates the digest hash for a given api permission
      * @param permission The permission to calculate the digest hash for
      * @param expiry The expiry of the api permission

@@ -539,6 +539,98 @@ contract AppControllerTest is ComputeDeployer {
         assertEq(address(otherApps2[0]), address(otherApp2));
     }
 
+    function test_getAppsByCreator_offsetAndLimit() public {
+        // Create 5 apps as developer for testing pagination
+        IApp[] memory createdApps = new IApp[](5);
+        for (uint256 i = 0; i < 5; i++) {
+            vm.prank(developer);
+            createdApps[i] =
+                appController.createApp(keccak256(abi.encodePacked("creator_test_", i)), _assembleRelease());
+        }
+
+        // Test 1: Creator pagination - offset 0, limit 3 (first 3 of creator's apps)
+        (IApp[] memory apps1,) = appController.getAppsByCreator(developer, 0, 3);
+        assertEq(apps1.length, 3);
+        assertEq(address(apps1[0]), address(createdApps[0]));
+        assertEq(address(apps1[1]), address(createdApps[1]));
+        assertEq(address(apps1[2]), address(createdApps[2]));
+
+        // Test 2: Creator pagination - offset 2, limit 2 (3rd and 4th of creator's apps)
+        (IApp[] memory apps2,) = appController.getAppsByCreator(developer, 2, 2);
+        assertEq(apps2.length, 2);
+        assertEq(address(apps2[0]), address(createdApps[2]));
+        assertEq(address(apps2[1]), address(createdApps[3]));
+
+        // Test 3: Creator pagination - offset 3, limit 10 (last 2 of creator's apps)
+        (IApp[] memory apps3,) = appController.getAppsByCreator(developer, 3, 10);
+        assertEq(apps3.length, 2); // Only 2 apps left for this creator
+        assertEq(address(apps3[0]), address(createdApps[3]));
+        assertEq(address(apps3[1]), address(createdApps[4]));
+
+        // Test 4: Creator pagination - offset equals creator's total apps
+        (IApp[] memory apps4,) = appController.getAppsByCreator(developer, 5, 10);
+        assertEq(apps4.length, 0);
+
+        // Test 5: Creator pagination - offset exceeds creator's total apps
+        (IApp[] memory apps5,) = appController.getAppsByCreator(developer, 10, 5);
+        assertEq(apps5.length, 0);
+
+        // Test 6: Unknown creator (should return empty)
+        address otherDev = makeAddr("otherCreator");
+        (IApp[] memory apps6,) = appController.getAppsByCreator(otherDev, 0, 10);
+        assertEq(apps6.length, 0);
+
+        // Test 7: Mixed ownership scenario - create app for another creator
+        _setMaxActiveAppsPerUser(otherDev, 10);
+        vm.prank(otherDev);
+        IApp otherApp1 = appController.createApp(keccak256("creator_mixed_test_1"), _assembleRelease());
+        vm.prank(otherDev);
+        IApp otherApp2 = appController.createApp(keccak256("creator_mixed_test_2"), _assembleRelease());
+
+        // Test pagination: first creator should still get their 5 apps in order
+        (IApp[] memory devApps,) = appController.getAppsByCreator(developer, 0, 10);
+        assertEq(devApps.length, 5);
+        for (uint256 i = 0; i < 5; i++) {
+            assertEq(address(devApps[i]), address(createdApps[i]));
+        }
+
+        // Test pagination: second creator should get their 2 apps in order
+        (IApp[] memory otherApps,) = appController.getAppsByCreator(otherDev, 0, 10);
+        assertEq(otherApps.length, 2);
+        assertEq(address(otherApps[0]), address(otherApp1));
+        assertEq(address(otherApps[1]), address(otherApp2));
+    }
+
+    function test_getAppsByCreator_worksWithoutAdminRights() public {
+        vm.prank(developer);
+        IApp app1 = appController.createApp(keccak256("admin_test_1"), _assembleRelease());
+        vm.prank(developer);
+        IApp app2 = appController.createApp(keccak256("admin_test_2"), _assembleRelease());
+
+        // Only accept admin on app1, leave app2 without accepting admin
+        vm.prank(developer);
+        permissionController.acceptAdmin(address(app1));
+
+        // getAppsByCreator should return BOTH apps (filters by creator, not admin)
+        (IApp[] memory creatorApps,) = appController.getAppsByCreator(developer, 0, 10);
+        assertEq(creatorApps.length, 2);
+        assertEq(address(creatorApps[0]), address(app1));
+        assertEq(address(creatorApps[1]), address(app2));
+
+        // getAppsByDeveloper should only return app1 (developer only accepted admin on app1)
+        (IApp[] memory devApps,) = appController.getAppsByDeveloper(developer, 0, 10);
+        assertEq(devApps.length, 1);
+        assertEq(address(devApps[0]), address(app1));
+
+        // Verify the creator field is set correctly for both apps
+        assertEq(appController.getAppCreator(app1), developer);
+        assertEq(appController.getAppCreator(app2), developer);
+
+        // Verify developer is only admin of app1
+        assertTrue(permissionController.isAdmin(address(app1), developer));
+        assertFalse(permissionController.isAdmin(address(app2), developer));
+    }
+
     // ========== Helper Functions ==========
 
     function _acceptAppAdmin(IApp app) internal {
