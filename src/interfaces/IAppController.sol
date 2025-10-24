@@ -26,6 +26,9 @@ interface IAppController {
     /// @notice Thrown when global maximum active app limit has been reached
     error GlobalMaxActiveAppsExceeded();
 
+    /// @notice Thrown when trying to suspend an account that still has active apps
+    error AccountHasActiveApps();
+
     /// @notice Emitted when a new app is successfully created
     event AppCreated(address indexed creator, IApp indexed app, uint32 operatorSetId);
 
@@ -44,6 +47,9 @@ interface IAppController {
     /// @notice Emitted when an app is terminated by admin
     event AppTerminatedByAdmin(IApp indexed app);
 
+    /// @notice Emitted when an app is suspended
+    event AppSuspended(IApp indexed app);
+
     /// @notice Emitted when the maximum active apps limit is set for an address
     event MaxActiveAppsSet(address indexed user, uint32 limit);
 
@@ -58,9 +64,10 @@ interface IAppController {
      */
     enum AppStatus {
         NONE, // App has not been created yet
-        STARTED, // App is has been started
-        STOPPED, // App is has been stopped but can be restarted
-        TERMINATED // App is permanently terminated
+        STARTED, // App has been started
+        STOPPED, // App has been stopped but can be restarted
+        TERMINATED, // App is permanently terminated
+        SUSPENDED // App is suspended and can be started again, but does not have reserved capacity
     }
 
     /**
@@ -174,6 +181,16 @@ interface IAppController {
     function terminateAppByAdmin(IApp app) external;
 
     /**
+     * @notice Suspends all active apps for an account and sets their max active apps to 0
+     * @param account The account to suspend
+     * @param apps The apps to suspend (must all be created by account and include ALL active apps)
+     * @dev Caller must be the account owner or UAM permissioned for the AppController
+     * @dev All active apps (STARTED or STOPPED) must be provided, otherwise reverts with AccountHasActiveApps
+     * @dev Apps already suspended or terminated are silently skipped
+     */
+    function suspend(address account, IApp[] calldata apps) external;
+
+    /**
      * @notice Gets the maximum global active apps limit
      * @return The maximum number of active apps globally
      */
@@ -253,6 +270,19 @@ interface IAppController {
      * @return configs An array of corresponding app configurations
      */
     function getAppsByDeveloper(address developer, uint256 offset, uint256 limit)
+        external
+        view
+        returns (IApp[] memory, AppConfig[] memory);
+
+    /**
+     * @notice Retrieves a paginated list of apps created by the specified address and their configurations
+     * @param creator The address of the creator
+     * @param offset The starting index for pagination (0-based)
+     * @param limit The maximum number of apps to return in this page
+     * @return apps An array of app contract instances
+     * @return configs An array of corresponding app configurations
+     */
+    function getAppsByCreator(address creator, uint256 offset, uint256 limit)
         external
         view
         returns (IApp[] memory, AppConfig[] memory);

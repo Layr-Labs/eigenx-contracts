@@ -26,10 +26,9 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
     /// MODIFIERS
 
-    /// @notice Modifier to ensure app is not in the given status
+    /// @notice Modifier to ensure app is in an active status
     modifier appIsActive(IApp app) {
-        require(_appConfigs[app].status != AppStatus.TERMINATED, InvalidAppStatus());
-        require(_appConfigs[app].status != AppStatus.NONE, InvalidAppStatus());
+        require(_isActive(_appConfigs[app].status), InvalidAppStatus());
         _;
     }
 
@@ -84,8 +83,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
     /// @inheritdoc IAppController
     function setMaxActiveAppsPerUser(address user, uint32 limit) external checkCanCall(address(this)) {
-        _userConfigs[user].maxActiveApps = limit;
-        emit MaxActiveAppsSet(user, limit);
+        _setMaxActiveAppsPerUser(user, limit);
     }
 
     /// @inheritdoc IAppController
@@ -96,16 +94,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
     /// @inheritdoc IAppController
     function createApp(bytes32 salt, Release calldata release) external returns (IApp app) {
-        UserConfig storage userConfig = _userConfigs[msg.sender];
-
-        // Check global active app limit
-        require(globalActiveAppCount < maxGlobalActiveApps, GlobalMaxActiveAppsExceeded());
-        // Check user active app limit
-        require(userConfig.activeAppCount < userConfig.maxActiveApps, MaxActiveAppsExceeded());
-
-        // Increment active app counts
-        globalActiveAppCount++;
-        userConfig.activeAppCount++;
+        _checkAndIncrementActiveApps(msg.sender);
 
         // Assign an operator set ID to the app
         uint32 operatorSetId = computeAVSRegistrar.assignOperatorSetId();
@@ -169,12 +158,88 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         emit AppTerminatedByAdmin(app);
     }
 
+    /// @inheritdoc IAppController
+    function suspend(address account, IApp[] calldata apps) external {
+        // Allow account owner to self-suspend or AppController admin to enforce suspension
+        require(msg.sender == account || _checkCanCall(address(this)), InvalidPermissions());
+
+        // Suspend all provided apps, skipping apps that are already SUSPENDED, TERMINATED, or NONE
+        for (uint256 i = 0; i < apps.length; i++) {
+            IApp app = apps[i];
+            AppConfig memory config = _appConfigs[app];
+
+            // Validate ownership
+            require(config.creator == account, InvalidAppStatus());
+
+            // Only suspend if app is active (STARTED or STOPPED)
+            if (_isActive(config.status)) {
+                _suspendApp(app);
+            }
+        }
+
+        // Verify all active apps were provided - prevents partial suspension
+        require(_userConfigs[account].activeAppCount == 0, AccountHasActiveApps());
+
+        // Zero-out the account's max active apps
+        _setMaxActiveAppsPerUser(account, 0);
+    }
+
     /// INTERNAL FUNCTIONS
+
+    /**
+     * @notice Checks if an app status is active
+     * @param status The app status to check
+     * @return True if status is STARTED or STOPPED, false otherwise
+     */
+    function _isActive(AppStatus status) internal pure returns (bool) {
+        return status == AppStatus.STARTED || status == AppStatus.STOPPED;
+    }
+
+    /**
+     * @notice Checks active app limits and increments counters for a user
+     * @param user The user address to check and increment for
+     */
+    function _checkAndIncrementActiveApps(address user) internal {
+        UserConfig storage userConfig = _userConfigs[user];
+
+        // Check global active app limit
+        require(globalActiveAppCount < maxGlobalActiveApps, GlobalMaxActiveAppsExceeded());
+        // Check user active app limit
+        require(userConfig.activeAppCount < userConfig.maxActiveApps, MaxActiveAppsExceeded());
+
+        // Increment active app counts
+        globalActiveAppCount++;
+        userConfig.activeAppCount++;
+    }
+
+    /**
+     * @notice Decrements global and creator active app counters
+     * @param app The app instance to decrement counters for
+     */
+    function _decrementActiveApps(IApp app) internal {
+        // Decrement active app counts to free up capacity
+        globalActiveAppCount--;
+
+        // Decrement the creator's active app count
+        address appCreator = _appConfigs[app].creator;
+        _userConfigs[appCreator].activeAppCount--;
+    }
+
+    /**
+     * @notice Sets the maximum number of active apps allowed for a user
+     * @param user The user address to set the limit for
+     * @param limit The maximum number of active apps allowed
+     */
+    function _setMaxActiveAppsPerUser(address user, uint32 limit) internal {
+        _userConfigs[user].maxActiveApps = limit;
+        emit MaxActiveAppsSet(user, limit);
+    }
 
     /**
      * @notice Upgrades an app to a new release by publishing it through the release manager
      * @param app The app instance to upgrade
      * @param release The new release data containing artifacts and metadata
+     * @return releaseId The unique identifier assigned to the published release by the release manager
      */
     function _upgradeApp(IApp app, Release calldata release) internal returns (uint256 releaseId) {
         // Check that the release has exactly one artifact
@@ -192,7 +257,14 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
      * @param app The app instance to start
      */
     function _startApp(IApp app) internal {
-        _appConfigs[app].status = AppStatus.STARTED;
+        AppConfig storage config = _appConfigs[app];
+        require(config.status != AppStatus.TERMINATED, InvalidAppStatus());
+
+        // If resuming from suspended, re-check limits and increment active app counters
+        if (config.status == AppStatus.SUSPENDED) {
+            _checkAndIncrementActiveApps(config.creator);
+        }
+        config.status = AppStatus.STARTED;
         emit AppStarted(app);
     }
 
@@ -202,21 +274,25 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
      */
     function _terminateApp(IApp app) internal {
         _appConfigs[app].status = AppStatus.TERMINATED;
-
-        // Decrement active app counts to free up capacity
-        globalActiveAppCount--;
-
-        // Decrement the creator's active app count
-        address appCreator = _appConfigs[app].creator;
-        _userConfigs[appCreator].activeAppCount--;
-
+        _decrementActiveApps(app);
         emit AppTerminated(app);
+    }
+
+    /**
+     * @notice Suspends an app and decrements active app counters
+     * @param app The app instance to suspend
+     */
+    function _suspendApp(IApp app) internal {
+        _appConfigs[app].status = AppStatus.SUSPENDED;
+        _decrementActiveApps(app);
+        emit AppSuspended(app);
     }
 
     /**
      * @notice Calculates a mixed salt for app deployment using deployer address and provided salt
      * @param deployer The address of the app deployer
      * @param salt The salt value
+     * @return The keccak256 hash of deployer and salt, used for deterministic app address generation
      */
     function _calculateAppMixedSalt(address deployer, bytes32 salt) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(deployer, salt));
@@ -225,11 +301,75 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     /**
      * @notice Generates the initialization code for deploying a new app using beacon proxy pattern
      * @param deployer The address that will be set as the app owner during initialization
+     * @return The complete bytecode for deploying a BeaconProxy that initializes the app with the deployer
      */
     function _calculateAppInitCode(address deployer) internal view returns (bytes memory) {
         return abi.encodePacked(
             _BEACON_PROXY_BYTECODE, abi.encode(appBeacon, abi.encodeWithSelector(IApp.initialize.selector, deployer))
         );
+    }
+
+    /**
+     * @notice Gets filtered apps based on a predicate function
+     * @param predicate The predicate function to apply to each app
+     * @param target The target address to filter by
+     * @param offset The offset to start from
+     * @param limit The maximum number of apps to return
+     * @return apps The filtered apps
+     * @return appConfigsMem The app configs for the filtered apps
+     */
+    function _getFilteredApps(
+        function(IApp, address) view returns (bool) predicate,
+        address target,
+        uint256 offset,
+        uint256 limit
+    ) private view returns (IApp[] memory apps, AppConfig[] memory appConfigsMem) {
+        uint256 totalApps = _allApps.length();
+
+        apps = new IApp[](limit);
+        appConfigsMem = new AppConfig[](limit);
+        uint256 skipped = 0;
+        uint256 found = 0;
+
+        for (uint256 i = 0; i < totalApps && found < limit; i++) {
+            IApp app = IApp(_allApps.at(i));
+            if (predicate(app, target)) {
+                if (skipped < offset) {
+                    skipped++;
+                    continue;
+                }
+
+                apps[found] = app;
+                appConfigsMem[found] = _appConfigs[app];
+                found++;
+            }
+        }
+
+        // Resize arrays to actual number found
+        assembly {
+            mstore(apps, found)
+            mstore(appConfigsMem, found)
+        }
+    }
+
+    /**
+     * @notice Check if address is developer of app
+     * @param app The app to check
+     * @param developer The developer to check
+     * @return True if the developer is the developer of the app
+     */
+    function _isDeveloper(IApp app, address developer) private view returns (bool) {
+        return permissionController.isAdmin(address(app), developer);
+    }
+
+    /**
+     * @notice Check if address is creator of app
+     * @param app The app to check
+     * @param creator The creator to check
+     * @return True if the creator is the creator of the app
+     */
+    function _isCreator(IApp app, address creator) private view returns (bool) {
+        return _appConfigs[app].creator == creator;
     }
 
     /// VIEW FUNCTIONS
@@ -300,31 +440,16 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         view
         returns (IApp[] memory apps, AppConfig[] memory appConfigsMem)
     {
-        uint256 totalApps = _allApps.length();
+        return _getFilteredApps(_isDeveloper, developer, offset, limit);
+    }
 
-        apps = new IApp[](limit);
-        appConfigsMem = new AppConfig[](limit);
-        uint256 skipped = 0;
-        uint256 found = 0;
-        for (uint256 i = 0; i < totalApps && found < limit; i++) {
-            IApp app = IApp(_allApps.at(i));
-            if (permissionController.isAdmin(address(app), developer)) {
-                if (skipped < offset) {
-                    skipped++;
-                    continue;
-                }
-
-                apps[found] = app;
-                appConfigsMem[found] = _appConfigs[app];
-                found++;
-            }
-        }
-
-        // Resize arrays to actual number found
-        assembly {
-            mstore(apps, found)
-            mstore(appConfigsMem, found)
-        }
+    /// @inheritdoc IAppController
+    function getAppsByCreator(address creator, uint256 offset, uint256 limit)
+        external
+        view
+        returns (IApp[] memory apps, AppConfig[] memory appConfigsMem)
+    {
+        return _getFilteredApps(_isCreator, creator, offset, limit);
     }
 
     /// @inheritdoc IAppController

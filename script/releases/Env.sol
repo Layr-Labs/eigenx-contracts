@@ -142,6 +142,10 @@ library Env {
         return _envAddress("executorMultisig");
     }
 
+    function billingAdmin() internal view returns (address) {
+        return _envAddress("billingAdmin");
+    }
+
     function proxyAdmin() internal view returns (ProxyAdmin) {
         return ProxyAdmin(_deployedContract(type(ProxyAdmin).name));
     }
