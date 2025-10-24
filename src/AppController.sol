@@ -26,6 +26,12 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
     /// MODIFIERS
 
+    /// @notice Modifier to ensure app exists
+    modifier appExists(IApp app) {
+        require(_exists(_appConfigs[app].status), InvalidAppStatus());
+        _;
+    }
+
     /// @notice Modifier to ensure app is in an active status
     modifier appIsActive(IApp app) {
         require(_isActive(_appConfigs[app].status), InvalidAppStatus());
@@ -129,12 +135,16 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// @inheritdoc IAppController
-    function updateAppMetadataURI(IApp app, string calldata metadataURI) external checkCanCall(address(app)) {
+    function updateAppMetadataURI(IApp app, string calldata metadataURI)
+        external
+        checkCanCall(address(app))
+        appExists(app)
+    {
         emit AppMetadataURIUpdated(app, metadataURI);
     }
 
     /// @inheritdoc IAppController
-    function startApp(IApp app) external checkCanCall(address(app)) {
+    function startApp(IApp app) external checkCanCall(address(app)) appExists(app) {
         _startApp(app);
     }
 
@@ -185,6 +195,15 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// INTERNAL FUNCTIONS
+
+    /**
+     * @notice Checks if an app status is not NONE
+     * @param status The app status to check
+     * @return True if status is not NONE, false otherwise
+     */
+    function _exists(AppStatus status) internal pure returns (bool) {
+        return status != AppStatus.NONE;
+    }
 
     /**
      * @notice Checks if an app status is active
