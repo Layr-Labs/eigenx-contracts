@@ -9,7 +9,7 @@
         },
         {
             "type": "multisig",
-            "filename": "2-upgradeAppController.s.sol"
+            "filename": "2-upgradeAndGrantPermissions.s.sol"
         }
     ]
 }
