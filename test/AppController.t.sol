@@ -359,6 +359,23 @@ contract AppControllerTest is ComputeDeployer {
         appController.startApp(app);
     }
 
+    function test_startApp_nonExistentAppReverts() public {
+        // Use any arbitrary address that was NOT created through createApp()
+        address fakeAppAddress = address(0xDEADBEEF);
+        IApp fakeApp = IApp(fakeAppAddress);
+
+        // Verify this app doesn't exist
+        assertEq(uint256(appController.getAppStatus(fakeApp)), uint256(IAppController.AppStatus.NONE));
+
+        // Try to start a non-existent app - should revert with InvalidAppStatus
+        vm.prank(fakeAppAddress);
+        vm.expectRevert(abi.encodeWithSelector(IAppController.InvalidAppStatus.selector));
+        appController.startApp(fakeApp);
+
+        // Verify status is still NONE
+        assertEq(uint256(appController.getAppStatus(fakeApp)), uint256(IAppController.AppStatus.NONE));
+    }
+
     function test_terminateApp() public {
         vm.prank(developer);
         IApp app = appController.createApp(keccak256("terminate_test"), _assembleRelease());
@@ -765,6 +782,19 @@ contract AppControllerTest is ComputeDeployer {
         // Update metadata on terminated app - should succeed now
         vm.prank(developer);
         appController.updateAppMetadataURI(app, newMetadataURI);
+    }
+
+    function test_updateAppMetadataURI_nonExistentAppReverts() public {
+        address fakeAppAddress = address(0xDEADBEEF);
+        IApp fakeApp = IApp(fakeAppAddress);
+
+        // Verify this app doesn't exist
+        assertEq(uint256(appController.getAppStatus(fakeApp)), uint256(IAppController.AppStatus.NONE));
+
+        // Try to update metadata for a non-existent app - should revert
+        vm.prank(fakeAppAddress);
+        vm.expectRevert(abi.encodeWithSelector(IAppController.InvalidAppStatus.selector));
+        appController.updateAppMetadataURI(fakeApp, "https://example.com/fake-metadata");
     }
 
     function _assembleRelease() internal view returns (IAppController.Release memory) {
