@@ -94,9 +94,6 @@ interface ICloudReportCompendium {
     /// @notice The address that must sign cloud reports.
     function reportAttester() external view returns (address);
 
-    /// @notice The operator set ID this compendium is tracking.
-    function operatorSetId() external view returns (uint32);
-
     /// @notice Hash of the reference project ID that reports must match.
     function referenceProjectIdHash() external view returns (bytes32);
 

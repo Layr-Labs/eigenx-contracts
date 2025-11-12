@@ -24,12 +24,14 @@ abstract contract CloudReportCompendiumStorage is ICloudReportCompendium {
         IComputeAVSRegistrar computeAVSRegistrar;
         IComputeOperator computeOperator;
         address reportAttester;
-        uint32 operatorSetId;
         string referenceProjectId;
         IStrategy strategyToSlash;
     }
 
     /// CONSTANTS
+    /// @notice The operator set ID used for slashing
+    uint32 public constant SLASHING_OPERATORSET_ID = 0;
+
     /// @inheritdoc ICloudReportCompendium
     bytes32 public constant CLOUD_REPORT_TYPEHASH =
         keccak256("CloudReport(string projectId,uint32 fromTimestamp,uint32 toTimestamp,bytes eigendaCert)");
@@ -56,9 +58,6 @@ abstract contract CloudReportCompendiumStorage is ICloudReportCompendium {
 
     /// @inheritdoc ICloudReportCompendium
     address public immutable reportAttester;
-
-    /// @inheritdoc ICloudReportCompendium
-    uint32 public immutable operatorSetId;
 
     /// @inheritdoc ICloudReportCompendium
     bytes32 public immutable referenceProjectIdHash;
@@ -90,7 +89,6 @@ abstract contract CloudReportCompendiumStorage is ICloudReportCompendium {
         computeAVSRegistrar = params.computeAVSRegistrar;
         computeOperator = params.computeOperator;
         reportAttester = params.reportAttester;
-        operatorSetId = params.operatorSetId;
         referenceProjectIdHash = keccak256(abi.encodePacked(params.referenceProjectId));
         strategyToSlash = params.strategyToSlash;
     }

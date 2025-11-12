@@ -169,14 +169,14 @@ contract CloudReportCompendium is
             address(computeAVSRegistrar),
             IAllocationManagerTypes.SlashingParams({
                 operator: address(computeOperator),
-                operatorSetId: operatorSetId,
+                operatorSetId: SLASHING_OPERATORSET_ID,
                 strategies: strategies,
                 wadsToSlash: wadsToSlash,
                 description: reason
             })
         );
 
-        emit OperatorSlashed(address(computeOperator), operatorSetId, reason, slashId);
+        emit OperatorSlashed(address(computeOperator), SLASHING_OPERATORSET_ID, reason, slashId);
     }
 
     /**
@@ -195,7 +195,7 @@ contract CloudReportCompendium is
         // Calculate slashable shares by multiplying by the magnitude
         IAllocationManager.Allocation memory allocation = allocationManager.getAllocation(
             address(computeOperator),
-            OperatorSet({avs: address(computeAVSRegistrar), id: operatorSetId}),
+            OperatorSet({avs: address(computeAVSRegistrar), id: SLASHING_OPERATORSET_ID}),
             strategyToSlash
         );
         uint256 slashableShares = totalShares.mulDiv(allocation.currentMagnitude, WAD);
