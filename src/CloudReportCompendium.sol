@@ -13,9 +13,14 @@ import {
 import {IDelegationManager} from "@eigenlayer-contracts/src/contracts/interfaces/IDelegationManager.sol";
 import {IStrategy} from "@eigenlayer-contracts/src/contracts/interfaces/IStrategy.sol";
 import {OperatorSet} from "@eigenlayer-contracts/src/contracts/libraries/OperatorSetLib.sol";
+
+import {SlashingLib} from "@eigenlayer-contracts/src/contracts/libraries/SlashingLib.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+
 import {
     IEigenDACertVerifierRouter
 } from "@eigenda-contracts/src/integrations/cert/interfaces/IEigenDACertVerifierRouter.sol";
+
 import {IComputeAVSRegistrar} from "./interfaces/IComputeAVSRegistrar.sol";
 import {IComputeOperator} from "./interfaces/IComputeOperator.sol";
 import {CloudReportCompendiumStorage} from "./storage/CloudReportCompendiumStorage.sol";
@@ -28,6 +33,8 @@ contract CloudReportCompendium is
     CloudReportCompendiumStorage
 {
     using ECDSA for bytes32;
+    using SlashingLib for uint256;
+    using Math for uint256;
 
     /**
      * @param _version The version string to use for this contract's domain separator
@@ -131,7 +138,7 @@ contract CloudReportCompendium is
         address operator = address(computeOperator);
 
         // Calculate the proportion to slash
-        uint256 wadToSlash = _calculateSlashProportion(operator);
+        uint256 wadToSlash = _calculateSlashProportion();
 
         // Create single-element arrays
         IStrategy[] memory strategies = new IStrategy[](1);
@@ -157,13 +164,27 @@ contract CloudReportCompendium is
 
     /**
      * @notice Calculates the proportion to slash based on allocated shares
-     * @param operator The operator address
      * @return The proportion to slash (in WAD, capped at 1e18)
      */
-    function _calculateSlashProportion(address operator) internal view returns (uint256) {
-        // TODO: Implement proportion calculation
-        // Should convert slashAmountTokens to proportion of allocated stake
-        return 0;
+    function _calculateSlashProportion() internal view returns (uint256) {
+        // Fetch total shares by summing active and withdrawal queue shares
+        IStrategy[] memory strategies = new IStrategy[](1);
+        strategies[0] = strategyToSlash;
+        uint256[] memory totalSharesActiveArr =
+            delegationManager.getOperatorShares(address(computeOperator), strategies);
+        uint256 totalShares = totalSharesActiveArr[0]
+            + delegationManager.getSlashableSharesInQueue(address(computeOperator), strategyToSlash);
+
+        // Calculate slashable shares by multiplying by the magnitude
+        IAllocationManager.Allocation memory allocation = allocationManager.getAllocation(
+            address(computeOperator),
+            OperatorSet({avs: address(computeAVSRegistrar), id: operatorSetId}),
+            strategyToSlash
+        );
+        uint256 slashableShares = totalShares.mulDiv(allocation.currentMagnitude, WAD);
+        // wadsToSlash = slashAmountTokens / slashableShares * WAD
+        uint256 wadsToSlash = slashAmountTokens.mulDiv(WAD, slashableShares);
+        return wadsToSlash;
     }
 
     /**
