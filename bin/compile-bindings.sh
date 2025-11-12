@@ -52,6 +52,7 @@ contracts=(
     "AppController"
     "ComputeAVSRegistrar"
     "ComputeOperator"
+    "CloudReportCompendium"
     "IReleaseManager"
     "IPermissionController"
 )
