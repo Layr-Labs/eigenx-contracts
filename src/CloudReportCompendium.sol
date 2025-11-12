@@ -67,7 +67,10 @@ contract CloudReportCompendium is
         // Verify project ID matches
         require(keccak256(abi.encodePacked(report.projectId)) == referenceProjectIdHash, InvalidProjectId());
         // Verify timestamps
-        require(_latestReportSubmission.toTimestamp == 0 || report.fromTimestamp == _latestReportSubmission.toTimestamp, ReportChainTimestampMismatch());
+        require(
+            _latestReportSubmission.toTimestamp == 0 || report.fromTimestamp == _latestReportSubmission.toTimestamp,
+            ReportChainTimestampMismatch()
+        );
         require(report.fromTimestamp < report.toTimestamp, InvalidReportTimestamps());
         require(report.toTimestamp <= block.timestamp, ReportFromFuture());
 
