@@ -93,13 +93,12 @@ contract CloudReportCompendium is
         // Check eigenDaCert consistency
         require(bytes20(keccak256(eigendaCert)) == _latestReportSubmission.eigendaCertHash, InvalidCertificate());
 
-        bool shouldSlash = false;
         string memory reason;
-
-        // Check 1: Report freshness
         if (block.timestamp - _latestReportSubmission.submissionTimestamp >= reportFreshnessThreshold) {
+            // check report freshness
             reason = "Report too stale";
         } else if (certVerifierRouter.checkDACert(eigendaCert) != EIGENDA_CERT_SUCCESS) {
+            // check eigenda cert verification
             reason = "Invalid EigenDA certificate";
         } else {
             revert NoSlashRequired();
