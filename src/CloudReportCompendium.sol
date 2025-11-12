@@ -14,7 +14,7 @@ import {IDelegationManager} from "@eigenlayer-contracts/src/contracts/interfaces
 import {IStrategy} from "@eigenlayer-contracts/src/contracts/interfaces/IStrategy.sol";
 import {OperatorSet} from "@eigenlayer-contracts/src/contracts/libraries/OperatorSetLib.sol";
 
-import {SlashingLib} from "@eigenlayer-contracts/src/contracts/libraries/SlashingLib.sol";
+import {SlashingLib, WAD} from "@eigenlayer-contracts/src/contracts/libraries/SlashingLib.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {
@@ -54,9 +54,13 @@ contract CloudReportCompendium is
     }
 
     /// @inheritdoc ICloudReportCompendium
-    function initialize(uint32 _reportFreshnessThreshold, uint256 _slashAmountTokens) external initializer {
+    function initialize(uint32 _reportFreshnessThreshold, uint256 _slashAmountTokens, uint32 _minSlashInterval)
+        external
+        initializer
+    {
         _setReportFreshnessThreshold(_reportFreshnessThreshold);
         _setSlashAmountTokens(_slashAmountTokens);
+        _setMinSlashInterval(_minSlashInterval);
     }
 
     /// @inheritdoc ICloudReportCompendium
@@ -67,6 +71,11 @@ contract CloudReportCompendium is
     /// @inheritdoc ICloudReportCompendium
     function setSlashAmountTokens(uint256 _slashAmountTokens) external checkCanCall(address(this)) {
         _setSlashAmountTokens(_slashAmountTokens);
+    }
+
+    /// @inheritdoc ICloudReportCompendium
+    function setMinSlashInterval(uint32 _minSlashInterval) external checkCanCall(address(this)) {
+        _setMinSlashInterval(_minSlashInterval);
     }
 
     /// @inheritdoc ICloudReportCompendium
@@ -90,7 +99,6 @@ contract CloudReportCompendium is
         // Store the report
         _latestReportSubmission = CloudReportSubmission({
             submissionTimestamp: uint32(block.timestamp),
-            fromTimestamp: report.fromTimestamp,
             toTimestamp: report.toTimestamp,
             eigendaCertHash: bytes20(keccak256(report.eigendaCert))
         });
@@ -100,6 +108,9 @@ contract CloudReportCompendium is
 
     /// @inheritdoc ICloudReportCompendium
     function slash(bytes calldata eigendaCert) external {
+        // Check that enough time has passed since last slash
+        require(lastSlashTimestamp == 0 || block.timestamp - lastSlashTimestamp >= minSlashInterval, SlashTooSoon());
+
         // Check eigenDaCert consistency
         require(bytes20(keccak256(eigendaCert)) == _latestReportSubmission.eigendaCertHash, InvalidCertificate());
 
@@ -130,12 +141,18 @@ contract CloudReportCompendium is
         emit SlashAmountTokensSet(_slashAmountTokens);
     }
 
+    function _setMinSlashInterval(uint32 _minSlashInterval) internal {
+        minSlashInterval = _minSlashInterval;
+        emit MinSlashIntervalSet(_minSlashInterval);
+    }
+
     /**
      * @notice Performs the slashing operation with calculated proportions
      * @param reason The reason for slashing
      */
     function _performSlash(string memory reason) internal {
-        address operator = address(computeOperator);
+        // Update last slash timestamp
+        lastSlashTimestamp = uint32(block.timestamp);
 
         // Calculate the proportion to slash
         uint256 wadToSlash = _calculateSlashProportion();
@@ -151,7 +168,7 @@ contract CloudReportCompendium is
         (uint256 slashId,) = allocationManager.slashOperator(
             address(computeAVSRegistrar),
             IAllocationManagerTypes.SlashingParams({
-                operator: operator,
+                operator: address(computeOperator),
                 operatorSetId: operatorSetId,
                 strategies: strategies,
                 wadsToSlash: wadsToSlash,
@@ -159,7 +176,7 @@ contract CloudReportCompendium is
             })
         );
 
-        emit OperatorSlashed(operator, operatorSetId, reason, slashId);
+        emit OperatorSlashed(address(computeOperator), operatorSetId, reason, slashId);
     }
 
     /**

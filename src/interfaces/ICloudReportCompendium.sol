@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
+import {IDelegationManager} from "@eigenlayer-contracts/src/contracts/interfaces/IDelegationManager.sol";
+import {IAllocationManager} from "@eigenlayer-contracts/src/contracts/interfaces/IAllocationManager.sol";
 import {
     IEigenDACertVerifierRouter
 } from "@eigenda-contracts/src/integrations/cert/interfaces/IEigenDACertVerifierRouter.sol";
 import {IStrategy} from "@eigenlayer-contracts/src/contracts/interfaces/IStrategy.sol";
+import {IComputeAVSRegistrar} from "./IComputeAVSRegistrar.sol";
+import {IComputeOperator} from "./IComputeOperator.sol";
 
 interface ICloudReportCompendium {
     /// ERRORS
@@ -32,6 +36,9 @@ interface ICloudReportCompendium {
     /// @notice Thrown when report toTimestamp is in the future
     error ReportFromFuture();
 
+    /// @notice Thrown when trying to slash before the minimum slash interval has passed
+    error SlashTooSoon();
+
     /// EVENTS
 
     /// @notice Emitted when a cloud report is submitted
@@ -46,11 +53,13 @@ interface ICloudReportCompendium {
     /// @notice Emitted when the slash amount in tokens is updated
     event SlashAmountTokensSet(uint256 slashAmountTokens);
 
+    /// @notice Emitted when the minimum slash interval is updated
+    event MinSlashIntervalSet(uint32 minSlashInterval);
+
     /// STRUCTS
 
     struct CloudReportSubmission {
         uint32 submissionTimestamp;
-        uint32 fromTimestamp;
         uint32 toTimestamp;
         bytes20 eigendaCertHash; // using bytes20 for packing
     }
@@ -67,8 +76,20 @@ interface ICloudReportCompendium {
     /// @notice The EIP-712 typehash for the CloudReport struct.
     function CLOUD_REPORT_TYPEHASH() external view returns (bytes32);
 
+    /// @notice The EigenLayer DelegationManager contract.
+    function delegationManager() external view returns (IDelegationManager);
+
+    /// @notice The EigenLayer AllocationManager contract.
+    function allocationManager() external view returns (IAllocationManager);
+
     /// @notice The address of the EigenDA Cert Verifier Router contract.
     function certVerifierRouter() external view returns (IEigenDACertVerifierRouter);
+
+    /// @notice The ComputeAVSRegistrar contract.
+    function computeAVSRegistrar() external view returns (IComputeAVSRegistrar);
+
+    /// @notice The ComputeOperator contract.
+    function computeOperator() external view returns (IComputeOperator);
 
     /// @notice The address that must sign cloud reports.
     function reportAttester() external view returns (address);
@@ -88,6 +109,12 @@ interface ICloudReportCompendium {
     /// @notice The absolute amount in tokens to slash.
     function slashAmountTokens() external view returns (uint256);
 
+    /// @notice The minimum time interval between slashes (in seconds).
+    function minSlashInterval() external view returns (uint32);
+
+    /// @notice The timestamp when the last slash occurred.
+    function lastSlashTimestamp() external view returns (uint32);
+
     /// @notice The latest cloud report submission.
     function latestReportSubmission() external view returns (CloudReportSubmission memory);
 
@@ -102,8 +129,9 @@ interface ICloudReportCompendium {
      * @notice Initializes the CloudReportCompendium contract
      * @param _reportFreshnessThreshold The number of blocks within which a report must be submitted
      * @param _slashAmountTokens The absolute amount in tokens to slash
+     * @param _minSlashInterval The minimum time interval between slashes (in seconds)
      */
-    function initialize(uint32 _reportFreshnessThreshold, uint256 _slashAmountTokens) external;
+    function initialize(uint32 _reportFreshnessThreshold, uint256 _slashAmountTokens, uint32 _minSlashInterval) external;
 
     /**
      * @notice Sets the report freshness threshold.
@@ -118,6 +146,13 @@ interface ICloudReportCompendium {
      * @dev Caller must be UAM permissioned
      */
     function setSlashAmountTokens(uint256 _slashAmountTokens) external;
+
+    /**
+     * @notice Sets the minimum slash interval.
+     * @param _minSlashInterval The new minimum interval in seconds.
+     * @dev Caller must be UAM permissioned
+     */
+    function setMinSlashInterval(uint32 _minSlashInterval) external;
 
     /**
      * @notice Submits a cloud report.

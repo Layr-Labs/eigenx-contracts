@@ -30,52 +30,55 @@ abstract contract CloudReportCompendiumStorage is ICloudReportCompendium {
     }
 
     /// CONSTANTS
-    /// @notice The EIP-712 typehash for the CloudReport struct
+    /// @inheritdoc ICloudReportCompendium
     bytes32 public constant CLOUD_REPORT_TYPEHASH =
         keccak256("CloudReport(string projectId,uint32 fromTimestamp,uint32 toTimestamp,bytes eigendaCert)");
 
     /// @notice EigenDA cert verification success status code
     uint8 internal constant EIGENDA_CERT_SUCCESS = 1;
 
-    /// @notice Basis point constant for percentage calculations (100%)
-    uint256 internal constant WAD = 1e18;
-
     /// IMMUTABLES
 
-    /// @notice The EigenLayer DelegationManager contract
+    /// @inheritdoc ICloudReportCompendium
     IDelegationManager public immutable delegationManager;
 
-    /// @notice The EigenLayer AllocationManager contract
+    /// @inheritdoc ICloudReportCompendium
     IAllocationManager public immutable allocationManager;
 
     /// @inheritdoc ICloudReportCompendium
     IEigenDACertVerifierRouter public immutable certVerifierRouter;
 
-    /// @notice The ComputeAVSRegistrar contract
+    /// @inheritdoc ICloudReportCompendium
     IComputeAVSRegistrar public immutable computeAVSRegistrar;
 
-    /// @notice The ComputeOperator contract
+    /// @inheritdoc ICloudReportCompendium
     IComputeOperator public immutable computeOperator;
 
     /// @inheritdoc ICloudReportCompendium
     address public immutable reportAttester;
 
-    /// @notice The operator set ID this compendium is tracking
+    /// @inheritdoc ICloudReportCompendium
     uint32 public immutable operatorSetId;
 
-    /// @notice Hash of the reference project ID that reports must match
+    /// @inheritdoc ICloudReportCompendium
     bytes32 public immutable referenceProjectIdHash;
 
-    /// @notice The strategy to slash when an operator fails checks
+    /// @inheritdoc ICloudReportCompendium
     IStrategy public immutable strategyToSlash;
 
     /// STORAGE
 
-    /// @notice The number of blocks within which a report must be submitted
+    /// @inheritdoc ICloudReportCompendium
     uint32 public reportFreshnessThreshold;
 
-    /// @notice The absolute amount in tokens to slash
+    /// @inheritdoc ICloudReportCompendium
     uint256 public slashAmountTokens;
+
+    /// @inheritdoc ICloudReportCompendium
+    uint32 public minSlashInterval;
+
+    /// @inheritdoc ICloudReportCompendium
+    uint32 public lastSlashTimestamp;
 
     /// @notice The latest cloud report submission
     CloudReportSubmission internal _latestReportSubmission;
@@ -97,5 +100,5 @@ abstract contract CloudReportCompendiumStorage is ICloudReportCompendium {
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
-    uint256[44] private __gap;
+    uint256[43] private __gap;
 }
