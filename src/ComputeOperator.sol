@@ -6,6 +6,8 @@ import {
     IAllocationManager,
     IAllocationManagerTypes
 } from "@eigenlayer-contracts/src/contracts/interfaces/IAllocationManager.sol";
+import {OperatorSet} from "@eigenlayer-contracts/src/contracts/libraries/OperatorSetLib.sol";
+import {IStrategy} from "@eigenlayer-contracts/src/contracts/interfaces/IStrategy.sol";
 import {IPermissionController} from "@eigenlayer-contracts/src/contracts/interfaces/IPermissionController.sol";
 import {Initializable} from "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
 import {SemVerMixin} from "@eigenlayer-contracts/src/contracts/mixins/SemVerMixin.sol";
@@ -26,6 +28,7 @@ contract ComputeOperator is Initializable, SemVerMixin, ComputeOperatorStorage {
      * @param _permissionController The PermissionController contract from EigenLayer
      * @param _appController The AppController contract
      * @param _computeAVSRegistrar The ComputeAVSRegistrar contract
+     * @param _strategyToSlash The strategy to allocate and potentially slash
      */
     constructor(
         string memory _version,
@@ -33,11 +36,17 @@ contract ComputeOperator is Initializable, SemVerMixin, ComputeOperatorStorage {
         IAllocationManager _allocationManager,
         IPermissionController _permissionController,
         address _appController,
-        address _computeAVSRegistrar
+        address _computeAVSRegistrar,
+        IStrategy _strategyToSlash
     )
         SemVerMixin(_version)
         ComputeOperatorStorage(
-            _delegationManager, _allocationManager, _permissionController, _appController, _computeAVSRegistrar
+            _delegationManager,
+            _allocationManager,
+            _permissionController,
+            _appController,
+            _computeAVSRegistrar,
+            _strategyToSlash
         )
     {
         _disableInitializers();
@@ -61,5 +70,33 @@ contract ComputeOperator is Initializable, SemVerMixin, ComputeOperatorStorage {
         });
 
         allocationManager.registerForOperatorSets(address(this), params);
+    }
+
+    /// @inheritdoc IComputeOperator
+    function performInitialAllocation() external {
+        // Check if allocation already exists
+        IAllocationManager.Allocation memory allocation = allocationManager.getAllocation(
+            address(this), OperatorSet({avs: computeAVSRegistrar, id: SLASHING_OPERATORSET_ID}), strategyToSlash
+        );
+        require(allocation.currentMagnitude == 0, InitialAllocationAlreadyComplete());
+
+        // Create allocation params for operator set 0
+        // 10% = 1e17 in WAD format (where 1e18 = 100%)
+        uint64 tenPercentMagnitude = 1e17;
+
+        IStrategy[] memory strategies = new IStrategy[](1);
+        strategies[0] = strategyToSlash;
+
+        uint64[] memory magnitudes = new uint64[](1);
+        magnitudes[0] = tenPercentMagnitude;
+
+        IAllocationManagerTypes.AllocateParams[] memory allocateParams = new IAllocationManagerTypes.AllocateParams[](1);
+        allocateParams[0] = IAllocationManagerTypes.AllocateParams({
+            operatorSet: OperatorSet({avs: computeAVSRegistrar, id: SLASHING_OPERATORSET_ID}),
+            strategies: strategies,
+            newMagnitudes: magnitudes
+        });
+
+        allocationManager.modifyAllocations(address(this), allocateParams);
     }
 }

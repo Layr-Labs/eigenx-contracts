@@ -10,6 +10,7 @@ remappings = [
     "@eigenlayer-contracts/=lib/eigenlayer-middleware/lib/eigenlayer-contracts/",
     "@openzeppelin/=lib/eigenlayer-middleware/lib/openzeppelin-contracts/",
     "@openzeppelin-upgrades/=lib/eigenlayer-middleware/lib/openzeppelin-contracts-upgradeable/",
+    "@eigenda-contracts/=lib/eigenda/contracts"
 ]
 
 fs_permissions = [{ access = "read-write", path = "./" }]

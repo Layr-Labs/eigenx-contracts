@@ -1,0 +1,17 @@
+{
+  "lib/eigenda": {
+    "tag": {
+      "name": "v2.4.1",
+      "rev": "9c0c5621b5424560d7c640e28785ef56345178d4"
+    }
+  },
+  "lib/eigenlayer-middleware": {
+    "rev": "dbccc2119e1e63ffdfc5bacda7c60f6c1574c347"
+  },
+  "lib/forge-std": {
+    "rev": "8bbcf6e3f8f62f419e5429a0bd89331c85c37824"
+  },
+  "lib/zeus-templates": {
+    "rev": "b4c42abc64bb7cc414819deb177fa2f924a761a7"
+  }
+}

@@ -26,7 +26,7 @@ var (
 
 // ComputeOperatorMetaData contains all meta data concerning the ComputeOperator contract.
 var ComputeOperatorMetaData = bind.MetaData{
-	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"_delegationManager\",\"type\":\"address\",\"internalType\":\"contractIDelegationManager\"},{\"name\":\"_allocationManager\",\"type\":\"address\",\"internalType\":\"contractIAllocationManager\"},{\"name\":\"_permissionController\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"},{\"name\":\"_appController\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_computeAVSRegistrar\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"allocationManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIAllocationManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"appController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeAVSRegistrar\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"delegationManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIDelegationManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"operatorMetadataURI\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"permissionController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"registerForOperatorSet\",\"inputs\":[{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"InvalidShortString\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotAppController\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotComputeAVS\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"StringTooLong\",\"inputs\":[{\"name\":\"str\",\"type\":\"string\",\"internalType\":\"string\"}]}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"_delegationManager\",\"type\":\"address\",\"internalType\":\"contractIDelegationManager\"},{\"name\":\"_allocationManager\",\"type\":\"address\",\"internalType\":\"contractIAllocationManager\"},{\"name\":\"_permissionController\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"},{\"name\":\"_appController\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_computeAVSRegistrar\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_strategyToSlash\",\"type\":\"address\",\"internalType\":\"contractIStrategy\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"SLASHING_OPERATORSET_ID\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"allocationManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIAllocationManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"appController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeAVSRegistrar\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"delegationManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIDelegationManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"operatorMetadataURI\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"performInitialAllocation\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"permissionController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"registerForOperatorSet\",\"inputs\":[{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"strategyToSlash\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIStrategy\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"InitialAllocationAlreadyComplete\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidShortString\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotAppController\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotComputeAVS\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"StringTooLong\",\"inputs\":[{\"name\":\"str\",\"type\":\"string\",\"internalType\":\"string\"}]}]",
 	ID:  "ComputeOperator",
 }
 
@@ -53,13 +53,48 @@ func (c *ComputeOperator) Instance(backend bind.ContractBackend, addr common.Add
 // PackConstructor is the Go binding used to pack the parameters required for
 // contract deployment.
 //
-// Solidity: constructor(string _version, address _delegationManager, address _allocationManager, address _permissionController, address _appController, address _computeAVSRegistrar) returns()
-func (computeOperator *ComputeOperator) PackConstructor(_version string, _delegationManager common.Address, _allocationManager common.Address, _permissionController common.Address, _appController common.Address, _computeAVSRegistrar common.Address) []byte {
-	enc, err := computeOperator.abi.Pack("", _version, _delegationManager, _allocationManager, _permissionController, _appController, _computeAVSRegistrar)
+// Solidity: constructor(string _version, address _delegationManager, address _allocationManager, address _permissionController, address _appController, address _computeAVSRegistrar, address _strategyToSlash) returns()
+func (computeOperator *ComputeOperator) PackConstructor(_version string, _delegationManager common.Address, _allocationManager common.Address, _permissionController common.Address, _appController common.Address, _computeAVSRegistrar common.Address, _strategyToSlash common.Address) []byte {
+	enc, err := computeOperator.abi.Pack("", _version, _delegationManager, _allocationManager, _permissionController, _appController, _computeAVSRegistrar, _strategyToSlash)
 	if err != nil {
 		panic(err)
 	}
 	return enc
+}
+
+// PackSLASHINGOPERATORSETID is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x96b313c8.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function SLASHING_OPERATORSET_ID() view returns(uint32)
+func (computeOperator *ComputeOperator) PackSLASHINGOPERATORSETID() []byte {
+	enc, err := computeOperator.abi.Pack("SLASHING_OPERATORSET_ID")
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackSLASHINGOPERATORSETID is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x96b313c8.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function SLASHING_OPERATORSET_ID() view returns(uint32)
+func (computeOperator *ComputeOperator) TryPackSLASHINGOPERATORSETID() ([]byte, error) {
+	return computeOperator.abi.Pack("SLASHING_OPERATORSET_ID")
+}
+
+// UnpackSLASHINGOPERATORSETID is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x96b313c8.
+//
+// Solidity: function SLASHING_OPERATORSET_ID() view returns(uint32)
+func (computeOperator *ComputeOperator) UnpackSLASHINGOPERATORSETID(data []byte) (uint32, error) {
+	out, err := computeOperator.abi.Unpack("SLASHING_OPERATORSET_ID", data)
+	if err != nil {
+		return *new(uint32), err
+	}
+	out0 := *abi.ConvertType(out[0], new(uint32)).(*uint32)
+	return out0, nil
 }
 
 // PackAllocationManager is the Go binding used to pack the parameters required for calling
@@ -224,6 +259,28 @@ func (computeOperator *ComputeOperator) TryPackInitialize(operatorMetadataURI st
 	return computeOperator.abi.Pack("initialize", operatorMetadataURI)
 }
 
+// PackPerformInitialAllocation is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x33cd0d13.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function performInitialAllocation() returns()
+func (computeOperator *ComputeOperator) PackPerformInitialAllocation() []byte {
+	enc, err := computeOperator.abi.Pack("performInitialAllocation")
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackPerformInitialAllocation is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x33cd0d13.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function performInitialAllocation() returns()
+func (computeOperator *ComputeOperator) TryPackPerformInitialAllocation() ([]byte, error) {
+	return computeOperator.abi.Pack("performInitialAllocation")
+}
+
 // PackPermissionController is the Go binding used to pack the parameters required for calling
 // the contract method with ID 0x4657e26a.  This method will panic if any
 // invalid/nil inputs are passed.
@@ -279,6 +336,41 @@ func (computeOperator *ComputeOperator) PackRegisterForOperatorSet(operatorSetId
 // Solidity: function registerForOperatorSet(uint32 operatorSetId) returns()
 func (computeOperator *ComputeOperator) TryPackRegisterForOperatorSet(operatorSetId uint32) ([]byte, error) {
 	return computeOperator.abi.Pack("registerForOperatorSet", operatorSetId)
+}
+
+// PackStrategyToSlash is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x5ac080f1.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function strategyToSlash() view returns(address)
+func (computeOperator *ComputeOperator) PackStrategyToSlash() []byte {
+	enc, err := computeOperator.abi.Pack("strategyToSlash")
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackStrategyToSlash is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x5ac080f1.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function strategyToSlash() view returns(address)
+func (computeOperator *ComputeOperator) TryPackStrategyToSlash() ([]byte, error) {
+	return computeOperator.abi.Pack("strategyToSlash")
+}
+
+// UnpackStrategyToSlash is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x5ac080f1.
+//
+// Solidity: function strategyToSlash() view returns(address)
+func (computeOperator *ComputeOperator) UnpackStrategyToSlash(data []byte) (common.Address, error) {
+	out, err := computeOperator.abi.Unpack("strategyToSlash", data)
+	if err != nil {
+		return *new(common.Address), err
+	}
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+	return out0, nil
 }
 
 // PackVersion is the Go binding used to pack the parameters required for calling
@@ -360,6 +452,9 @@ func (computeOperator *ComputeOperator) UnpackInitializedEvent(log *types.Log) (
 // UnpackError attempts to decode the provided error data using user-defined
 // error definitions.
 func (computeOperator *ComputeOperator) UnpackError(raw []byte) (any, error) {
+	if bytes.Equal(raw[:4], computeOperator.abi.Errors["InitialAllocationAlreadyComplete"].ID.Bytes()[:4]) {
+		return computeOperator.UnpackInitialAllocationAlreadyCompleteError(raw[4:])
+	}
 	if bytes.Equal(raw[:4], computeOperator.abi.Errors["InvalidShortString"].ID.Bytes()[:4]) {
 		return computeOperator.UnpackInvalidShortStringError(raw[4:])
 	}
@@ -373,6 +468,29 @@ func (computeOperator *ComputeOperator) UnpackError(raw []byte) (any, error) {
 		return computeOperator.UnpackStringTooLongError(raw[4:])
 	}
 	return nil, errors.New("Unknown error")
+}
+
+// ComputeOperatorInitialAllocationAlreadyComplete represents a InitialAllocationAlreadyComplete error raised by the ComputeOperator contract.
+type ComputeOperatorInitialAllocationAlreadyComplete struct {
+}
+
+// ErrorID returns the hash of canonical representation of the error's signature.
+//
+// Solidity: error InitialAllocationAlreadyComplete()
+func ComputeOperatorInitialAllocationAlreadyCompleteErrorID() common.Hash {
+	return common.HexToHash("0xecda00a561411299445aa34e692dae071871089b3338c0cc1b27fb64e7804d94")
+}
+
+// UnpackInitialAllocationAlreadyCompleteError is the Go binding used to decode the provided
+// error data into the corresponding Go error struct.
+//
+// Solidity: error InitialAllocationAlreadyComplete()
+func (computeOperator *ComputeOperator) UnpackInitialAllocationAlreadyCompleteError(raw []byte) (*ComputeOperatorInitialAllocationAlreadyComplete, error) {
+	out := new(ComputeOperatorInitialAllocationAlreadyComplete)
+	if err := computeOperator.abi.UnpackIntoInterface(out, "InitialAllocationAlreadyComplete", raw); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 // ComputeOperatorInvalidShortString represents a InvalidShortString error raised by the ComputeOperator contract.

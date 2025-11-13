@@ -13,6 +13,7 @@ import {IAllocationManager} from "@eigenlayer-contracts/src/contracts/interfaces
 import {IKeyRegistrar} from "@eigenlayer-contracts/src/contracts/interfaces/IKeyRegistrar.sol";
 import {IPermissionController} from "@eigenlayer-contracts/src/contracts/interfaces/IPermissionController.sol";
 import {IReleaseManager} from "@eigenlayer-contracts/src/contracts/interfaces/IReleaseManager.sol";
+import {IStrategy} from "@eigenlayer-contracts/src/contracts/interfaces/IStrategy.sol";
 import {EmptyContract} from "@eigenlayer-contracts/src/test/mocks/EmptyContract.sol";
 
 import {App} from "../../../src/App.sol";
@@ -73,7 +74,8 @@ contract Deploy is EOADeployer {
             _allocationManager: Env.allocationManager(),
             _permissionController: Env.permissionController(),
             _appController: address(appControllerProxy),
-            _computeAVSRegistrar: address(computeAVSRegistrarProxy)
+            _computeAVSRegistrar: address(computeAVSRegistrarProxy),
+            _strategyToSlash: IStrategy(address(emptyContract))
         });
 
         AppController appControllerImpl = new AppController({

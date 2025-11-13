@@ -13,6 +13,7 @@ import {IAllocationManager} from "@eigenlayer-contracts/src/contracts/interfaces
 import {IKeyRegistrar} from "@eigenlayer-contracts/src/contracts/interfaces/IKeyRegistrar.sol";
 import {IPermissionController} from "@eigenlayer-contracts/src/contracts/interfaces/IPermissionController.sol";
 import {IReleaseManager} from "@eigenlayer-contracts/src/contracts/interfaces/IReleaseManager.sol";
+import {IStrategy} from "@eigenlayer-contracts/src/contracts/interfaces/IStrategy.sol";
 import {EmptyContract} from "@eigenlayer-contracts/src/test/mocks/EmptyContract.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {App} from "../src/App.sol";
@@ -80,7 +81,8 @@ contract Deploy is Parser {
             _allocationManager: params.allocationManager,
             _permissionController: params.permissionController,
             _appController: address(appControllerProxy),
-            _computeAVSRegistrar: address(computeAVSRegistrarProxy)
+            _computeAVSRegistrar: address(computeAVSRegistrarProxy),
+            _strategyToSlash: IStrategy(address(emptyContract))
         });
         AppController appControllerImpl = new AppController({
             _version: params.version,

@@ -4,10 +4,15 @@ pragma solidity ^0.8.27;
 import {IDelegationManager} from "@eigenlayer-contracts/src/contracts/interfaces/IDelegationManager.sol";
 import {IAllocationManager} from "@eigenlayer-contracts/src/contracts/interfaces/IAllocationManager.sol";
 import {IPermissionController} from "@eigenlayer-contracts/src/contracts/interfaces/IPermissionController.sol";
+import {IStrategy} from "@eigenlayer-contracts/src/contracts/interfaces/IStrategy.sol";
 import {IComputeOperator} from "../interfaces/IComputeOperator.sol";
 
 abstract contract ComputeOperatorStorage is IComputeOperator {
-    /// CONSTANTS & IMMUTABLES
+    /// CONSTANTS
+    /// @notice The operator set ID used for slashing
+    uint32 public constant SLASHING_OPERATORSET_ID = 0;
+
+    /// IMMUTABLES
     /// @notice The EigenLayer DelegationManager contract
     IDelegationManager public immutable delegationManager;
 
@@ -23,18 +28,25 @@ abstract contract ComputeOperatorStorage is IComputeOperator {
     /// @notice The ComputeAVSRegistrar contract
     address public immutable computeAVSRegistrar;
 
+    /// @notice The strategy to slash when operator fails to meet requirements
+    IStrategy public immutable strategyToSlash;
+
+    /// STORAGE
+
     constructor(
         IDelegationManager _delegationManager,
         IAllocationManager _allocationManager,
         IPermissionController _permissionController,
         address _appController,
-        address _computeAVSRegistrar
+        address _computeAVSRegistrar,
+        IStrategy _strategyToSlash
     ) {
         delegationManager = _delegationManager;
         allocationManager = _allocationManager;
         permissionController = _permissionController;
         appController = _appController;
         computeAVSRegistrar = _computeAVSRegistrar;
+        strategyToSlash = _strategyToSlash;
     }
 
     /**

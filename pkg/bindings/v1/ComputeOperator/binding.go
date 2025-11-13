@@ -31,7 +31,7 @@ var (
 
 // ComputeOperatorMetaData contains all meta data concerning the ComputeOperator contract.
 var ComputeOperatorMetaData = &bind.MetaData{
-	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"_delegationManager\",\"type\":\"address\",\"internalType\":\"contractIDelegationManager\"},{\"name\":\"_allocationManager\",\"type\":\"address\",\"internalType\":\"contractIAllocationManager\"},{\"name\":\"_permissionController\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"},{\"name\":\"_appController\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_computeAVSRegistrar\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"allocationManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIAllocationManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"appController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeAVSRegistrar\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"delegationManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIDelegationManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"operatorMetadataURI\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"permissionController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"registerForOperatorSet\",\"inputs\":[{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"InvalidShortString\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotAppController\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotComputeAVS\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"StringTooLong\",\"inputs\":[{\"name\":\"str\",\"type\":\"string\",\"internalType\":\"string\"}]}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"_delegationManager\",\"type\":\"address\",\"internalType\":\"contractIDelegationManager\"},{\"name\":\"_allocationManager\",\"type\":\"address\",\"internalType\":\"contractIAllocationManager\"},{\"name\":\"_permissionController\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"},{\"name\":\"_appController\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_computeAVSRegistrar\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_strategyToSlash\",\"type\":\"address\",\"internalType\":\"contractIStrategy\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"SLASHING_OPERATORSET_ID\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"allocationManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIAllocationManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"appController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeAVSRegistrar\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"delegationManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIDelegationManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"operatorMetadataURI\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"performInitialAllocation\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"permissionController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"registerForOperatorSet\",\"inputs\":[{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"strategyToSlash\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIStrategy\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"InitialAllocationAlreadyComplete\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidShortString\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotAppController\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotComputeAVS\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"StringTooLong\",\"inputs\":[{\"name\":\"str\",\"type\":\"string\",\"internalType\":\"string\"}]}]",
 }
 
 // ComputeOperatorABI is the input ABI used to generate the binding from.
@@ -178,6 +178,37 @@ func (_ComputeOperator *ComputeOperatorTransactorRaw) Transfer(opts *bind.Transa
 // Transact invokes the (paid) contract method with params as input values.
 func (_ComputeOperator *ComputeOperatorTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _ComputeOperator.Contract.contract.Transact(opts, method, params...)
+}
+
+// SLASHINGOPERATORSETID is a free data retrieval call binding the contract method 0x96b313c8.
+//
+// Solidity: function SLASHING_OPERATORSET_ID() view returns(uint32)
+func (_ComputeOperator *ComputeOperatorCaller) SLASHINGOPERATORSETID(opts *bind.CallOpts) (uint32, error) {
+	var out []interface{}
+	err := _ComputeOperator.contract.Call(opts, &out, "SLASHING_OPERATORSET_ID")
+
+	if err != nil {
+		return *new(uint32), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint32)).(*uint32)
+
+	return out0, err
+
+}
+
+// SLASHINGOPERATORSETID is a free data retrieval call binding the contract method 0x96b313c8.
+//
+// Solidity: function SLASHING_OPERATORSET_ID() view returns(uint32)
+func (_ComputeOperator *ComputeOperatorSession) SLASHINGOPERATORSETID() (uint32, error) {
+	return _ComputeOperator.Contract.SLASHINGOPERATORSETID(&_ComputeOperator.CallOpts)
+}
+
+// SLASHINGOPERATORSETID is a free data retrieval call binding the contract method 0x96b313c8.
+//
+// Solidity: function SLASHING_OPERATORSET_ID() view returns(uint32)
+func (_ComputeOperator *ComputeOperatorCallerSession) SLASHINGOPERATORSETID() (uint32, error) {
+	return _ComputeOperator.Contract.SLASHINGOPERATORSETID(&_ComputeOperator.CallOpts)
 }
 
 // AllocationManager is a free data retrieval call binding the contract method 0xca8aa7c7.
@@ -335,6 +366,37 @@ func (_ComputeOperator *ComputeOperatorCallerSession) PermissionController() (co
 	return _ComputeOperator.Contract.PermissionController(&_ComputeOperator.CallOpts)
 }
 
+// StrategyToSlash is a free data retrieval call binding the contract method 0x5ac080f1.
+//
+// Solidity: function strategyToSlash() view returns(address)
+func (_ComputeOperator *ComputeOperatorCaller) StrategyToSlash(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _ComputeOperator.contract.Call(opts, &out, "strategyToSlash")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// StrategyToSlash is a free data retrieval call binding the contract method 0x5ac080f1.
+//
+// Solidity: function strategyToSlash() view returns(address)
+func (_ComputeOperator *ComputeOperatorSession) StrategyToSlash() (common.Address, error) {
+	return _ComputeOperator.Contract.StrategyToSlash(&_ComputeOperator.CallOpts)
+}
+
+// StrategyToSlash is a free data retrieval call binding the contract method 0x5ac080f1.
+//
+// Solidity: function strategyToSlash() view returns(address)
+func (_ComputeOperator *ComputeOperatorCallerSession) StrategyToSlash() (common.Address, error) {
+	return _ComputeOperator.Contract.StrategyToSlash(&_ComputeOperator.CallOpts)
+}
+
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(string)
@@ -385,6 +447,27 @@ func (_ComputeOperator *ComputeOperatorSession) Initialize(operatorMetadataURI s
 // Solidity: function initialize(string operatorMetadataURI) returns()
 func (_ComputeOperator *ComputeOperatorTransactorSession) Initialize(operatorMetadataURI string) (*types.Transaction, error) {
 	return _ComputeOperator.Contract.Initialize(&_ComputeOperator.TransactOpts, operatorMetadataURI)
+}
+
+// PerformInitialAllocation is a paid mutator transaction binding the contract method 0x33cd0d13.
+//
+// Solidity: function performInitialAllocation() returns()
+func (_ComputeOperator *ComputeOperatorTransactor) PerformInitialAllocation(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _ComputeOperator.contract.Transact(opts, "performInitialAllocation")
+}
+
+// PerformInitialAllocation is a paid mutator transaction binding the contract method 0x33cd0d13.
+//
+// Solidity: function performInitialAllocation() returns()
+func (_ComputeOperator *ComputeOperatorSession) PerformInitialAllocation() (*types.Transaction, error) {
+	return _ComputeOperator.Contract.PerformInitialAllocation(&_ComputeOperator.TransactOpts)
+}
+
+// PerformInitialAllocation is a paid mutator transaction binding the contract method 0x33cd0d13.
+//
+// Solidity: function performInitialAllocation() returns()
+func (_ComputeOperator *ComputeOperatorTransactorSession) PerformInitialAllocation() (*types.Transaction, error) {
+	return _ComputeOperator.Contract.PerformInitialAllocation(&_ComputeOperator.TransactOpts)
 }
 
 // RegisterForOperatorSet is a paid mutator transaction binding the contract method 0x4ca62978.
