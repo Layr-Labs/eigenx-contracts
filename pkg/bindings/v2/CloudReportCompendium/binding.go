@@ -32,7 +32,6 @@ type CloudReportCompendiumStorageConstructorParams struct {
 	ComputeAVSRegistrar common.Address
 	ComputeOperator     common.Address
 	ReportAttester      common.Address
-	OperatorSetId       uint32
 	ReferenceProjectId  string
 	StrategyToSlash     common.Address
 }
@@ -48,14 +47,13 @@ type ICloudReportCompendiumCloudReport struct {
 // ICloudReportCompendiumCloudReportSubmission is an auto generated low-level Go binding around an user-defined struct.
 type ICloudReportCompendiumCloudReportSubmission struct {
 	SubmissionTimestamp uint32
-	FromTimestamp       uint32
 	ToTimestamp         uint32
 	EigendaCertHash     [20]byte
 }
 
 // CloudReportCompendiumMetaData contains all meta data concerning the CloudReportCompendium contract.
 var CloudReportCompendiumMetaData = bind.MetaData{
-	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"_permissionController\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"},{\"name\":\"params\",\"type\":\"tuple\",\"internalType\":\"structCloudReportCompendiumStorage.ConstructorParams\",\"components\":[{\"name\":\"delegationManager\",\"type\":\"address\",\"internalType\":\"contractIDelegationManager\"},{\"name\":\"allocationManager\",\"type\":\"address\",\"internalType\":\"contractIAllocationManager\"},{\"name\":\"certVerifierRouter\",\"type\":\"address\",\"internalType\":\"contractIEigenDACertVerifierRouter\"},{\"name\":\"computeAVSRegistrar\",\"type\":\"address\",\"internalType\":\"contractIComputeAVSRegistrar\"},{\"name\":\"computeOperator\",\"type\":\"address\",\"internalType\":\"contractIComputeOperator\"},{\"name\":\"reportAttester\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"referenceProjectId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"strategyToSlash\",\"type\":\"address\",\"internalType\":\"contractIStrategy\"}]}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"CLOUD_REPORT_TYPEHASH\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"allocationManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIAllocationManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"calculateReportDigestHash\",\"inputs\":[{\"name\":\"report\",\"type\":\"tuple\",\"internalType\":\"structICloudReportCompendium.CloudReport\",\"components\":[{\"name\":\"projectId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"fromTimestamp\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"toTimestamp\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"eigendaCert\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"certVerifierRouter\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIEigenDACertVerifierRouter\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeAVSRegistrar\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIComputeAVSRegistrar\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeOperator\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIComputeOperator\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"delegationManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIDelegationManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"domainSeparator\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"_reportFreshnessThreshold\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"_slashAmountTokens\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"latestReportSubmission\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"tuple\",\"internalType\":\"structICloudReportCompendium.CloudReportSubmission\",\"components\":[{\"name\":\"submissionTimestamp\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"fromTimestamp\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"toTimestamp\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"eigendaCertHash\",\"type\":\"bytes20\",\"internalType\":\"bytes20\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"operatorSetId\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"permissionController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"referenceProjectIdHash\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"reportAttester\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"reportFreshnessThreshold\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"setReportFreshnessThreshold\",\"inputs\":[{\"name\":\"_reportFreshnessThreshold\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setSlashAmountTokens\",\"inputs\":[{\"name\":\"_slashAmountTokens\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"slash\",\"inputs\":[{\"name\":\"eigendaCert\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"slashAmountTokens\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"strategyToSlash\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIStrategy\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"submitReport\",\"inputs\":[{\"name\":\"report\",\"type\":\"tuple\",\"internalType\":\"structICloudReportCompendium.CloudReport\",\"components\":[{\"name\":\"projectId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"fromTimestamp\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"toTimestamp\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"eigendaCert\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]},{\"name\":\"signature\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OperatorSlashed\",\"inputs\":[{\"name\":\"operator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"indexed\":true,\"internalType\":\"uint32\"},{\"name\":\"reason\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"},{\"name\":\"slashId\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"ReportFreshnessThresholdSet\",\"inputs\":[{\"name\":\"reportFreshnessThreshold\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"ReportSubmitted\",\"inputs\":[{\"name\":\"report\",\"type\":\"tuple\",\"indexed\":false,\"internalType\":\"structICloudReportCompendium.CloudReport\",\"components\":[{\"name\":\"projectId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"fromTimestamp\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"toTimestamp\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"eigendaCert\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]},{\"name\":\"timestamp\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"SlashAmountTokensSet\",\"inputs\":[{\"name\":\"slashAmountTokens\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"InsufficientAllocation\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidCertificate\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidPermissions\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidProjectId\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidReportTimestamps\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidShortString\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidSignature\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NoSlashRequired\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ReportChainTimestampMismatch\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ReportFromFuture\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ReportTooStale\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"SignatureExpired\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"StringTooLong\",\"inputs\":[{\"name\":\"str\",\"type\":\"string\",\"internalType\":\"string\"}]}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"_permissionController\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"},{\"name\":\"params\",\"type\":\"tuple\",\"internalType\":\"structCloudReportCompendiumStorage.ConstructorParams\",\"components\":[{\"name\":\"delegationManager\",\"type\":\"address\",\"internalType\":\"contractIDelegationManager\"},{\"name\":\"allocationManager\",\"type\":\"address\",\"internalType\":\"contractIAllocationManager\"},{\"name\":\"certVerifierRouter\",\"type\":\"address\",\"internalType\":\"contractIEigenDACertVerifierRouter\"},{\"name\":\"computeAVSRegistrar\",\"type\":\"address\",\"internalType\":\"contractIComputeAVSRegistrar\"},{\"name\":\"computeOperator\",\"type\":\"address\",\"internalType\":\"contractIComputeOperator\"},{\"name\":\"reportAttester\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"referenceProjectId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"strategyToSlash\",\"type\":\"address\",\"internalType\":\"contractIStrategy\"}]}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"CLOUD_REPORT_TYPEHASH\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"SLASHING_OPERATORSET_ID\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"allocationManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIAllocationManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"calculateReportDigestHash\",\"inputs\":[{\"name\":\"report\",\"type\":\"tuple\",\"internalType\":\"structICloudReportCompendium.CloudReport\",\"components\":[{\"name\":\"projectId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"fromTimestamp\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"toTimestamp\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"eigendaCert\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"certVerifierRouter\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIEigenDACertVerifierRouter\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeAVSRegistrar\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIComputeAVSRegistrar\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeOperator\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIComputeOperator\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"delegationManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIDelegationManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"domainSeparator\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"_reportFreshnessThreshold\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"_slashAmountTokens\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"_minSlashInterval\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"lastSlashTimestamp\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"latestReportSubmission\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"tuple\",\"internalType\":\"structICloudReportCompendium.CloudReportSubmission\",\"components\":[{\"name\":\"submissionTimestamp\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"toTimestamp\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"eigendaCertHash\",\"type\":\"bytes20\",\"internalType\":\"bytes20\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"minSlashInterval\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"permissionController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"referenceProjectIdHash\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"reportAttester\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"reportFreshnessThreshold\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"setMinSlashInterval\",\"inputs\":[{\"name\":\"_minSlashInterval\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setReportFreshnessThreshold\",\"inputs\":[{\"name\":\"_reportFreshnessThreshold\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setSlashAmountTokens\",\"inputs\":[{\"name\":\"_slashAmountTokens\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"slash\",\"inputs\":[{\"name\":\"eigendaCert\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"slashAmountTokens\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"strategyToSlash\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIStrategy\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"submitReport\",\"inputs\":[{\"name\":\"report\",\"type\":\"tuple\",\"internalType\":\"structICloudReportCompendium.CloudReport\",\"components\":[{\"name\":\"projectId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"fromTimestamp\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"toTimestamp\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"eigendaCert\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]},{\"name\":\"signature\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MinSlashIntervalSet\",\"inputs\":[{\"name\":\"minSlashInterval\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OperatorSlashed\",\"inputs\":[{\"name\":\"operator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"indexed\":true,\"internalType\":\"uint32\"},{\"name\":\"reason\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"},{\"name\":\"slashId\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"ReportFreshnessThresholdSet\",\"inputs\":[{\"name\":\"reportFreshnessThreshold\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"ReportSubmitted\",\"inputs\":[{\"name\":\"report\",\"type\":\"tuple\",\"indexed\":false,\"internalType\":\"structICloudReportCompendium.CloudReport\",\"components\":[{\"name\":\"projectId\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"fromTimestamp\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"toTimestamp\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"eigendaCert\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]},{\"name\":\"timestamp\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"SlashAmountTokensSet\",\"inputs\":[{\"name\":\"slashAmountTokens\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"InsufficientAllocation\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidCertificate\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidPermissions\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidProjectId\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidReportTimestamps\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidShortString\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidSignature\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NoSlashRequired\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ReportChainTimestampMismatch\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ReportFromFuture\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ReportTooStale\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"SignatureExpired\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"SlashTooSoon\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"StringTooLong\",\"inputs\":[{\"name\":\"str\",\"type\":\"string\",\"internalType\":\"string\"}]}]",
 	ID:  "CloudReportCompendium",
 }
 
@@ -82,7 +80,7 @@ func (c *CloudReportCompendium) Instance(backend bind.ContractBackend, addr comm
 // PackConstructor is the Go binding used to pack the parameters required for
 // contract deployment.
 //
-// Solidity: constructor(string _version, address _permissionController, (address,address,address,address,address,address,uint32,string,address) params) returns()
+// Solidity: constructor(string _version, address _permissionController, (address,address,address,address,address,address,string,address) params) returns()
 func (cloudReportCompendium *CloudReportCompendium) PackConstructor(_version string, _permissionController common.Address, params CloudReportCompendiumStorageConstructorParams) []byte {
 	enc, err := cloudReportCompendium.abi.Pack("", _version, _permissionController, params)
 	if err != nil {
@@ -123,6 +121,41 @@ func (cloudReportCompendium *CloudReportCompendium) UnpackCLOUDREPORTTYPEHASH(da
 		return *new([32]byte), err
 	}
 	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+	return out0, nil
+}
+
+// PackSLASHINGOPERATORSETID is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x96b313c8.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function SLASHING_OPERATORSET_ID() view returns(uint32)
+func (cloudReportCompendium *CloudReportCompendium) PackSLASHINGOPERATORSETID() []byte {
+	enc, err := cloudReportCompendium.abi.Pack("SLASHING_OPERATORSET_ID")
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackSLASHINGOPERATORSETID is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x96b313c8.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function SLASHING_OPERATORSET_ID() view returns(uint32)
+func (cloudReportCompendium *CloudReportCompendium) TryPackSLASHINGOPERATORSETID() ([]byte, error) {
+	return cloudReportCompendium.abi.Pack("SLASHING_OPERATORSET_ID")
+}
+
+// UnpackSLASHINGOPERATORSETID is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x96b313c8.
+//
+// Solidity: function SLASHING_OPERATORSET_ID() view returns(uint32)
+func (cloudReportCompendium *CloudReportCompendium) UnpackSLASHINGOPERATORSETID(data []byte) (uint32, error) {
+	out, err := cloudReportCompendium.abi.Unpack("SLASHING_OPERATORSET_ID", data)
+	if err != nil {
+		return *new(uint32), err
+	}
+	out0 := *abi.ConvertType(out[0], new(uint32)).(*uint32)
 	return out0, nil
 }
 
@@ -372,12 +405,12 @@ func (cloudReportCompendium *CloudReportCompendium) UnpackDomainSeparator(data [
 }
 
 // PackInitialize is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x282558d9.  This method will panic if any
+// the contract method with ID 0x0d302011.  This method will panic if any
 // invalid/nil inputs are passed.
 //
-// Solidity: function initialize(uint32 _reportFreshnessThreshold, uint256 _slashAmountTokens) returns()
-func (cloudReportCompendium *CloudReportCompendium) PackInitialize(reportFreshnessThreshold uint32, slashAmountTokens *big.Int) []byte {
-	enc, err := cloudReportCompendium.abi.Pack("initialize", reportFreshnessThreshold, slashAmountTokens)
+// Solidity: function initialize(uint32 _reportFreshnessThreshold, uint256 _slashAmountTokens, uint32 _minSlashInterval) returns()
+func (cloudReportCompendium *CloudReportCompendium) PackInitialize(reportFreshnessThreshold uint32, slashAmountTokens *big.Int, minSlashInterval uint32) []byte {
+	enc, err := cloudReportCompendium.abi.Pack("initialize", reportFreshnessThreshold, slashAmountTokens, minSlashInterval)
 	if err != nil {
 		panic(err)
 	}
@@ -385,19 +418,54 @@ func (cloudReportCompendium *CloudReportCompendium) PackInitialize(reportFreshne
 }
 
 // TryPackInitialize is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x282558d9.  This method will return an error
+// the contract method with ID 0x0d302011.  This method will return an error
 // if any inputs are invalid/nil.
 //
-// Solidity: function initialize(uint32 _reportFreshnessThreshold, uint256 _slashAmountTokens) returns()
-func (cloudReportCompendium *CloudReportCompendium) TryPackInitialize(reportFreshnessThreshold uint32, slashAmountTokens *big.Int) ([]byte, error) {
-	return cloudReportCompendium.abi.Pack("initialize", reportFreshnessThreshold, slashAmountTokens)
+// Solidity: function initialize(uint32 _reportFreshnessThreshold, uint256 _slashAmountTokens, uint32 _minSlashInterval) returns()
+func (cloudReportCompendium *CloudReportCompendium) TryPackInitialize(reportFreshnessThreshold uint32, slashAmountTokens *big.Int, minSlashInterval uint32) ([]byte, error) {
+	return cloudReportCompendium.abi.Pack("initialize", reportFreshnessThreshold, slashAmountTokens, minSlashInterval)
+}
+
+// PackLastSlashTimestamp is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xc77f5062.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function lastSlashTimestamp() view returns(uint32)
+func (cloudReportCompendium *CloudReportCompendium) PackLastSlashTimestamp() []byte {
+	enc, err := cloudReportCompendium.abi.Pack("lastSlashTimestamp")
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackLastSlashTimestamp is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xc77f5062.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function lastSlashTimestamp() view returns(uint32)
+func (cloudReportCompendium *CloudReportCompendium) TryPackLastSlashTimestamp() ([]byte, error) {
+	return cloudReportCompendium.abi.Pack("lastSlashTimestamp")
+}
+
+// UnpackLastSlashTimestamp is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0xc77f5062.
+//
+// Solidity: function lastSlashTimestamp() view returns(uint32)
+func (cloudReportCompendium *CloudReportCompendium) UnpackLastSlashTimestamp(data []byte) (uint32, error) {
+	out, err := cloudReportCompendium.abi.Unpack("lastSlashTimestamp", data)
+	if err != nil {
+		return *new(uint32), err
+	}
+	out0 := *abi.ConvertType(out[0], new(uint32)).(*uint32)
+	return out0, nil
 }
 
 // PackLatestReportSubmission is the Go binding used to pack the parameters required for calling
 // the contract method with ID 0x371517a4.  This method will panic if any
 // invalid/nil inputs are passed.
 //
-// Solidity: function latestReportSubmission() view returns((uint32,uint32,uint32,bytes20))
+// Solidity: function latestReportSubmission() view returns((uint32,uint32,bytes20))
 func (cloudReportCompendium *CloudReportCompendium) PackLatestReportSubmission() []byte {
 	enc, err := cloudReportCompendium.abi.Pack("latestReportSubmission")
 	if err != nil {
@@ -410,7 +478,7 @@ func (cloudReportCompendium *CloudReportCompendium) PackLatestReportSubmission()
 // the contract method with ID 0x371517a4.  This method will return an error
 // if any inputs are invalid/nil.
 //
-// Solidity: function latestReportSubmission() view returns((uint32,uint32,uint32,bytes20))
+// Solidity: function latestReportSubmission() view returns((uint32,uint32,bytes20))
 func (cloudReportCompendium *CloudReportCompendium) TryPackLatestReportSubmission() ([]byte, error) {
 	return cloudReportCompendium.abi.Pack("latestReportSubmission")
 }
@@ -418,7 +486,7 @@ func (cloudReportCompendium *CloudReportCompendium) TryPackLatestReportSubmissio
 // UnpackLatestReportSubmission is the Go binding that unpacks the parameters returned
 // from invoking the contract method with ID 0x371517a4.
 //
-// Solidity: function latestReportSubmission() view returns((uint32,uint32,uint32,bytes20))
+// Solidity: function latestReportSubmission() view returns((uint32,uint32,bytes20))
 func (cloudReportCompendium *CloudReportCompendium) UnpackLatestReportSubmission(data []byte) (ICloudReportCompendiumCloudReportSubmission, error) {
 	out, err := cloudReportCompendium.abi.Unpack("latestReportSubmission", data)
 	if err != nil {
@@ -428,34 +496,34 @@ func (cloudReportCompendium *CloudReportCompendium) UnpackLatestReportSubmission
 	return out0, nil
 }
 
-// PackOperatorSetId is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xe1ebfc37.  This method will panic if any
+// PackMinSlashInterval is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x18e38c93.  This method will panic if any
 // invalid/nil inputs are passed.
 //
-// Solidity: function operatorSetId() view returns(uint32)
-func (cloudReportCompendium *CloudReportCompendium) PackOperatorSetId() []byte {
-	enc, err := cloudReportCompendium.abi.Pack("operatorSetId")
+// Solidity: function minSlashInterval() view returns(uint32)
+func (cloudReportCompendium *CloudReportCompendium) PackMinSlashInterval() []byte {
+	enc, err := cloudReportCompendium.abi.Pack("minSlashInterval")
 	if err != nil {
 		panic(err)
 	}
 	return enc
 }
 
-// TryPackOperatorSetId is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xe1ebfc37.  This method will return an error
+// TryPackMinSlashInterval is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x18e38c93.  This method will return an error
 // if any inputs are invalid/nil.
 //
-// Solidity: function operatorSetId() view returns(uint32)
-func (cloudReportCompendium *CloudReportCompendium) TryPackOperatorSetId() ([]byte, error) {
-	return cloudReportCompendium.abi.Pack("operatorSetId")
+// Solidity: function minSlashInterval() view returns(uint32)
+func (cloudReportCompendium *CloudReportCompendium) TryPackMinSlashInterval() ([]byte, error) {
+	return cloudReportCompendium.abi.Pack("minSlashInterval")
 }
 
-// UnpackOperatorSetId is the Go binding that unpacks the parameters returned
-// from invoking the contract method with ID 0xe1ebfc37.
+// UnpackMinSlashInterval is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x18e38c93.
 //
-// Solidity: function operatorSetId() view returns(uint32)
-func (cloudReportCompendium *CloudReportCompendium) UnpackOperatorSetId(data []byte) (uint32, error) {
-	out, err := cloudReportCompendium.abi.Unpack("operatorSetId", data)
+// Solidity: function minSlashInterval() view returns(uint32)
+func (cloudReportCompendium *CloudReportCompendium) UnpackMinSlashInterval(data []byte) (uint32, error) {
+	out, err := cloudReportCompendium.abi.Unpack("minSlashInterval", data)
 	if err != nil {
 		return *new(uint32), err
 	}
@@ -601,6 +669,28 @@ func (cloudReportCompendium *CloudReportCompendium) UnpackReportFreshnessThresho
 	}
 	out0 := *abi.ConvertType(out[0], new(uint32)).(*uint32)
 	return out0, nil
+}
+
+// PackSetMinSlashInterval is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xe7a6e55a.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function setMinSlashInterval(uint32 _minSlashInterval) returns()
+func (cloudReportCompendium *CloudReportCompendium) PackSetMinSlashInterval(minSlashInterval uint32) []byte {
+	enc, err := cloudReportCompendium.abi.Pack("setMinSlashInterval", minSlashInterval)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackSetMinSlashInterval is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xe7a6e55a.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function setMinSlashInterval(uint32 _minSlashInterval) returns()
+func (cloudReportCompendium *CloudReportCompendium) TryPackSetMinSlashInterval(minSlashInterval uint32) ([]byte, error) {
+	return cloudReportCompendium.abi.Pack("setMinSlashInterval", minSlashInterval)
 }
 
 // PackSetReportFreshnessThreshold is the Go binding used to pack the parameters required for calling
@@ -837,6 +927,47 @@ func (cloudReportCompendium *CloudReportCompendium) UnpackInitializedEvent(log *
 	return out, nil
 }
 
+// CloudReportCompendiumMinSlashIntervalSet represents a MinSlashIntervalSet event raised by the CloudReportCompendium contract.
+type CloudReportCompendiumMinSlashIntervalSet struct {
+	MinSlashInterval uint32
+	Raw              *types.Log // Blockchain specific contextual infos
+}
+
+const CloudReportCompendiumMinSlashIntervalSetEventName = "MinSlashIntervalSet"
+
+// ContractEventName returns the user-defined event name.
+func (CloudReportCompendiumMinSlashIntervalSet) ContractEventName() string {
+	return CloudReportCompendiumMinSlashIntervalSetEventName
+}
+
+// UnpackMinSlashIntervalSetEvent is the Go binding that unpacks the event data emitted
+// by contract.
+//
+// Solidity: event MinSlashIntervalSet(uint32 minSlashInterval)
+func (cloudReportCompendium *CloudReportCompendium) UnpackMinSlashIntervalSetEvent(log *types.Log) (*CloudReportCompendiumMinSlashIntervalSet, error) {
+	event := "MinSlashIntervalSet"
+	if len(log.Topics) == 0 || log.Topics[0] != cloudReportCompendium.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
+	}
+	out := new(CloudReportCompendiumMinSlashIntervalSet)
+	if len(log.Data) > 0 {
+		if err := cloudReportCompendium.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
+			return nil, err
+		}
+	}
+	var indexed abi.Arguments
+	for _, arg := range cloudReportCompendium.abi.Events[event].Inputs {
+		if arg.Indexed {
+			indexed = append(indexed, arg)
+		}
+	}
+	if err := abi.ParseTopics(out, indexed, log.Topics[1:]); err != nil {
+		return nil, err
+	}
+	out.Raw = log
+	return out, nil
+}
+
 // CloudReportCompendiumOperatorSlashed represents a OperatorSlashed event raised by the CloudReportCompendium contract.
 type CloudReportCompendiumOperatorSlashed struct {
 	Operator      common.Address
@@ -1043,6 +1174,9 @@ func (cloudReportCompendium *CloudReportCompendium) UnpackError(raw []byte) (any
 	}
 	if bytes.Equal(raw[:4], cloudReportCompendium.abi.Errors["SignatureExpired"].ID.Bytes()[:4]) {
 		return cloudReportCompendium.UnpackSignatureExpiredError(raw[4:])
+	}
+	if bytes.Equal(raw[:4], cloudReportCompendium.abi.Errors["SlashTooSoon"].ID.Bytes()[:4]) {
+		return cloudReportCompendium.UnpackSlashTooSoonError(raw[4:])
 	}
 	if bytes.Equal(raw[:4], cloudReportCompendium.abi.Errors["StringTooLong"].ID.Bytes()[:4]) {
 		return cloudReportCompendium.UnpackStringTooLongError(raw[4:])
@@ -1321,6 +1455,29 @@ func CloudReportCompendiumSignatureExpiredErrorID() common.Hash {
 func (cloudReportCompendium *CloudReportCompendium) UnpackSignatureExpiredError(raw []byte) (*CloudReportCompendiumSignatureExpired, error) {
 	out := new(CloudReportCompendiumSignatureExpired)
 	if err := cloudReportCompendium.abi.UnpackIntoInterface(out, "SignatureExpired", raw); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// CloudReportCompendiumSlashTooSoon represents a SlashTooSoon error raised by the CloudReportCompendium contract.
+type CloudReportCompendiumSlashTooSoon struct {
+}
+
+// ErrorID returns the hash of canonical representation of the error's signature.
+//
+// Solidity: error SlashTooSoon()
+func CloudReportCompendiumSlashTooSoonErrorID() common.Hash {
+	return common.HexToHash("0x1324fda8e4694b9452a4008939c7bdbcbaf964827ea803eea9f6fe1c1f3f76bc")
+}
+
+// UnpackSlashTooSoonError is the Go binding used to decode the provided
+// error data into the corresponding Go error struct.
+//
+// Solidity: error SlashTooSoon()
+func (cloudReportCompendium *CloudReportCompendium) UnpackSlashTooSoonError(raw []byte) (*CloudReportCompendiumSlashTooSoon, error) {
+	out := new(CloudReportCompendiumSlashTooSoon)
+	if err := cloudReportCompendium.abi.UnpackIntoInterface(out, "SlashTooSoon", raw); err != nil {
 		return nil, err
 	}
 	return out, nil
