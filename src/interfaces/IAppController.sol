@@ -29,8 +29,11 @@ interface IAppController {
     /// @notice Thrown when trying to suspend an account that still has active apps
     error AccountHasActiveApps();
 
+    /// @notice Thrown when trying to revoke or renounce the last admin
+    error CannotRevokeLastAdmin();
+
     /// @notice Emitted when a new app is successfully created
-    event AppCreated(address indexed creator, IApp indexed app, uint32 operatorSetId);
+    event AppCreated(address indexed owner, IApp indexed app, uint32 operatorSetId);
 
     /// @notice Emitted when an app is upgraded
     event AppUpgraded(IApp indexed app, uint256 rmsReleaseId, Release release);
@@ -71,6 +74,24 @@ interface IAppController {
     }
 
     /**
+     * @notice Enum for team roles
+     */
+    enum TeamRole {
+        ADMIN, // Full access: upgrade, start, stop, terminate, manage roles
+        PAUSER, // Stop apps (emergency response)
+        DEVELOPER // Update metadata, view logs, submit builds
+    }
+
+    /**
+     * @notice App with associated roles for an account
+     */
+    struct AppRoles {
+        IApp app;
+        bool isOwner;
+        TeamRole[] roles;
+    }
+
+    /**
      * @notice A struct containing a release and its environment
      * @param rmsRelease The release to publish
      * @param env The environment for the release
@@ -84,7 +105,7 @@ interface IAppController {
 
     /// @notice The controller's config for an app
     struct AppConfig {
-        address creator;
+        address owner;
         uint32 operatorSetId;
         uint32 latestReleaseBlockNumber;
         AppStatus status;
@@ -118,12 +139,30 @@ interface IAppController {
     function setMaxGlobalActiveApps(uint32 limit) external;
 
     /**
+     * @notice Migrates admins from PermissionController to AccessControl for specified apps
+     * @param apps The apps to migrate admins for
+     * @dev Caller must be UAM permissioned for the AppController
+     * @dev For each app, grants ADMIN_ROLE to all addresses that are admins via PermissionController
+     */
+    function migrateAdmins(IApp[] calldata apps) external;
+
+    /**
      * @notice Creates a new app instance
      * @param salt The salt to use for the app
      * @param release The release to upgrade to
      * @return app The address of the newly created app
      */
     function createApp(bytes32 salt, Release calldata release) external returns (IApp app);
+
+    /**
+     * @notice Creates a new app instance for a team
+     * @param team The team address (owner) to create the app for
+     * @param salt The salt to use for the app
+     * @param release The release to upgrade to
+     * @return app The address of the newly created app
+     * @dev Caller must be the team address itself or have ADMIN role on the team
+     */
+    function createAppForTeam(address team, bytes32 salt, Release calldata release) external returns (IApp app);
 
     /**
      * @notice Upgrades an app with a new release to the ReleaseManager
@@ -232,11 +271,11 @@ interface IAppController {
     function getAppStatus(IApp app) external view returns (AppStatus);
 
     /**
-     * @notice Gets the creator of an app
+     * @notice Gets the owner of an app
      * @param app The app to check
-     * @return The address of the app creator
+     * @return The address of the owner
      */
-    function getAppCreator(IApp app) external view returns (address);
+    function getAppOwner(IApp app) external view returns (address);
 
     /**
      * @notice Gets the operator set ID for a given app
@@ -268,6 +307,7 @@ interface IAppController {
      * @param limit The maximum number of apps to return in this page
      * @return apps An array of app contract instances
      * @return configs An array of corresponding app configurations
+     * @dev Deprecated: Use getAppsForAccount for comprehensive role information
      */
     function getAppsByDeveloper(address developer, uint256 offset, uint256 limit)
         external
@@ -275,12 +315,13 @@ interface IAppController {
         returns (IApp[] memory, AppConfig[] memory);
 
     /**
-     * @notice Retrieves a paginated list of apps created by the specified address and their configurations
+     * @notice Retrieves a paginated list of apps created by the specified creator and their configurations
      * @param creator The address of the creator
      * @param offset The starting index for pagination (0-based)
      * @param limit The maximum number of apps to return in this page
      * @return apps An array of app contract instances
      * @return configs An array of corresponding app configurations
+     * @dev Deprecated: Use getAppsForAccount for comprehensive role information
      */
     function getAppsByCreator(address creator, uint256 offset, uint256 limit)
         external
@@ -294,4 +335,77 @@ interface IAppController {
      * @return The digest hash
      */
     function calculateApiPermissionDigestHash(bytes4 permission, uint256 expiry) external view returns (bytes32);
+
+    /// ROLE-BASED ACCESS CONTROL
+
+    /**
+     * @notice Grants a role to an account on a team
+     * @param team The team address
+     * @param role The role to grant (ADMIN, PAUSER, or DEVELOPER)
+     * @param account The account to grant the role to
+     * @dev Only team admins can grant roles
+     */
+    function grantTeamRole(address team, TeamRole role, address account) external;
+
+    /**
+     * @notice Revokes a role from an account on a team
+     * @param team The team address
+     * @param role The role to revoke
+     * @param account The account to revoke the role from
+     * @dev Only team admins can revoke roles
+     */
+    function revokeTeamRole(address team, TeamRole role, address account) external;
+
+    /**
+     * @notice Allows an account to renounce their own role on a team
+     * @param team The team address
+     * @param role The role to renounce
+     */
+    function renounceTeamRole(address team, TeamRole role) external;
+
+    /**
+     * @notice Checks if an account has a specific role on a team (admins always return true)
+     * @param team The team address
+     * @param role The role to check
+     * @param account The account to check
+     * @return True if the account has the role or is an admin
+     */
+    function hasTeamRole(address team, TeamRole role, address account) external view returns (bool);
+
+    /**
+     * @notice Gets the number of accounts with a specific role on a team
+     * @param team The team address
+     * @param role The role to check
+     * @return The number of accounts with the role
+     */
+    function getTeamRoleMemberCount(address team, TeamRole role) external view returns (uint256);
+
+    /**
+     * @notice Gets the account at index for a specific role on a team
+     * @param team The team address
+     * @param role The role to check
+     * @param index The index of the account
+     * @return The account address
+     */
+    function getTeamRoleMember(address team, TeamRole role, uint256 index) external view returns (address);
+
+    /**
+     * @notice Gets all accounts with a specific role on a team
+     * @param team The team address
+     * @param role The role to check
+     * @return Array of account addresses with the role
+     */
+    function getTeamRoleMembers(address team, TeamRole role) external view returns (address[] memory);
+
+    /**
+     * @notice Retrieves apps and the account's roles for each app
+     * @param account The account to check
+     * @param offset The starting index for pagination (0-based)
+     * @param limit The maximum number of apps to return in this page
+     * @return appRoles An array of AppRoles structs containing app and role information
+     */
+    function getAppsForAccount(address account, uint256 offset, uint256 limit)
+        external
+        view
+        returns (AppRoles[] memory appRoles);
 }
