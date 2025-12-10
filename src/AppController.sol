@@ -4,6 +4,9 @@ pragma solidity ^0.8.27;
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {OwnableUpgradeable} from "@openzeppelin-upgrades/contracts/access/OwnableUpgradeable.sol";
 import {Initializable} from "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
+import {
+    AccessControlEnumerableUpgradeable
+} from "@openzeppelin-upgrades/contracts/access/AccessControlEnumerableUpgradeable.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {SignatureUtilsMixin} from "@eigenlayer-contracts/src/contracts/mixins/SignatureUtilsMixin.sol";
 import {IPermissionController} from "@eigenlayer-contracts/src/contracts/interfaces/IPermissionController.sol";
@@ -21,7 +24,13 @@ import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
 import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {IApp} from "./interfaces/IApp.sol";
 
-contract AppController is Initializable, SignatureUtilsMixin, PermissionControllerMixin, AppControllerStorage {
+contract AppController is
+    Initializable,
+    SignatureUtilsMixin,
+    PermissionControllerMixin,
+    AppControllerStorage,
+    AccessControlEnumerableUpgradeable
+{
     using EnumerableSet for EnumerableSet.AddressSet;
 
     /// MODIFIERS
@@ -35,6 +44,18 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     /// @notice Modifier to ensure app is in an active status
     modifier appIsActive(IApp app) {
         require(_isActive(_appConfigs[app].status), InvalidAppStatus());
+        _;
+    }
+
+    /// @notice Modifier to check if caller has the required role (or is admin) for an app
+    modifier onlyAdminOrRole(IApp app, TeamRole role) {
+        _checkAdminOrRole(app, role);
+        _;
+    }
+
+    /// @notice Modifier to check if caller is an admin for an app
+    modifier onlyAdmin(IApp app) {
+        _checkIsAdmin(app);
         _;
     }
 
@@ -62,6 +83,9 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
     /// @inheritdoc IAppController
     function initialize(address admin) external initializer {
+        // Initialize AccessControl
+        __AccessControl_init();
+
         // Accept the ComputeAVSRegistrar as an admin
         permissionController.acceptAdmin(address(computeAVSRegistrar));
 
@@ -99,44 +123,80 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// @inheritdoc IAppController
+    /// @dev This function will be removed in a later upgrade once initial migrations are completed
+    function migrateAdmins(IApp[] calldata apps) external checkCanCall(address(this)) {
+        for (uint256 i = 0; i < apps.length; i++) {
+            IApp app = apps[i];
+            require(_exists(_appConfigs[app].status), AppDoesNotExist());
+
+            address owner = _appConfigs[app].owner;
+            address[] memory admins = permissionController.getAdmins(address(app));
+
+            for (uint256 j = 0; j < admins.length; j++) {
+                _grantRole(_teamRole(owner, TeamRole.ADMIN), admins[j]);
+            }
+        }
+    }
+
+    /// @inheritdoc IAppController
     function createApp(bytes32 salt, Release calldata release) external returns (IApp app) {
-        _checkAndIncrementActiveApps(msg.sender);
-        app = _deployApp(salt, release, BillingType.DEFAULT);
+        return createAppForTeam(msg.sender, salt, release);
     }
 
     /// @inheritdoc IAppController
-    function createAppWithIsolatedBilling(bytes32 salt, Release calldata release) external returns (IApp app) {
-        _checkAndIncrementActiveApps(address(calculateAppId(msg.sender, salt)));
-        app = _deployApp(salt, release, BillingType.ISOLATED);
+    function createAppForTeam(address team, bytes32 salt, Release calldata release) public returns (IApp app) {
+        // Check caller is admin on the team (or is the team themselves for first app creation)
+        require(team == msg.sender || hasRole(_teamRole(team, TeamRole.ADMIN), msg.sender), InvalidPermissions());
+
+        _checkAndIncrementActiveApps(team);
+
+        // Assign an operator set ID to the app
+        uint32 operatorSetId = computeAVSRegistrar.assignOperatorSetId();
+
+        // Publish the initial release metadata URI
+        releaseManager.publishMetadataURI(
+            OperatorSet({avs: address(computeAVSRegistrar), id: operatorSetId}), "https://eigencloud.xyz"
+        );
+
+        // Create app using BeaconProxy (salt is mixed with team for deterministic address)
+        app = IApp(Create2.deploy(0, _calculateAppMixedSalt(team, salt), _calculateAppInitCode(team)));
+        _appConfigs[app].operatorSetId = operatorSetId;
+        _appConfigs[app].latestReleaseBlockNumber = 0;
+        _appConfigs[app].owner = team;
+        _allApps.add(address(app));
+
+        emit AppCreated(team, app, operatorSetId);
+
+        // Grant ADMIN role to the team if not already granted
+        _grantRole(_teamRole(team, TeamRole.ADMIN), team);
+
+        // Upgrade the app with the initial release
+        _upgradeApp(app, release);
+        _startApp(app);
     }
 
     /// @inheritdoc IAppController
-    function upgradeApp(IApp app, Release calldata release)
-        external
-        checkCanCall(address(app))
-        appIsActive(app)
-        returns (uint256)
-    {
+    function upgradeApp(IApp app, Release calldata release) external appIsActive(app) onlyAdmin(app) returns (uint256) {
         return _upgradeApp(app, release);
     }
 
     /// @inheritdoc IAppController
     function updateAppMetadataURI(IApp app, string calldata metadataURI)
         external
-        checkCanCall(address(app))
         appExists(app)
+        onlyAdminOrRole(app, TeamRole.DEVELOPER)
     {
         emit AppMetadataURIUpdated(app, metadataURI);
     }
 
     /// @inheritdoc IAppController
-    function startApp(IApp app) external checkCanCall(address(app)) appExists(app) {
+    function startApp(IApp app) external appExists(app) onlyAdmin(app) {
         _startApp(app);
     }
 
     /// @inheritdoc IAppController
-    function stopApp(IApp app) external checkCanCall(address(app)) {
-        AppConfigStorage storage config = _appConfigs[app];
+    function stopApp(IApp app) external onlyAdminOrRole(app, TeamRole.PAUSER) {
+        AppConfig storage config = _appConfigs[app];
         require(config.status == AppStatus.STARTED, InvalidAppStatus());
         config.status = AppStatus.STOPPED;
 
@@ -144,7 +204,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// @inheritdoc IAppController
-    function terminateApp(IApp app) external checkCanCall(address(app)) appIsActive(app) {
+    function terminateApp(IApp app) external appIsActive(app) onlyAdmin(app) {
         _terminateApp(app);
     }
 
@@ -162,11 +222,10 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         // Suspend all provided apps, skipping apps that are already SUSPENDED, TERMINATED, or NONE
         for (uint256 i = 0; i < apps.length; i++) {
             IApp app = apps[i];
-            AppConfigStorage memory config = _appConfigs[app];
+            AppConfig memory config = _appConfigs[app];
 
-            // Validate that the app is billed to this account
-            address billingAccount = config.billingType == BillingType.ISOLATED ? address(app) : config.creator;
-            require(billingAccount == account, InvalidAppStatus());
+            // Validate ownership
+            require(config.owner == account, InvalidAppStatus());
 
             // Only suspend if app is active (STARTED or STOPPED)
             if (_isActive(config.status)) {
@@ -181,32 +240,100 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         _setMaxActiveAppsPerUser(account, 0);
     }
 
+    /// TEAM ROLE MANAGEMENT
+
+    /// @inheritdoc IAppController
+    function grantTeamRole(address team, TeamRole role, address account) external {
+        require(hasRole(_teamRole(team, TeamRole.ADMIN), msg.sender), InvalidPermissions());
+        _grantRole(_teamRole(team, role), account);
+    }
+
+    /// @inheritdoc IAppController
+    function revokeTeamRole(address team, TeamRole role, address account) external {
+        require(hasRole(_teamRole(team, TeamRole.ADMIN), msg.sender), InvalidPermissions());
+        bytes32 teamRole = _teamRole(team, role);
+        require(role != TeamRole.ADMIN || getRoleMemberCount(teamRole) > 1, CannotRevokeLastAdmin());
+
+        _revokeRole(teamRole, account);
+    }
+
+    /// @inheritdoc IAppController
+    function renounceTeamRole(address team, TeamRole role) external {
+        bytes32 teamRole = _teamRole(team, role);
+        require(role != TeamRole.ADMIN || getRoleMemberCount(teamRole) > 1, CannotRevokeLastAdmin());
+
+        _revokeRole(teamRole, msg.sender);
+    }
+
+    /// @inheritdoc IAppController
+    function hasTeamRole(address team, TeamRole role, address account) external view returns (bool) {
+        return _hasTeamRole(team, account, role);
+    }
+
+    /// @inheritdoc IAppController
+    function getTeamRoleMemberCount(address team, TeamRole role) external view returns (uint256) {
+        return getRoleMemberCount(_teamRole(team, role));
+    }
+
+    /// @inheritdoc IAppController
+    function getTeamRoleMember(address team, TeamRole role, uint256 index) external view returns (address) {
+        return getRoleMember(_teamRole(team, role), index);
+    }
+
+    /// @inheritdoc IAppController
+    function getTeamRoleMembers(address team, TeamRole role) external view returns (address[] memory) {
+        bytes32 teamRole = _teamRole(team, role);
+        uint256 count = getRoleMemberCount(teamRole);
+        address[] memory members = new address[](count);
+        for (uint256 i = 0; i < count; i++) {
+            members[i] = getRoleMember(teamRole, i);
+        }
+        return members;
+    }
+
     /// INTERNAL FUNCTIONS
 
     /**
-     * @notice Deploys an app, configures it, publishes the initial release, and starts it
-     * @param salt The salt for deterministic deployment
-     * @param release The initial release to upgrade to
-     * @param _billingType The billing type for the app (DEFAULT or ISOLATED)
-     * @return app The deployed app instance
+     * @notice Computes a team-scoped role identifier by combining team address with role enum
+     * @param team The team address
+     * @param role The team role (ADMIN, PAUSER, or DEVELOPER)
+     * @return The team-scoped role identifier for use with AccessControl
      */
-    function _deployApp(bytes32 salt, Release calldata release, BillingType _billingType) internal returns (IApp app) {
-        uint32 operatorSetId = computeAVSRegistrar.assignOperatorSetId();
-        releaseManager.publishMetadataURI(
-            OperatorSet({avs: address(computeAVSRegistrar), id: operatorSetId}), "https://eigencloud.xyz"
-        );
+    function _teamRole(address team, TeamRole role) internal pure returns (bytes32) {
+        return keccak256(abi.encode(team, role));
+    }
 
-        app = IApp(Create2.deploy(0, _calculateAppMixedSalt(msg.sender, salt), _calculateAppInitCode(msg.sender)));
-        _appConfigs[app].operatorSetId = operatorSetId;
-        _appConfigs[app].latestReleaseBlockNumber = 0;
-        _appConfigs[app].creator = msg.sender;
-        _appConfigs[app].billingType = _billingType;
-        _allApps.add(address(app));
+    /**
+     * @notice Checks if an account has the required role (admins always have access)
+     * @param team The team address
+     * @param account The account to check
+     * @param role The required role
+     * @return True if account has the required role or is an admin
+     */
+    function _hasTeamRole(address team, address account, TeamRole role) internal view returns (bool) {
+        if (hasRole(_teamRole(team, TeamRole.ADMIN), account)) return true;
+        return hasRole(_teamRole(team, role), account);
+    }
 
-        emit AppCreated(msg.sender, app, operatorSetId);
+    /**
+     * @notice Checks if the caller has the required role (or is admin) for an app
+     * @param app The app to check access for
+     * @param role The required role
+     * @dev Reverts with InvalidPermissions if caller lacks the required role
+     */
+    function _checkAdminOrRole(IApp app, TeamRole role) internal view {
+        address owner = _appConfigs[app].owner;
+        require(_hasTeamRole(owner, msg.sender, role), InvalidPermissions());
+    }
 
-        _upgradeApp(app, release);
-        _startApp(app);
+    /**
+     * @notice Checks if the caller is an admin for the app's owner
+     * @param app The app to check access for
+     * @dev Reverts with InvalidPermissions if caller is not an admin
+     */
+    function _checkIsAdmin(IApp app) internal view {
+        address owner = _appConfigs[app].owner;
+        require(hasRole(_teamRole(owner, TeamRole.ADMIN), msg.sender), InvalidPermissions());
     }
 
     /**
@@ -245,15 +372,16 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /**
-     * @notice Decrements global and billing account active app counters
+     * @notice Decrements global and owner active app counters
      * @param app The app instance to decrement counters for
      */
     function _decrementActiveApps(IApp app) internal {
         // Decrement active app counts to free up capacity
         globalActiveAppCount--;
 
-        // Decrement the billing account's active app count
-        _userConfigs[getBillingAccount(app)].activeAppCount--;
+        // Decrement the owner's active app count
+        address appOwner = _appConfigs[app].owner;
+        _userConfigs[appOwner].activeAppCount--;
     }
 
     /**
@@ -288,12 +416,12 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
      * @param app The app instance to start
      */
     function _startApp(IApp app) internal {
-        AppConfigStorage storage config = _appConfigs[app];
+        AppConfig storage config = _appConfigs[app];
         require(config.status != AppStatus.TERMINATED, InvalidAppStatus());
 
         // If resuming from suspended, re-check limits and increment active app counters
         if (config.status == AppStatus.SUSPENDED) {
-            _checkAndIncrementActiveApps(getBillingAccount(app));
+            _checkAndIncrementActiveApps(config.owner);
         }
         config.status = AppStatus.STARTED;
         emit AppStarted(app);
@@ -341,18 +469,6 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /**
-     * @notice Converts an AppConfigStorage to a public AppConfig
-     */
-    function _toAppConfig(AppConfigStorage storage s) private view returns (AppConfig memory) {
-        return AppConfig({
-            creator: s.creator,
-            operatorSetId: s.operatorSetId,
-            latestReleaseBlockNumber: s.latestReleaseBlockNumber,
-            status: s.status
-        });
-    }
-
-    /**
      * @notice Gets filtered apps based on a predicate function
      * @param predicate The predicate function to apply to each app
      * @param target The target address to filter by
@@ -383,7 +499,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
                 }
 
                 apps[found] = app;
-                appConfigsMem[found] = _toAppConfig(_appConfigs[app]);
+                appConfigsMem[found] = _appConfigs[app];
                 found++;
             }
         }
@@ -396,33 +512,24 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /**
-     * @notice Check if address is developer of app
+     * @notice Check if address is developer of app (has ADMIN role on the app's owner team)
      * @param app The app to check
      * @param developer The developer to check
-     * @return True if the developer is the developer of the app
+     * @return True if the developer has admin access to the app
      */
     function _isDeveloper(IApp app, address developer) private view returns (bool) {
-        return permissionController.isAdmin(address(app), developer);
+        address owner = _appConfigs[app].owner;
+        return _hasTeamRole(owner, developer, TeamRole.ADMIN);
     }
 
     /**
-     * @notice Check if address is creator of app
+     * @notice Check if address is owner of app
      * @param app The app to check
-     * @param creator The creator to check
-     * @return True if the creator is the creator of the app
+     * @param owner The owner to check
+     * @return True if the owner owns the app
      */
-    function _isCreator(IApp app, address creator) private view returns (bool) {
-        return _appConfigs[app].creator == creator;
-    }
-
-    /**
-     * @notice Check if an app is billed to the given account
-     * @param app The app to check
-     * @param account The billing account to match against
-     * @return True if the app is billed to the account
-     */
-    function _isBilledTo(IApp app, address account) private view returns (bool) {
-        return getBillingAccount(app) == account;
+    function _isOwner(IApp app, address owner) private view returns (bool) {
+        return _appConfigs[app].owner == owner;
     }
 
     /// VIEW FUNCTIONS
@@ -438,7 +545,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// @inheritdoc IAppController
-    function calculateAppId(address deployer, bytes32 salt) public view returns (IApp) {
+    function calculateAppId(address deployer, bytes32 salt) external view returns (IApp) {
         return IApp(
             Create2.computeAddress(
                 _calculateAppMixedSalt(deployer, salt),
@@ -453,23 +560,8 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// @inheritdoc IAppController
-    function getAppCreator(IApp app) external view returns (address) {
-        return _appConfigs[app].creator;
-    }
-
-    /**
-     * @notice Resolves the billing account for an app
-     * @param app The app instance to resolve billing for
-     * @return The billing account address (app address if ISOLATED, creator if DEFAULT)
-     */
-    function getBillingAccount(IApp app) public view returns (address) {
-        AppConfigStorage storage config = _appConfigs[app];
-        return config.billingType == BillingType.ISOLATED ? address(app) : config.creator;
-    }
-
-    /// @inheritdoc IAppController
-    function getBillingType(IApp app) external view returns (BillingType) {
-        return _appConfigs[app].billingType;
+    function getAppOwner(IApp app) external view returns (address) {
+        return _appConfigs[app].owner;
     }
 
     /// @inheritdoc IAppController
@@ -498,7 +590,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         appConfigsMem = new AppConfig[](rangeSize);
         for (uint256 i = 0; i < rangeSize; i++) {
             apps[i] = IApp(_allApps.at(offset + i));
-            appConfigsMem[i] = _toAppConfig(_appConfigs[apps[i]]);
+            appConfigsMem[i] = _appConfigs[apps[i]];
         }
     }
 
@@ -517,20 +609,67 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         view
         returns (IApp[] memory apps, AppConfig[] memory appConfigsMem)
     {
-        return _getFilteredApps(_isCreator, creator, offset, limit);
+        return _getFilteredApps(_isOwner, creator, offset, limit);
     }
 
     /// @inheritdoc IAppController
-    function getAppsByBillingAccount(address account, uint256 offset, uint256 limit)
+    function getAppsForAccount(address account, uint256 offset, uint256 limit)
         external
         view
-        returns (IApp[] memory apps, AppConfig[] memory appConfigsMem)
+        returns (AppRoles[] memory appRoles)
     {
-        return _getFilteredApps(_isBilledTo, account, offset, limit);
+        // Reuse _getFilteredApps with _accountHasAnyRole predicate for pagination
+        (IApp[] memory apps,) = _getFilteredApps(_accountHasAnyRole, account, offset, limit);
+
+        // Build AppRoles array from filtered results
+        appRoles = new AppRoles[](apps.length);
+        for (uint256 i = 0; i < apps.length; i++) {
+            appRoles[i] = _buildAppRoles(apps[i], account);
+        }
+    }
+
+    /**
+     * @notice Builds AppRoles struct for a single app
+     * @param app The app to build roles for
+     * @param account The account to check roles for
+     * @return The AppRoles struct with app, isOwner, and roles array
+     */
+    function _buildAppRoles(IApp app, address account) private view returns (AppRoles memory) {
+        address owner = _appConfigs[app].owner;
+
+        // Check roles
+        bool hasAdmin = hasRole(_teamRole(owner, TeamRole.ADMIN), account);
+        bool hasPauser = hasRole(_teamRole(owner, TeamRole.PAUSER), account);
+        bool hasDeveloper = hasRole(_teamRole(owner, TeamRole.DEVELOPER), account);
+
+        // Count and build roles array
+        uint256 roleCount = (hasAdmin ? 1 : 0) + (hasPauser ? 1 : 0) + (hasDeveloper ? 1 : 0);
+        TeamRole[] memory roles = new TeamRole[](roleCount);
+        uint256 idx = 0;
+        if (hasAdmin) roles[idx++] = TeamRole.ADMIN;
+        if (hasPauser) roles[idx++] = TeamRole.PAUSER;
+        if (hasDeveloper) roles[idx++] = TeamRole.DEVELOPER;
+
+        return AppRoles({app: app, isOwner: owner == account, roles: roles});
     }
 
     /// @inheritdoc IAppController
     function calculateApiPermissionDigestHash(bytes4 permission, uint256 expiry) external view returns (bytes32) {
         return _calculateSignableDigest(keccak256(abi.encode(API_PERMISSION_TYPEHASH, permission, expiry)));
+    }
+
+    /**
+     * @notice Checks if an account has any role (owner, admin, pauser, or developer) on an app
+     * @param app The app to check
+     * @param account The account to check
+     * @return True if the account has any role on the app
+     */
+    function _accountHasAnyRole(IApp app, address account) private view returns (bool) {
+        address owner = _appConfigs[app].owner;
+        if (owner == account) return true;
+        if (hasRole(_teamRole(owner, TeamRole.ADMIN), account)) return true;
+        if (hasRole(_teamRole(owner, TeamRole.PAUSER), account)) return true;
+        if (hasRole(_teamRole(owner, TeamRole.DEVELOPER), account)) return true;
+        return false;
     }
 }

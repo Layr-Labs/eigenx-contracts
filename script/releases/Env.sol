@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.so
 import "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {DelegationManager} from "@eigenlayer-contracts/src/contracts/core/DelegationManager.sol";
 import {AllocationManager} from "@eigenlayer-contracts/src/contracts/core/AllocationManager.sol";
 import {PermissionController} from "@eigenlayer-contracts/src/contracts/permissions/PermissionController.sol";
