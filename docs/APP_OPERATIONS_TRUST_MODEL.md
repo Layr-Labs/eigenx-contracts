@@ -21,11 +21,11 @@ This spec describes a new operational model for Eigen Compute apps, focusing on 
 An app owner's address IS the team identity. This is similar to GitHub or Vercel teams, but the team is built around the owner address rather than a separate entity. This keeps things simple - no team entity to create, straightforward billing tied to the owner, and works naturally for the common case of a single EOA or multisig. Ownership can be transferred to a new address if the team structure changes (see Future Additions).
 
 Any role (including the team owner) can be:
-- An EOA (solo dev or operator)
+- An EOA (solo dev)
 - A multisig (shared control)
-- A multisig behind a timelock (for enforced delays on sensitive operations)
+- An EOA or multisig behind a timelock (for enforced delays on sensitive operations)
 
-This also enables a cleaner UX: manage your team once, and all apps under that team inherit the same permissions - similar to how Vercel or GitHub organization access works. App-level permissions would require managing access separately for each app, and wouldn't align with billing which is at the owner level.
+This also enables a cleaner UX: manage your team once, and all apps under that team inherit the same permissions. App-level permissions would require managing access separately for each app, and wouldn't align with billing which is at the owner level.
 
 ## Roles
 
@@ -90,9 +90,19 @@ For emergency response, grant `PAUSER` to a lower-threshold multisig or EOA that
 ```
 ecloud auth login
 
-> Select identity type:
-  1. EOA (private key)
-  2. Gnosis Safe (enter address)
+> Enter your address: 0x1234...
+
+# If address is a timelock, auto-detect:
+> Detected timelock with 24h delay
+> Proposer: 0x5678... (3/5 Safe)
+> Logged in as: 0x1234...
+
+# If address is not a timelock:
+> Is this address behind a timelock? (y/N) y
+> Enter timelock address: 0x9999...
+
+> Logged in as: 0x9999... (timelock)
+> Proposer: 0x1234... (EOA)
 ```
 
 **Create new identity:**
@@ -103,6 +113,7 @@ ecloud auth new
 > What would you like to create?
   1. EOA (new private key)
   2. Gnosis Safe
+  3. Timelock (for existing EOA or Safe)
 
 # For Safe:
 > Enter owner addresses: 0x1111..., 0x2222..., 0x3333...
@@ -112,9 +123,17 @@ ecloud auth new
 > Enter minimum delay (e.g., "24h", "7d"): 24h
 
 > Deploying Safe + Timelock via factory...
+
+# For Timelock:
+> Enter proposer/executor address (your EOA or Safe): 0x1234...
+> Enter minimum delay (e.g., "24h", "7d"): 24h
+
+> Deploying Timelock via factory...
+> Your new identity: 0x5678... (timelock)
+> Proposer/Executor: 0x1234...
 ```
 
-When a timelock is configured, the CLI deploys via SafeTimelockFactory with your identity as both proposer and executor.
+When a timelock is configured, the CLI deploys via SafeTimelockFactory with the specified address as both proposer and executor.
 
 **App actions with Safe:**
 
