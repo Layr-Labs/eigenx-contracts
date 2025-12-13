@@ -40,29 +40,17 @@ interface ISafeTimelockFactory {
 
     /// ERRORS
 
-    /// @notice Thrown when threshold is zero or exceeds owner count
-    error InvalidThreshold();
-
-    /// @notice Thrown when owners array is empty
-    error NoOwners();
-
     /// @notice Thrown when proposers array is empty
     error NoProposers();
 
     /// @notice Thrown when executors array is empty
     error NoExecutors();
 
-    /// @notice Thrown when an owner address is zero
-    error ZeroAddressOwner();
-
     /// @notice Thrown when a proposer address is zero
     error ZeroAddressProposer();
 
     /// @notice Thrown when an executor address is zero
     error ZeroAddressExecutor();
-
-    /// @notice Thrown when duplicate owners are provided
-    error DuplicateOwner();
 
     /// EXTERNAL FUNCTIONS
 
@@ -113,14 +101,10 @@ interface ISafeTimelockFactory {
     /**
      * @notice Pre-computes the address of a Timelock deployment
      * @param deployer The address that will deploy
-     * @param config Timelock configuration
      * @param salt User-provided salt
      * @return The computed TimelockController address
      */
-    function calculateTimelockAddress(address deployer, TimelockConfig calldata config, bytes32 salt)
-        external
-        view
-        returns (address);
+    function calculateTimelockAddress(address deployer, bytes32 salt) external view returns (address);
 
     /**
      * @notice Returns the official Gnosis Safe singleton address
@@ -133,4 +117,10 @@ interface ISafeTimelockFactory {
      * @return The SafeProxyFactory address
      */
     function safeProxyFactory() external view returns (address);
+
+    /**
+     * @notice Returns the TimelockController implementation address for minimal proxies
+     * @return The TimelockControllerImpl address
+     */
+    function timelockImplementation() external view returns (address);
 }

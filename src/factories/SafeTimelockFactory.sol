@@ -2,13 +2,14 @@
 pragma solidity ^0.8.27;
 
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
 import {SafeTimelockFactoryStorage} from "../storage/SafeTimelockFactoryStorage.sol";
 import {ISafeTimelockFactory} from "../interfaces/ISafeTimelockFactory.sol";
 import {ISafe} from "../interfaces/ISafe.sol";
 import {ISafeProxyFactory} from "../interfaces/ISafeProxyFactory.sol";
+import {TimelockControllerImpl} from "../governance/TimelockControllerImpl.sol";
 
 /**
  * @title SafeTimelockFactory
@@ -18,9 +19,12 @@ import {ISafeProxyFactory} from "../interfaces/ISafeProxyFactory.sol";
 contract SafeTimelockFactory is Initializable, SafeTimelockFactoryStorage {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    constructor(address _safeSingleton, address _safeProxyFactory, address _defaultFallbackHandler)
-        SafeTimelockFactoryStorage(_safeSingleton, _safeProxyFactory, _defaultFallbackHandler)
-    {
+    constructor(
+        address _safeSingleton,
+        address _safeProxyFactory,
+        address _defaultFallbackHandler,
+        address _timelockImplementation
+    ) SafeTimelockFactoryStorage(_safeSingleton, _safeProxyFactory, _defaultFallbackHandler, _timelockImplementation) {
         _disableInitializers();
     }
 
@@ -30,7 +34,6 @@ contract SafeTimelockFactory is Initializable, SafeTimelockFactoryStorage {
 
     /// @inheritdoc ISafeTimelockFactory
     function deploySafe(SafeConfig calldata config, bytes32 salt) external returns (address safe) {
-        _validateSafeConfig(config);
         safe = _deploySafe(config, salt);
         _safes.add(safe);
         emit SafeDeployed(msg.sender, safe, config.owners, config.threshold, salt);
@@ -63,39 +66,20 @@ contract SafeTimelockFactory is Initializable, SafeTimelockFactoryStorage {
         returns (address)
     {
         bytes memory initializer = _encodeSafeInitializer(config);
-        uint256 saltNonce = uint256(keccak256(abi.encodePacked(deployer, salt)));
+        uint256 saltNonce = uint256(_deriveSalt(deployer, salt));
         bytes32 creationSalt = keccak256(abi.encodePacked(keccak256(initializer), saltNonce));
-        bytes memory deploymentData =
-            abi.encodePacked(ISafeProxyFactory(safeProxyFactory).proxyCreationCode(), uint256(uint160(safeSingleton)));
+        bytes memory proxyCreationCode = ISafeProxyFactory(safeProxyFactory).proxyCreationCode();
+        bytes memory deploymentData = abi.encodePacked(proxyCreationCode, uint256(uint160(safeSingleton)));
         return Create2.computeAddress(creationSalt, keccak256(deploymentData), safeProxyFactory);
     }
 
     /// @inheritdoc ISafeTimelockFactory
-    function calculateTimelockAddress(address deployer, TimelockConfig calldata config, bytes32 salt)
-        external
-        view
-        returns (address)
-    {
-        bytes32 mixedSalt = keccak256(abi.encodePacked(deployer, salt));
-        bytes memory initCode = abi.encodePacked(
-            type(TimelockController).creationCode,
-            abi.encode(config.minDelay, config.proposers, config.executors, address(0))
-        );
-        return Create2.computeAddress(mixedSalt, keccak256(initCode));
+    function calculateTimelockAddress(address deployer, bytes32 salt) external view returns (address) {
+        bytes32 mixedSalt = _deriveSalt(deployer, salt);
+        return Clones.predictDeterministicAddress(timelockImplementation, mixedSalt);
     }
 
     /// INTERNAL FUNCTIONS
-
-    function _validateSafeConfig(SafeConfig calldata config) internal pure {
-        require(config.owners.length > 0, NoOwners());
-        require(config.threshold > 0 && config.threshold <= config.owners.length, InvalidThreshold());
-        for (uint256 i = 0; i < config.owners.length; i++) {
-            require(config.owners[i] != address(0), ZeroAddressOwner());
-            for (uint256 j = i + 1; j < config.owners.length; j++) {
-                require(config.owners[i] != config.owners[j], DuplicateOwner());
-            }
-        }
-    }
 
     function _validateTimelockConfig(TimelockConfig calldata config) internal pure {
         require(config.proposers.length > 0, NoProposers());
@@ -110,7 +94,7 @@ contract SafeTimelockFactory is Initializable, SafeTimelockFactoryStorage {
 
     function _deploySafe(SafeConfig calldata config, bytes32 salt) internal returns (address safe) {
         bytes memory initializer = _encodeSafeInitializer(config);
-        uint256 saltNonce = uint256(keccak256(abi.encodePacked(msg.sender, salt)));
+        uint256 saltNonce = uint256(_deriveSalt(msg.sender, salt));
         safe = ISafeProxyFactory(safeProxyFactory).createProxyWithNonce(safeSingleton, initializer, saltNonce);
     }
 
@@ -129,11 +113,14 @@ contract SafeTimelockFactory is Initializable, SafeTimelockFactoryStorage {
     }
 
     function _deployTimelock(TimelockConfig calldata config, bytes32 salt) internal returns (address timelock) {
-        bytes32 mixedSalt = keccak256(abi.encodePacked(msg.sender, salt));
-        bytes memory initCode = abi.encodePacked(
-            type(TimelockController).creationCode,
-            abi.encode(config.minDelay, config.proposers, config.executors, address(0))
-        );
-        timelock = Create2.deploy(0, mixedSalt, initCode);
+        bytes32 mixedSalt = _deriveSalt(msg.sender, salt);
+        timelock = Clones.cloneDeterministic(timelockImplementation, mixedSalt);
+
+        // forgefmt: disable-next-item
+        TimelockControllerImpl(payable(timelock)).initialize(config.minDelay, config.proposers, config.executors, address(0));
+    }
+
+    function _deriveSalt(address deployer, bytes32 salt) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(deployer, salt));
     }
 }
