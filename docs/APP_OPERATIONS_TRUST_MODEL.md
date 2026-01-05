@@ -90,19 +90,17 @@ For emergency response, grant `PAUSER` to a lower-threshold multisig or EOA that
 ```
 ecloud auth login
 
-> Enter your address: 0x1234...
+> Connect wallet or enter EOA address: 0x1234...
 
-# If address is a timelock, auto-detect:
-> Detected timelock with 24h delay
-> Proposer: 0x5678... (3/5 Safe)
+> Select an identity:
+  1. 0x1234... (your wallet)
+  ───
+  2. 0xABCD... (Timelock, 24h) via 2/3 Safe
+  3. 0x9999... (3/5 Safe)
+
+> Select: 1
+
 > Logged in as: 0x1234...
-
-# If address is not a timelock:
-> Is this address behind a timelock? (y/N) y
-> Enter timelock address: 0x9999...
-
-> Logged in as: 0x9999... (timelock)
-> Proposer: 0x1234... (EOA)
 ```
 
 **Create new identity:**
