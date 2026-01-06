@@ -1,41 +1,25 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
-import {Test} from "forge-std/Test.sol";
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import {ImageAllowlist} from "../src/ImageAllowlist.sol";
+import {ComputeDeployer} from "./utils/ComputeDeployer.sol";
 import {IImageAllowlist} from "../src/interfaces/IImageAllowlist.sol";
 
-contract ImageAllowlistTest is Test {
-    ImageAllowlist public imageAllowlist;
-
-    address public owner = makeAddr("owner");
-    address public notOwner = makeAddr("notOwner");
-    address public proxyAdmin = makeAddr("proxyAdmin");
-
+contract ImageAllowlistTest is ComputeDeployer {
     event ImageUpdated(IImageAllowlist.CVM indexed cvm, bytes32 indexed key, bool allowed);
     event MinimumTCBUpdated(IImageAllowlist.CVM indexed cvm, uint64 tcb);
 
     function setUp() public {
-        ImageAllowlist implementation = new ImageAllowlist();
-        TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
-            address(implementation), proxyAdmin, abi.encodeWithSelector(ImageAllowlist.initialize.selector, owner)
-        );
-        imageAllowlist = ImageAllowlist(address(proxy));
+        _deployContracts();
     }
 
-    /// INITIALIZATION TESTS
-
     function test_initialize_setsOwner() public view {
-        assertEq(imageAllowlist.owner(), owner);
+        assertEq(imageAllowlist.owner(), admin);
     }
 
     function test_initialize_revertsIfCalledTwice() public {
         vm.expectRevert();
-        imageAllowlist.initialize(owner);
+        imageAllowlist.initialize(admin);
     }
-
-    /// SET IMAGE TESTS
 
     function test_setImage() public {
         IImageAllowlist.PCR[] memory pcrs = _createPCRs();
@@ -44,7 +28,7 @@ contract ImageAllowlistTest is Test {
         vm.expectEmit(true, true, true, true);
         emit ImageUpdated(IImageAllowlist.CVM.TDX, expectedKey, true);
 
-        vm.prank(owner);
+        vm.prank(admin);
         imageAllowlist.setImage(IImageAllowlist.CVM.TDX, pcrs, true);
 
         assertTrue(imageAllowlist.isImageAllowed(IImageAllowlist.CVM.TDX, pcrs));
@@ -54,7 +38,7 @@ contract ImageAllowlistTest is Test {
     function test_setImage_canToggle() public {
         IImageAllowlist.PCR[] memory pcrs = _createPCRs();
 
-        vm.startPrank(owner);
+        vm.startPrank(admin);
         imageAllowlist.setImage(IImageAllowlist.CVM.TDX, pcrs, true);
         assertTrue(imageAllowlist.isImageAllowed(IImageAllowlist.CVM.TDX, pcrs));
 
@@ -66,7 +50,7 @@ contract ImageAllowlistTest is Test {
     function test_setImage_separatePerCVM() public {
         IImageAllowlist.PCR[] memory pcrs = _createPCRs();
 
-        vm.startPrank(owner);
+        vm.startPrank(admin);
         imageAllowlist.setImage(IImageAllowlist.CVM.TDX, pcrs, true);
         imageAllowlist.setImage(IImageAllowlist.CVM.SEV_SNP, pcrs, false);
         vm.stopPrank();
@@ -76,13 +60,13 @@ contract ImageAllowlistTest is Test {
     }
 
     function test_setImage_revertsIfNotOwner() public {
-        vm.prank(notOwner);
+        vm.prank(user);
         vm.expectRevert();
         imageAllowlist.setImage(IImageAllowlist.CVM.TDX, _createPCRs(), true);
     }
 
     function test_setImage_revertsIfEmptyPCRs() public {
-        vm.prank(owner);
+        vm.prank(admin);
         vm.expectRevert(IImageAllowlist.EmptyPCRs.selector);
         imageAllowlist.setImage(IImageAllowlist.CVM.TDX, new IImageAllowlist.PCR[](0), true);
     }
@@ -92,31 +76,29 @@ contract ImageAllowlistTest is Test {
         pcrs[0] = IImageAllowlist.PCR({index: 2, value: bytes32(uint256(1))});
         pcrs[1] = IImageAllowlist.PCR({index: 1, value: bytes32(uint256(2))});
 
-        vm.prank(owner);
+        vm.prank(admin);
         vm.expectRevert(IImageAllowlist.NotSorted.selector);
         imageAllowlist.setImage(IImageAllowlist.CVM.TDX, pcrs, true);
 
         // Duplicate indices also fail (not strictly increasing)
         pcrs[0].index = 1;
-        vm.prank(owner);
+        vm.prank(admin);
         vm.expectRevert(IImageAllowlist.NotSorted.selector);
         imageAllowlist.setImage(IImageAllowlist.CVM.TDX, pcrs, true);
     }
-
-    /// SET MINIMUM TCB TESTS
 
     function test_setMinimumTCB() public {
         vm.expectEmit(true, true, true, true);
         emit MinimumTCBUpdated(IImageAllowlist.CVM.TDX, 100);
 
-        vm.prank(owner);
+        vm.prank(admin);
         imageAllowlist.setMinimumTCB(IImageAllowlist.CVM.TDX, 100);
 
         assertEq(imageAllowlist.minimumTCB(IImageAllowlist.CVM.TDX), 100);
     }
 
     function test_setMinimumTCB_separatePerCVM() public {
-        vm.startPrank(owner);
+        vm.startPrank(admin);
         imageAllowlist.setMinimumTCB(IImageAllowlist.CVM.TDX, 100);
         imageAllowlist.setMinimumTCB(IImageAllowlist.CVM.SEV_SNP, 200);
         vm.stopPrank();
@@ -126,15 +108,13 @@ contract ImageAllowlistTest is Test {
     }
 
     function test_setMinimumTCB_revertsIfNotOwner() public {
-        vm.prank(notOwner);
+        vm.prank(user);
         vm.expectRevert();
         imageAllowlist.setMinimumTCB(IImageAllowlist.CVM.TDX, 100);
     }
 
-    /// IS TCB VALID TESTS
-
     function test_isTCBValid() public {
-        vm.prank(owner);
+        vm.prank(admin);
         imageAllowlist.setMinimumTCB(IImageAllowlist.CVM.TDX, 100);
 
         assertTrue(imageAllowlist.isTCBValid(IImageAllowlist.CVM.TDX, 101));
@@ -147,8 +127,6 @@ contract ImageAllowlistTest is Test {
         assertTrue(imageAllowlist.isTCBValid(IImageAllowlist.CVM.TDX, 0));
         assertTrue(imageAllowlist.isTCBValid(IImageAllowlist.CVM.TDX, 1));
     }
-
-    /// HELPER FUNCTIONS
 
     function _createPCRs() internal pure returns (IImageAllowlist.PCR[] memory) {
         IImageAllowlist.PCR[] memory pcrs = new IImageAllowlist.PCR[](3);

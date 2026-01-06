@@ -1,0 +1,11 @@
+{
+    "name": "image-allowlist",
+    "from": "1.1.1",
+    "to": "1.2.0",
+    "phases": [
+        {
+            "type": "eoa",
+            "filename": "1-deployImageAllowlistImpl.s.sol"
+        }
+    ]
+}
