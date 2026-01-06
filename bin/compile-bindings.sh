@@ -52,6 +52,7 @@ contracts=(
     "AppController"
     "ComputeAVSRegistrar"
     "ComputeOperator"
+    "ImageAllowlist"
     "IReleaseManager"
     "IPermissionController"
 )
