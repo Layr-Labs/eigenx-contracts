@@ -24,6 +24,13 @@ var (
 	_ = abi.ConvertType
 )
 
+// IImageAllowlistImage is an auto generated low-level Go binding around an user-defined struct.
+type IImageAllowlistImage struct {
+	Pcrs        []IImageAllowlistPCR
+	Version     string
+	Description string
+}
+
 // IImageAllowlistPCR is an auto generated low-level Go binding around an user-defined struct.
 type IImageAllowlistPCR struct {
 	Index uint8
@@ -32,7 +39,7 @@ type IImageAllowlistPCR struct {
 
 // ImageAllowlistMetaData contains all meta data concerning the ImageAllowlist contract.
 var ImageAllowlistMetaData = bind.MetaData{
-	ABI: "[{\"type\":\"constructor\",\"inputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"images\",\"inputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"initialOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"isImageAllowed\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"pcrs\",\"type\":\"tuple[]\",\"internalType\":\"structIImageAllowlist.PCR[]\",\"components\":[{\"name\":\"index\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"value\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"isTCBValid\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"tcb\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"minimumTCB\",\"inputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"owner\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"renounceOwnership\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setImage\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"pcrs\",\"type\":\"tuple[]\",\"internalType\":\"structIImageAllowlist.PCR[]\",\"components\":[{\"name\":\"index\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"value\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]},{\"name\":\"isAllowed\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setMinimumTCB\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"tcb\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"transferOwnership\",\"inputs\":[{\"name\":\"newOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"event\",\"name\":\"ImageUpdated\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"indexed\":true,\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"key\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"allowed\",\"type\":\"bool\",\"indexed\":false,\"internalType\":\"bool\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MinimumTCBUpdated\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"indexed\":true,\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"tcb\",\"type\":\"uint64\",\"indexed\":false,\"internalType\":\"uint64\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OwnershipTransferred\",\"inputs\":[{\"name\":\"previousOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"newOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"EmptyPCRs\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotSorted\",\"inputs\":[]}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"addImage\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"image\",\"type\":\"tuple\",\"internalType\":\"structIImageAllowlist.Image\",\"components\":[{\"name\":\"pcrs\",\"type\":\"tuple[]\",\"internalType\":\"structIImageAllowlist.PCR[]\",\"components\":[{\"name\":\"index\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"value\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]},{\"name\":\"version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"description\",\"type\":\"string\",\"internalType\":\"string\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"addImages\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"images_\",\"type\":\"tuple[]\",\"internalType\":\"structIImageAllowlist.Image[]\",\"components\":[{\"name\":\"pcrs\",\"type\":\"tuple[]\",\"internalType\":\"structIImageAllowlist.PCR[]\",\"components\":[{\"name\":\"index\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"value\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]},{\"name\":\"version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"description\",\"type\":\"string\",\"internalType\":\"string\"}]}],\"outputs\":[{\"name\":\"keys\",\"type\":\"bytes32[]\",\"internalType\":\"bytes32[]\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"images\",\"inputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"initialOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"isImageAllowed\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"pcrs\",\"type\":\"tuple[]\",\"internalType\":\"structIImageAllowlist.PCR[]\",\"components\":[{\"name\":\"index\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"value\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"isTCBValid\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"tcb\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"minimumTCB\",\"inputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"owner\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"removeImage\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"key\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"removeImages\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"keys\",\"type\":\"bytes32[]\",\"internalType\":\"bytes32[]\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"renounceOwnership\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setMinimumTCB\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"tcb\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"transferOwnership\",\"inputs\":[{\"name\":\"newOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"event\",\"name\":\"ImageAdded\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"indexed\":true,\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"key\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"version\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"},{\"name\":\"description\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"ImageRemoved\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"indexed\":true,\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"key\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MinimumTCBUpdated\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"indexed\":true,\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"tcb\",\"type\":\"uint64\",\"indexed\":false,\"internalType\":\"uint64\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OwnershipTransferred\",\"inputs\":[{\"name\":\"previousOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"newOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"EmptyPCRs\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ImageNotFound\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotSorted\",\"inputs\":[]}]",
 	ID:  "ImageAllowlist",
 }
 
@@ -54,6 +61,76 @@ func NewImageAllowlist() *ImageAllowlist {
 // Use this to create the instance object passed to abigen v2 library functions Call, Transact, etc.
 func (c *ImageAllowlist) Instance(backend bind.ContractBackend, addr common.Address) *bind.BoundContract {
 	return bind.NewBoundContract(addr, c.abi, backend, backend, backend)
+}
+
+// PackAddImage is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xffc2585d.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function addImage(uint8 cvm, ((uint8,bytes32)[],string,string) image) returns(bytes32)
+func (imageAllowlist *ImageAllowlist) PackAddImage(cvm uint8, image IImageAllowlistImage) []byte {
+	enc, err := imageAllowlist.abi.Pack("addImage", cvm, image)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackAddImage is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xffc2585d.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function addImage(uint8 cvm, ((uint8,bytes32)[],string,string) image) returns(bytes32)
+func (imageAllowlist *ImageAllowlist) TryPackAddImage(cvm uint8, image IImageAllowlistImage) ([]byte, error) {
+	return imageAllowlist.abi.Pack("addImage", cvm, image)
+}
+
+// UnpackAddImage is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0xffc2585d.
+//
+// Solidity: function addImage(uint8 cvm, ((uint8,bytes32)[],string,string) image) returns(bytes32)
+func (imageAllowlist *ImageAllowlist) UnpackAddImage(data []byte) ([32]byte, error) {
+	out, err := imageAllowlist.abi.Unpack("addImage", data)
+	if err != nil {
+		return *new([32]byte), err
+	}
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+	return out0, nil
+}
+
+// PackAddImages is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x188675b3.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function addImages(uint8 cvm, ((uint8,bytes32)[],string,string)[] images_) returns(bytes32[] keys)
+func (imageAllowlist *ImageAllowlist) PackAddImages(cvm uint8, images []IImageAllowlistImage) []byte {
+	enc, err := imageAllowlist.abi.Pack("addImages", cvm, images)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackAddImages is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x188675b3.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function addImages(uint8 cvm, ((uint8,bytes32)[],string,string)[] images_) returns(bytes32[] keys)
+func (imageAllowlist *ImageAllowlist) TryPackAddImages(cvm uint8, images []IImageAllowlistImage) ([]byte, error) {
+	return imageAllowlist.abi.Pack("addImages", cvm, images)
+}
+
+// UnpackAddImages is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x188675b3.
+//
+// Solidity: function addImages(uint8 cvm, ((uint8,bytes32)[],string,string)[] images_) returns(bytes32[] keys)
+func (imageAllowlist *ImageAllowlist) UnpackAddImages(data []byte) ([][32]byte, error) {
+	out, err := imageAllowlist.abi.Unpack("addImages", data)
+	if err != nil {
+		return *new([][32]byte), err
+	}
+	out0 := *abi.ConvertType(out[0], new([][32]byte)).(*[][32]byte)
+	return out0, nil
 }
 
 // PackImages is the Go binding used to pack the parameters required for calling
@@ -253,6 +330,50 @@ func (imageAllowlist *ImageAllowlist) UnpackOwner(data []byte) (common.Address, 
 	return out0, nil
 }
 
+// PackRemoveImage is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x036257e2.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function removeImage(uint8 cvm, bytes32 key) returns()
+func (imageAllowlist *ImageAllowlist) PackRemoveImage(cvm uint8, key [32]byte) []byte {
+	enc, err := imageAllowlist.abi.Pack("removeImage", cvm, key)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackRemoveImage is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x036257e2.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function removeImage(uint8 cvm, bytes32 key) returns()
+func (imageAllowlist *ImageAllowlist) TryPackRemoveImage(cvm uint8, key [32]byte) ([]byte, error) {
+	return imageAllowlist.abi.Pack("removeImage", cvm, key)
+}
+
+// PackRemoveImages is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xd79799b5.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function removeImages(uint8 cvm, bytes32[] keys) returns()
+func (imageAllowlist *ImageAllowlist) PackRemoveImages(cvm uint8, keys [][32]byte) []byte {
+	enc, err := imageAllowlist.abi.Pack("removeImages", cvm, keys)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackRemoveImages is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xd79799b5.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function removeImages(uint8 cvm, bytes32[] keys) returns()
+func (imageAllowlist *ImageAllowlist) TryPackRemoveImages(cvm uint8, keys [][32]byte) ([]byte, error) {
+	return imageAllowlist.abi.Pack("removeImages", cvm, keys)
+}
+
 // PackRenounceOwnership is the Go binding used to pack the parameters required for calling
 // the contract method with ID 0x715018a6.  This method will panic if any
 // invalid/nil inputs are passed.
@@ -273,28 +394,6 @@ func (imageAllowlist *ImageAllowlist) PackRenounceOwnership() []byte {
 // Solidity: function renounceOwnership() returns()
 func (imageAllowlist *ImageAllowlist) TryPackRenounceOwnership() ([]byte, error) {
 	return imageAllowlist.abi.Pack("renounceOwnership")
-}
-
-// PackSetImage is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xb85bbdca.  This method will panic if any
-// invalid/nil inputs are passed.
-//
-// Solidity: function setImage(uint8 cvm, (uint8,bytes32)[] pcrs, bool isAllowed) returns()
-func (imageAllowlist *ImageAllowlist) PackSetImage(cvm uint8, pcrs []IImageAllowlistPCR, isAllowed bool) []byte {
-	enc, err := imageAllowlist.abi.Pack("setImage", cvm, pcrs, isAllowed)
-	if err != nil {
-		panic(err)
-	}
-	return enc
-}
-
-// TryPackSetImage is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xb85bbdca.  This method will return an error
-// if any inputs are invalid/nil.
-//
-// Solidity: function setImage(uint8 cvm, (uint8,bytes32)[] pcrs, bool isAllowed) returns()
-func (imageAllowlist *ImageAllowlist) TryPackSetImage(cvm uint8, pcrs []IImageAllowlistPCR, isAllowed bool) ([]byte, error) {
-	return imageAllowlist.abi.Pack("setImage", cvm, pcrs, isAllowed)
 }
 
 // PackSetMinimumTCB is the Go binding used to pack the parameters required for calling
@@ -341,31 +440,74 @@ func (imageAllowlist *ImageAllowlist) TryPackTransferOwnership(newOwner common.A
 	return imageAllowlist.abi.Pack("transferOwnership", newOwner)
 }
 
-// ImageAllowlistImageUpdated represents a ImageUpdated event raised by the ImageAllowlist contract.
-type ImageAllowlistImageUpdated struct {
-	Cvm     uint8
-	Key     [32]byte
-	Allowed bool
-	Raw     *types.Log // Blockchain specific contextual infos
+// ImageAllowlistImageAdded represents a ImageAdded event raised by the ImageAllowlist contract.
+type ImageAllowlistImageAdded struct {
+	Cvm         uint8
+	Key         [32]byte
+	Version     string
+	Description string
+	Raw         *types.Log // Blockchain specific contextual infos
 }
 
-const ImageAllowlistImageUpdatedEventName = "ImageUpdated"
+const ImageAllowlistImageAddedEventName = "ImageAdded"
 
 // ContractEventName returns the user-defined event name.
-func (ImageAllowlistImageUpdated) ContractEventName() string {
-	return ImageAllowlistImageUpdatedEventName
+func (ImageAllowlistImageAdded) ContractEventName() string {
+	return ImageAllowlistImageAddedEventName
 }
 
-// UnpackImageUpdatedEvent is the Go binding that unpacks the event data emitted
+// UnpackImageAddedEvent is the Go binding that unpacks the event data emitted
 // by contract.
 //
-// Solidity: event ImageUpdated(uint8 indexed cvm, bytes32 indexed key, bool allowed)
-func (imageAllowlist *ImageAllowlist) UnpackImageUpdatedEvent(log *types.Log) (*ImageAllowlistImageUpdated, error) {
-	event := "ImageUpdated"
+// Solidity: event ImageAdded(uint8 indexed cvm, bytes32 indexed key, string version, string description)
+func (imageAllowlist *ImageAllowlist) UnpackImageAddedEvent(log *types.Log) (*ImageAllowlistImageAdded, error) {
+	event := "ImageAdded"
 	if len(log.Topics) == 0 || log.Topics[0] != imageAllowlist.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
-	out := new(ImageAllowlistImageUpdated)
+	out := new(ImageAllowlistImageAdded)
+	if len(log.Data) > 0 {
+		if err := imageAllowlist.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
+			return nil, err
+		}
+	}
+	var indexed abi.Arguments
+	for _, arg := range imageAllowlist.abi.Events[event].Inputs {
+		if arg.Indexed {
+			indexed = append(indexed, arg)
+		}
+	}
+	if err := abi.ParseTopics(out, indexed, log.Topics[1:]); err != nil {
+		return nil, err
+	}
+	out.Raw = log
+	return out, nil
+}
+
+// ImageAllowlistImageRemoved represents a ImageRemoved event raised by the ImageAllowlist contract.
+type ImageAllowlistImageRemoved struct {
+	Cvm uint8
+	Key [32]byte
+	Raw *types.Log // Blockchain specific contextual infos
+}
+
+const ImageAllowlistImageRemovedEventName = "ImageRemoved"
+
+// ContractEventName returns the user-defined event name.
+func (ImageAllowlistImageRemoved) ContractEventName() string {
+	return ImageAllowlistImageRemovedEventName
+}
+
+// UnpackImageRemovedEvent is the Go binding that unpacks the event data emitted
+// by contract.
+//
+// Solidity: event ImageRemoved(uint8 indexed cvm, bytes32 indexed key)
+func (imageAllowlist *ImageAllowlist) UnpackImageRemovedEvent(log *types.Log) (*ImageAllowlistImageRemoved, error) {
+	event := "ImageRemoved"
+	if len(log.Topics) == 0 || log.Topics[0] != imageAllowlist.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
+	}
+	out := new(ImageAllowlistImageRemoved)
 	if len(log.Data) > 0 {
 		if err := imageAllowlist.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
 			return nil, err
@@ -515,6 +657,9 @@ func (imageAllowlist *ImageAllowlist) UnpackError(raw []byte) (any, error) {
 	if bytes.Equal(raw[:4], imageAllowlist.abi.Errors["EmptyPCRs"].ID.Bytes()[:4]) {
 		return imageAllowlist.UnpackEmptyPCRsError(raw[4:])
 	}
+	if bytes.Equal(raw[:4], imageAllowlist.abi.Errors["ImageNotFound"].ID.Bytes()[:4]) {
+		return imageAllowlist.UnpackImageNotFoundError(raw[4:])
+	}
 	if bytes.Equal(raw[:4], imageAllowlist.abi.Errors["NotSorted"].ID.Bytes()[:4]) {
 		return imageAllowlist.UnpackNotSortedError(raw[4:])
 	}
@@ -539,6 +684,29 @@ func ImageAllowlistEmptyPCRsErrorID() common.Hash {
 func (imageAllowlist *ImageAllowlist) UnpackEmptyPCRsError(raw []byte) (*ImageAllowlistEmptyPCRs, error) {
 	out := new(ImageAllowlistEmptyPCRs)
 	if err := imageAllowlist.abi.UnpackIntoInterface(out, "EmptyPCRs", raw); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ImageAllowlistImageNotFound represents a ImageNotFound error raised by the ImageAllowlist contract.
+type ImageAllowlistImageNotFound struct {
+}
+
+// ErrorID returns the hash of canonical representation of the error's signature.
+//
+// Solidity: error ImageNotFound()
+func ImageAllowlistImageNotFoundErrorID() common.Hash {
+	return common.HexToHash("0x264a7c138f2c67fcefd73820af910dccfa14df264cddda11b7049873eda2046d")
+}
+
+// UnpackImageNotFoundError is the Go binding used to decode the provided
+// error data into the corresponding Go error struct.
+//
+// Solidity: error ImageNotFound()
+func (imageAllowlist *ImageAllowlist) UnpackImageNotFoundError(raw []byte) (*ImageAllowlistImageNotFound, error) {
+	out := new(ImageAllowlistImageNotFound)
+	if err := imageAllowlist.abi.UnpackIntoInterface(out, "ImageNotFound", raw); err != nil {
 		return nil, err
 	}
 	return out, nil
