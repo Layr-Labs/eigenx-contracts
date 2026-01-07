@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
+/// @title IImageAllowlist
+/// @notice Interface for managing CVM image allowlists using PCR measurements and TCB validation
 interface IImageAllowlist {
     enum CVM {
         TDX,
@@ -12,11 +14,19 @@ interface IImageAllowlist {
         bytes32 value;
     }
 
-    event ImageUpdated(CVM indexed cvm, bytes32 indexed key, bool allowed);
+    struct Image {
+        PCR[] pcrs;
+        string version;
+        string description;
+    }
+
+    event ImageAdded(CVM indexed cvm, bytes32 indexed key, string version, string description);
+    event ImageRemoved(CVM indexed cvm, bytes32 indexed key);
     event MinimumTCBUpdated(CVM indexed cvm, uint64 tcb);
 
     error NotSorted();
     error EmptyPCRs();
+    error ImageNotFound();
 
     /**
      * @notice Initialize the ImageAllowlist contract
@@ -25,12 +35,34 @@ interface IImageAllowlist {
     function initialize(address initialOwner) external;
 
     /**
-     * @notice Sets an image's allowlist status
+     * @notice Adds an image to the allowlist
      * @param cvm The CVM type
-     * @param pcrs The PCR values identifying the image
-     * @param isAllowed_ Whether the image should be allowed
+     * @param image The image to add
+     * @return key The key (hash of PCR measurements) for the added image
      */
-    function setImage(CVM cvm, PCR[] calldata pcrs, bool isAllowed_) external;
+    function addImage(CVM cvm, Image calldata image) external returns (bytes32 key);
+
+    /**
+     * @notice Removes an image from the allowlist
+     * @param cvm The CVM type
+     * @param key The key (hash of PCR measurements) to remove
+     */
+    function removeImage(CVM cvm, bytes32 key) external;
+
+    /**
+     * @notice Adds multiple images to the allowlist
+     * @param cvm The CVM type
+     * @param images_ Array of images to add
+     * @return keys The keys (hashes of PCR measurements) for the added images
+     */
+    function addImages(CVM cvm, Image[] calldata images_) external returns (bytes32[] memory keys);
+
+    /**
+     * @notice Removes multiple images from the allowlist
+     * @param cvm The CVM type
+     * @param keys Array of keys (hashes of PCR measurements) to remove
+     */
+    function removeImages(CVM cvm, bytes32[] calldata keys) external;
 
     /**
      * @notice Sets the minimum TCB level for a CVM type
@@ -57,9 +89,9 @@ interface IImageAllowlist {
     function isTCBValid(CVM cvm, uint64 tcb) external view returns (bool);
 
     /**
-     * @notice Gets the allowed status for an image hash
+     * @notice Gets the allowed status for an image key
      * @param cvm The CVM type
-     * @param key The image hash to check
+     * @param key The key (hash of PCR measurements) to check
      * @return Whether the image is allowed
      */
     function images(CVM cvm, bytes32 key) external view returns (bool);

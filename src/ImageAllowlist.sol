@@ -20,13 +20,28 @@ contract ImageAllowlist is Initializable, OwnableUpgradeable, ImageAllowlistStor
     }
 
     /// @inheritdoc IImageAllowlist
-    function setImage(CVM cvm, PCR[] calldata pcrs, bool isAllowed) external onlyOwner {
-        require(pcrs.length != 0, EmptyPCRs());
-        require(_isSorted(pcrs), NotSorted());
+    function addImage(CVM cvm, Image calldata image) external onlyOwner returns (bytes32) {
+        return _addImage(cvm, image);
+    }
 
-        bytes32 key = _hashPCRs(pcrs);
-        images[cvm][key] = isAllowed;
-        emit ImageUpdated(cvm, key, isAllowed);
+    /// @inheritdoc IImageAllowlist
+    function removeImage(CVM cvm, bytes32 key) external onlyOwner {
+        _removeImage(cvm, key);
+    }
+
+    /// @inheritdoc IImageAllowlist
+    function addImages(CVM cvm, Image[] calldata images_) external onlyOwner returns (bytes32[] memory keys) {
+        keys = new bytes32[](images_.length);
+        for (uint256 i = 0; i < images_.length; i++) {
+            keys[i] = _addImage(cvm, images_[i]);
+        }
+    }
+
+    /// @inheritdoc IImageAllowlist
+    function removeImages(CVM cvm, bytes32[] calldata keys) external onlyOwner {
+        for (uint256 i = 0; i < keys.length; i++) {
+            _removeImage(cvm, keys[i]);
+        }
     }
 
     /// @inheritdoc IImageAllowlist
@@ -43,6 +58,32 @@ contract ImageAllowlist is Initializable, OwnableUpgradeable, ImageAllowlistStor
     /// @inheritdoc IImageAllowlist
     function isTCBValid(CVM cvm, uint64 tcb) external view returns (bool) {
         return tcb >= minimumTCB[cvm];
+    }
+
+    /**
+     * @notice Adds an image to the allowlist for a CVM type
+     * @param cvm The CVM type to add the image for
+     * @param image The image to add
+     * @return key The key (hash of PCR measurements) for the added image
+     */
+    function _addImage(CVM cvm, Image calldata image) private returns (bytes32 key) {
+        require(image.pcrs.length != 0, EmptyPCRs());
+        require(_isSorted(image.pcrs), NotSorted());
+
+        key = _hashPCRs(image.pcrs);
+        images[cvm][key] = true;
+        emit ImageAdded(cvm, key, image.version, image.description);
+    }
+
+    /**
+     * @notice Removes an image from the allowlist for a CVM type
+     * @param cvm The CVM type to remove the image from
+     * @param key The key (hash of PCR measurements) identifying the image
+     */
+    function _removeImage(CVM cvm, bytes32 key) private {
+        require(images[cvm][key], ImageNotFound());
+        images[cvm][key] = false;
+        emit ImageRemoved(cvm, key);
     }
 
     /**
