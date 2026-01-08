@@ -5,7 +5,7 @@
     "phases": [
         {
             "type": "eoa",
-            "filename": "1-deployImageAllowlistImpl.s.sol"
+            "filename": "1-deployImageAllowlist.s.sol"
         }
     ]
 }
