@@ -53,6 +53,15 @@ abstract contract AppControllerStorage is IAppController {
     /// @inheritdoc IAppController
     uint32 public globalActiveAppCount;
 
+    /// @notice The window after readyAt during which a queued upgrade can be executed (7 days)
+    uint256 public constant UPGRADE_EXPIRY_WINDOW = 7 days;
+
+    /// @notice Per-app upgrade timelock configuration
+    mapping(IApp => UpgradeTimelockConfig) internal _timelockConfigs;
+
+    /// @notice Per-app pending queued upgrade
+    mapping(IApp => PendingUpgrade) internal _pendingUpgrades;
+
     constructor(
         IReleaseManager _releaseManager,
         IComputeOperator _computeOperator,
@@ -70,5 +79,5 @@ abstract contract AppControllerStorage is IAppController {
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
-    uint256[45] private __gap;
+    uint256[43] private __gap;
 }

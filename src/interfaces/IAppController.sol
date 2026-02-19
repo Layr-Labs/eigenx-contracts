@@ -29,6 +29,33 @@ interface IAppController {
     /// @notice Thrown when trying to suspend an account that still has active apps
     error AccountHasActiveApps();
 
+    /// @notice Thrown when upgradeApp is called on an app that has an upgrade timelock configured
+    error UpgradeMustBeQueued();
+
+    /// @notice Thrown when attempting to reduce a timelock delay that has been locked
+    error TimelockDelayLocked();
+
+    /// @notice Thrown when trying to queue an upgrade on an app with no timelock configured
+    error TimelockNotConfigured();
+
+    /// @notice Thrown when trying to execute a queued upgrade before the timelock has elapsed
+    error TimelockNotExpired();
+
+    /// @notice Thrown when a queued upgrade's execution window has passed
+    error TimelockExpired();
+
+    /// @notice Thrown when the provided release does not match the queued release hash
+    error ReleaseHashMismatch();
+
+    /// @notice Thrown when there is no pending upgrade queued for the app
+    error NoPendingUpgrade();
+
+    /// @notice Thrown when an upgrade is queued but the app already has a pending upgrade
+    error UpgradeAlreadyQueued();
+
+    /// @notice Thrown when attempting to lock a timelock with zero delay
+    error CannotLockZeroDelay();
+
     /// @notice Emitted when a new app is successfully created
     event AppCreated(address indexed creator, IApp indexed app, uint32 operatorSetId);
 
@@ -58,6 +85,15 @@ interface IAppController {
 
     /// @notice Emitted when an app's metadata URI is updated
     event AppMetadataURIUpdated(IApp indexed app, string metadataURI);
+
+    /// @notice Emitted when an app's upgrade timelock is configured
+    event UpgradeTimelockSet(IApp indexed app, uint40 delay, bool locked);
+
+    /// @notice Emitted when an upgrade is placed in the timelock queue
+    event UpgradeQueued(IApp indexed app, bytes32 indexed releaseHash, uint40 readyAt);
+
+    /// @notice Emitted when a queued upgrade is cancelled before execution
+    event UpgradeCancelled(IApp indexed app, bytes32 indexed releaseHash);
 
     /**
      * @notice Enum for app status
@@ -94,6 +130,20 @@ interface IAppController {
     struct UserConfig {
         uint32 maxActiveApps;
         uint32 activeAppCount;
+    }
+
+    /// @notice Per-app upgrade timelock configuration
+    /// @dev delay=0 means no timelock (direct upgradeApp works). Once locked=true, delay can never be reduced.
+    struct UpgradeTimelockConfig {
+        uint40 delay; // Required wait in seconds between queue and execute
+        bool locked; // Once true, delay can never be reduced
+    }
+
+    /// @notice A queued upgrade operation waiting for the timelock to expire
+    /// @dev readyAt=0 means no pending upgrade
+    struct PendingUpgrade {
+        bytes32 releaseHash; // keccak256(abi.encode(release)) of the queued Release
+        uint40 readyAt; // block.timestamp + delay at queue time; 0 means no pending upgrade
     }
 
     /**
@@ -189,6 +239,64 @@ interface IAppController {
      * @dev Apps already suspended or terminated are silently skipped
      */
     function suspend(address account, IApp[] calldata apps) external;
+
+    /**
+     * @notice Configures the upgrade timelock delay for an app. Only apps with delay > 0 require
+     *         the queue/execute flow; apps with delay == 0 use upgradeApp directly (the default).
+     * @param app The app to configure
+     * @param delay The required wait period in seconds between queueUpgradeApp and executeQueuedUpgrade
+     * @param lock If true, the delay is permanently locked at this value or higher
+     * @dev Caller must be UAM permissioned for the app
+     * @dev If the current config is locked, delay must be >= current delay (can only increase)
+     * @dev Once locked=true is set, it cannot be unset
+     */
+    function setUpgradeTimelock(IApp app, uint40 delay, bool lock) external;
+
+    /**
+     * @notice Queues an upgrade for a timelocked app. The upgrade cannot execute until
+     *         block.timestamp >= readyAt (readyAt = block.timestamp + timelockDelay).
+     * @param app The app to queue the upgrade for
+     * @param release The release to upgrade to (same format as upgradeApp)
+     * @return readyAt The timestamp after which executeQueuedUpgrade becomes callable
+     * @dev Caller must be UAM permissioned for the app
+     * @dev App must be active (STARTED or STOPPED)
+     * @dev The app must have a non-zero timelock delay configured
+     * @dev Only one upgrade can be pending per app at a time
+     */
+    function queueUpgradeApp(IApp app, Release calldata release) external returns (uint40 readyAt);
+
+    /**
+     * @notice Executes a previously queued upgrade after the timelock has elapsed.
+     * @param app The app to execute the upgrade for
+     * @param release The same release that was passed to queueUpgradeApp (verified by hash)
+     * @return releaseId The unique identifier for the published release
+     * @dev Caller must be UAM permissioned for the app
+     * @dev Reverts if called before readyAt or after readyAt + UPGRADE_EXPIRY_WINDOW
+     * @dev Reverts if the release hash does not match the queued hash
+     */
+    function executeQueuedUpgrade(IApp app, Release calldata release) external returns (uint256 releaseId);
+
+    /**
+     * @notice Cancels a pending queued upgrade before it is executed.
+     * @param app The app to cancel the queued upgrade for
+     * @dev Caller must be UAM permissioned for the app
+     * @dev Can be called regardless of app status (even stopped/suspended)
+     */
+    function cancelQueuedUpgrade(IApp app) external;
+
+    /**
+     * @notice Returns the upgrade timelock configuration for an app
+     * @param app The app to query
+     * @return The timelock configuration (delay=0 means no timelock)
+     */
+    function getUpgradeTimelockConfig(IApp app) external view returns (UpgradeTimelockConfig memory);
+
+    /**
+     * @notice Returns the pending upgrade for an app, if any
+     * @param app The app to query
+     * @return The pending upgrade (readyAt=0 means no pending upgrade)
+     */
+    function getPendingUpgrade(IApp app) external view returns (PendingUpgrade memory);
 
     /**
      * @notice Gets the maximum global active apps limit

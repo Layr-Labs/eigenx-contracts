@@ -131,6 +131,8 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         appIsActive(app)
         returns (uint256)
     {
+        // Apps with a configured timelock must use queueUpgradeApp + executeQueuedUpgrade
+        require(_timelockConfigs[app].delay == 0, UpgradeMustBeQueued());
         return _upgradeApp(app, release);
     }
 
@@ -192,6 +194,74 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
         // Zero-out the account's max active apps
         _setMaxActiveAppsPerUser(account, 0);
+    }
+
+    /// UPGRADE TIMELOCK FUNCTIONS
+
+    /// @inheritdoc IAppController
+    function setUpgradeTimelock(IApp app, uint40 delay, bool lock)
+        external
+        checkCanCall(address(app))
+        appExists(app)
+    {
+        UpgradeTimelockConfig storage config = _timelockConfigs[app];
+        // If already locked, the new delay must be >= current delay (can only increase)
+        require(!config.locked || delay >= config.delay, TimelockDelayLocked());
+        // Cannot lock at delay=0 (would permanently prevent timelock from being enabled)
+        require(!lock || delay > 0, CannotLockZeroDelay());
+        config.delay = delay;
+        // Once locked, cannot be unlocked (lock=false is ignored if already locked)
+        if (lock) config.locked = true;
+        emit UpgradeTimelockSet(app, config.delay, config.locked);
+    }
+
+    /// @inheritdoc IAppController
+    function queueUpgradeApp(IApp app, Release calldata release)
+        external
+        checkCanCall(address(app))
+        appIsActive(app)
+        returns (uint40 readyAt)
+    {
+        require(_timelockConfigs[app].delay > 0, TimelockNotConfigured());
+        require(_pendingUpgrades[app].readyAt == 0, UpgradeAlreadyQueued());
+
+        // Validate release structure upfront (same check as _upgradeApp)
+        require(release.rmsRelease.artifacts.length == 1, MoreThanOneArtifact());
+
+        bytes32 releaseHash = keccak256(abi.encode(release));
+        readyAt = uint40(block.timestamp) + _timelockConfigs[app].delay;
+
+        _pendingUpgrades[app] = PendingUpgrade({releaseHash: releaseHash, readyAt: readyAt});
+
+        emit UpgradeQueued(app, releaseHash, readyAt);
+    }
+
+    /// @inheritdoc IAppController
+    function executeQueuedUpgrade(IApp app, Release calldata release)
+        external
+        checkCanCall(address(app))
+        appIsActive(app)
+        returns (uint256 releaseId)
+    {
+        PendingUpgrade storage pending = _pendingUpgrades[app];
+        require(pending.readyAt != 0, NoPendingUpgrade());
+        require(block.timestamp >= pending.readyAt, TimelockNotExpired());
+        require(block.timestamp < uint256(pending.readyAt) + UPGRADE_EXPIRY_WINDOW, TimelockExpired());
+        require(keccak256(abi.encode(release)) == pending.releaseHash, ReleaseHashMismatch());
+
+        // Clear pending state before external call (checks-effects-interactions)
+        delete _pendingUpgrades[app];
+
+        releaseId = _upgradeApp(app, release);
+    }
+
+    /// @inheritdoc IAppController
+    function cancelQueuedUpgrade(IApp app) external checkCanCall(address(app)) {
+        PendingUpgrade storage pending = _pendingUpgrades[app];
+        require(pending.readyAt != 0, NoPendingUpgrade());
+        bytes32 releaseHash = pending.releaseHash;
+        delete _pendingUpgrades[app];
+        emit UpgradeCancelled(app, releaseHash);
     }
 
     /// INTERNAL FUNCTIONS
@@ -469,6 +539,16 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         returns (IApp[] memory apps, AppConfig[] memory appConfigsMem)
     {
         return _getFilteredApps(_isCreator, creator, offset, limit);
+    }
+
+    /// @inheritdoc IAppController
+    function getUpgradeTimelockConfig(IApp app) external view returns (UpgradeTimelockConfig memory) {
+        return _timelockConfigs[app];
+    }
+
+    /// @inheritdoc IAppController
+    function getPendingUpgrade(IApp app) external view returns (PendingUpgrade memory) {
+        return _pendingUpgrades[app];
     }
 
     /// @inheritdoc IAppController
