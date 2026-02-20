@@ -5,10 +5,10 @@ import {IImageAllowlist} from "../interfaces/IImageAllowlist.sol";
 
 abstract contract ImageAllowlistStorage is IImageAllowlist {
     /// @inheritdoc IImageAllowlist
-    mapping(CVM => mapping(bytes32 => bool)) public images;
+    mapping(Platform => mapping(bytes32 => bool)) public images;
 
     /// @inheritdoc IImageAllowlist
-    mapping(CVM => uint64) public minimumTCB;
+    mapping(Platform => uint64) public minimumTCB;
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new

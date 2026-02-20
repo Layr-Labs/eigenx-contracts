@@ -5,9 +5,11 @@ import {ComputeDeployer} from "./utils/ComputeDeployer.sol";
 import {IImageAllowlist} from "../src/interfaces/IImageAllowlist.sol";
 
 contract ImageAllowlistTest is ComputeDeployer {
-    event ImageAdded(IImageAllowlist.CVM indexed cvm, bytes32 indexed key, string version, string description);
-    event ImageRemoved(IImageAllowlist.CVM indexed cvm, bytes32 indexed key);
-    event MinimumTCBUpdated(IImageAllowlist.CVM indexed cvm, uint64 tcb);
+    event ImageAdded(
+        IImageAllowlist.Platform indexed platform, bytes32 indexed key, string version, string description
+    );
+    event ImageRemoved(IImageAllowlist.Platform indexed platform, bytes32 indexed key);
+    event MinimumTCBUpdated(IImageAllowlist.Platform indexed platform, uint64 tcb);
 
     function setUp() public {
         _deployContracts();
@@ -28,13 +30,13 @@ contract ImageAllowlistTest is ComputeDeployer {
         bytes32 expectedKey = keccak256(abi.encode(image.pcrs));
 
         vm.expectEmit(true, true, true, true);
-        emit ImageAdded(IImageAllowlist.CVM.TDX, expectedKey, "v1.0.0", "test-image");
+        emit ImageAdded(IImageAllowlist.Platform.INTEL_TDX, expectedKey, "v1.0.0", "test-image");
 
         vm.prank(admin);
-        imageAllowlist.addImage(IImageAllowlist.CVM.TDX, image);
+        imageAllowlist.addImage(IImageAllowlist.Platform.INTEL_TDX, image);
 
-        assertTrue(imageAllowlist.isImageAllowed(IImageAllowlist.CVM.TDX, image.pcrs));
-        assertTrue(imageAllowlist.images(IImageAllowlist.CVM.TDX, expectedKey));
+        assertTrue(imageAllowlist.isImageAllowed(IImageAllowlist.Platform.INTEL_TDX, image.pcrs));
+        assertTrue(imageAllowlist.images(IImageAllowlist.Platform.INTEL_TDX, expectedKey));
     }
 
     function test_removeImage() public {
@@ -43,27 +45,27 @@ contract ImageAllowlistTest is ComputeDeployer {
         bytes32 expectedKey = keccak256(abi.encode(image.pcrs));
 
         vm.startPrank(admin);
-        imageAllowlist.addImage(IImageAllowlist.CVM.TDX, image);
-        assertTrue(imageAllowlist.isImageAllowed(IImageAllowlist.CVM.TDX, image.pcrs));
+        imageAllowlist.addImage(IImageAllowlist.Platform.INTEL_TDX, image);
+        assertTrue(imageAllowlist.isImageAllowed(IImageAllowlist.Platform.INTEL_TDX, image.pcrs));
 
         vm.expectEmit(true, true, true, true);
-        emit ImageRemoved(IImageAllowlist.CVM.TDX, expectedKey);
+        emit ImageRemoved(IImageAllowlist.Platform.INTEL_TDX, expectedKey);
 
-        imageAllowlist.removeImage(IImageAllowlist.CVM.TDX, expectedKey);
-        assertFalse(imageAllowlist.isImageAllowed(IImageAllowlist.CVM.TDX, image.pcrs));
+        imageAllowlist.removeImage(IImageAllowlist.Platform.INTEL_TDX, expectedKey);
+        assertFalse(imageAllowlist.isImageAllowed(IImageAllowlist.Platform.INTEL_TDX, image.pcrs));
         vm.stopPrank();
     }
 
-    function test_addImage_separatePerCVM() public {
+    function test_addImage_separatePerPlatform() public {
         IImageAllowlist.Image memory image =
             IImageAllowlist.Image({pcrs: _createPCRs(), version: "v1.0.0", description: "tdx-image"});
 
         vm.startPrank(admin);
-        imageAllowlist.addImage(IImageAllowlist.CVM.TDX, image);
+        imageAllowlist.addImage(IImageAllowlist.Platform.INTEL_TDX, image);
         vm.stopPrank();
 
-        assertTrue(imageAllowlist.isImageAllowed(IImageAllowlist.CVM.TDX, image.pcrs));
-        assertFalse(imageAllowlist.isImageAllowed(IImageAllowlist.CVM.SEV_SNP, image.pcrs));
+        assertTrue(imageAllowlist.isImageAllowed(IImageAllowlist.Platform.INTEL_TDX, image.pcrs));
+        assertFalse(imageAllowlist.isImageAllowed(IImageAllowlist.Platform.AMD_SEV_SNP, image.pcrs));
     }
 
     function test_addImage_revertsIfNotOwner() public {
@@ -72,19 +74,19 @@ contract ImageAllowlistTest is ComputeDeployer {
 
         vm.prank(user);
         vm.expectRevert();
-        imageAllowlist.addImage(IImageAllowlist.CVM.TDX, image);
+        imageAllowlist.addImage(IImageAllowlist.Platform.INTEL_TDX, image);
     }
 
     function test_removeImage_revertsIfNotOwner() public {
         vm.prank(user);
         vm.expectRevert();
-        imageAllowlist.removeImage(IImageAllowlist.CVM.TDX, bytes32(uint256(1)));
+        imageAllowlist.removeImage(IImageAllowlist.Platform.INTEL_TDX, bytes32(uint256(1)));
     }
 
     function test_removeImage_revertsIfNotFound() public {
         vm.prank(admin);
         vm.expectRevert(IImageAllowlist.ImageNotFound.selector);
-        imageAllowlist.removeImage(IImageAllowlist.CVM.TDX, bytes32(uint256(1)));
+        imageAllowlist.removeImage(IImageAllowlist.Platform.INTEL_TDX, bytes32(uint256(1)));
     }
 
     function test_addImage_revertsIfEmptyPCRs() public {
@@ -93,7 +95,7 @@ contract ImageAllowlistTest is ComputeDeployer {
 
         vm.prank(admin);
         vm.expectRevert(IImageAllowlist.EmptyPCRs.selector);
-        imageAllowlist.addImage(IImageAllowlist.CVM.TDX, image);
+        imageAllowlist.addImage(IImageAllowlist.Platform.INTEL_TDX, image);
     }
 
     function test_addImage_revertsIfNotSorted() public {
@@ -106,54 +108,54 @@ contract ImageAllowlistTest is ComputeDeployer {
 
         vm.prank(admin);
         vm.expectRevert(IImageAllowlist.NotSorted.selector);
-        imageAllowlist.addImage(IImageAllowlist.CVM.TDX, image);
+        imageAllowlist.addImage(IImageAllowlist.Platform.INTEL_TDX, image);
 
         // Duplicate indices also fail (not strictly increasing)
         pcrs[0].index = 1;
         vm.prank(admin);
         vm.expectRevert(IImageAllowlist.NotSorted.selector);
-        imageAllowlist.addImage(IImageAllowlist.CVM.TDX, image);
+        imageAllowlist.addImage(IImageAllowlist.Platform.INTEL_TDX, image);
     }
 
     function test_setMinimumTCB() public {
         vm.expectEmit(true, true, true, true);
-        emit MinimumTCBUpdated(IImageAllowlist.CVM.TDX, 100);
+        emit MinimumTCBUpdated(IImageAllowlist.Platform.INTEL_TDX, 100);
 
         vm.prank(admin);
-        imageAllowlist.setMinimumTCB(IImageAllowlist.CVM.TDX, 100);
+        imageAllowlist.setMinimumTCB(IImageAllowlist.Platform.INTEL_TDX, 100);
 
-        assertEq(imageAllowlist.minimumTCB(IImageAllowlist.CVM.TDX), 100);
+        assertEq(imageAllowlist.minimumTCB(IImageAllowlist.Platform.INTEL_TDX), 100);
     }
 
-    function test_setMinimumTCB_separatePerCVM() public {
+    function test_setMinimumTCB_separatePerPlatform() public {
         vm.startPrank(admin);
-        imageAllowlist.setMinimumTCB(IImageAllowlist.CVM.TDX, 100);
-        imageAllowlist.setMinimumTCB(IImageAllowlist.CVM.SEV_SNP, 200);
+        imageAllowlist.setMinimumTCB(IImageAllowlist.Platform.INTEL_TDX, 100);
+        imageAllowlist.setMinimumTCB(IImageAllowlist.Platform.AMD_SEV_SNP, 200);
         vm.stopPrank();
 
-        assertEq(imageAllowlist.minimumTCB(IImageAllowlist.CVM.TDX), 100);
-        assertEq(imageAllowlist.minimumTCB(IImageAllowlist.CVM.SEV_SNP), 200);
+        assertEq(imageAllowlist.minimumTCB(IImageAllowlist.Platform.INTEL_TDX), 100);
+        assertEq(imageAllowlist.minimumTCB(IImageAllowlist.Platform.AMD_SEV_SNP), 200);
     }
 
     function test_setMinimumTCB_revertsIfNotOwner() public {
         vm.prank(user);
         vm.expectRevert();
-        imageAllowlist.setMinimumTCB(IImageAllowlist.CVM.TDX, 100);
+        imageAllowlist.setMinimumTCB(IImageAllowlist.Platform.INTEL_TDX, 100);
     }
 
     function test_isTCBValid() public {
         vm.prank(admin);
-        imageAllowlist.setMinimumTCB(IImageAllowlist.CVM.TDX, 100);
+        imageAllowlist.setMinimumTCB(IImageAllowlist.Platform.INTEL_TDX, 100);
 
-        assertTrue(imageAllowlist.isTCBValid(IImageAllowlist.CVM.TDX, 101));
-        assertTrue(imageAllowlist.isTCBValid(IImageAllowlist.CVM.TDX, 100));
-        assertFalse(imageAllowlist.isTCBValid(IImageAllowlist.CVM.TDX, 99));
+        assertTrue(imageAllowlist.isTCBValid(IImageAllowlist.Platform.INTEL_TDX, 101));
+        assertTrue(imageAllowlist.isTCBValid(IImageAllowlist.Platform.INTEL_TDX, 100));
+        assertFalse(imageAllowlist.isTCBValid(IImageAllowlist.Platform.INTEL_TDX, 99));
     }
 
     function test_isTCBValid_defaultsToZero() public view {
         // minimumTCB defaults to 0, so any TCB >= 0 is valid
-        assertTrue(imageAllowlist.isTCBValid(IImageAllowlist.CVM.TDX, 0));
-        assertTrue(imageAllowlist.isTCBValid(IImageAllowlist.CVM.TDX, 1));
+        assertTrue(imageAllowlist.isTCBValid(IImageAllowlist.Platform.INTEL_TDX, 0));
+        assertTrue(imageAllowlist.isTCBValid(IImageAllowlist.Platform.INTEL_TDX, 1));
     }
 
     function test_addImages() public {
@@ -165,10 +167,10 @@ contract ImageAllowlistTest is ComputeDeployer {
         bytes32 key2 = keccak256(abi.encode(inputs[1].pcrs));
 
         vm.prank(admin);
-        imageAllowlist.addImages(IImageAllowlist.CVM.TDX, inputs);
+        imageAllowlist.addImages(IImageAllowlist.Platform.INTEL_TDX, inputs);
 
-        assertTrue(imageAllowlist.images(IImageAllowlist.CVM.TDX, key1));
-        assertTrue(imageAllowlist.images(IImageAllowlist.CVM.TDX, key2));
+        assertTrue(imageAllowlist.images(IImageAllowlist.Platform.INTEL_TDX, key1));
+        assertTrue(imageAllowlist.images(IImageAllowlist.Platform.INTEL_TDX, key2));
     }
 
     function test_removeImages() public {
@@ -180,19 +182,19 @@ contract ImageAllowlistTest is ComputeDeployer {
         bytes32 key2 = keccak256(abi.encode(inputs[1].pcrs));
 
         vm.startPrank(admin);
-        imageAllowlist.addImages(IImageAllowlist.CVM.TDX, inputs);
+        imageAllowlist.addImages(IImageAllowlist.Platform.INTEL_TDX, inputs);
 
-        assertTrue(imageAllowlist.images(IImageAllowlist.CVM.TDX, key1));
-        assertTrue(imageAllowlist.images(IImageAllowlist.CVM.TDX, key2));
+        assertTrue(imageAllowlist.images(IImageAllowlist.Platform.INTEL_TDX, key1));
+        assertTrue(imageAllowlist.images(IImageAllowlist.Platform.INTEL_TDX, key2));
 
         bytes32[] memory keys = new bytes32[](2);
         keys[0] = key1;
         keys[1] = key2;
 
-        imageAllowlist.removeImages(IImageAllowlist.CVM.TDX, keys);
+        imageAllowlist.removeImages(IImageAllowlist.Platform.INTEL_TDX, keys);
 
-        assertFalse(imageAllowlist.images(IImageAllowlist.CVM.TDX, key1));
-        assertFalse(imageAllowlist.images(IImageAllowlist.CVM.TDX, key2));
+        assertFalse(imageAllowlist.images(IImageAllowlist.Platform.INTEL_TDX, key1));
+        assertFalse(imageAllowlist.images(IImageAllowlist.Platform.INTEL_TDX, key2));
         vm.stopPrank();
     }
 

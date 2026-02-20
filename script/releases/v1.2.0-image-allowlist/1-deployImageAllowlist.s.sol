@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.so
 import {ImageAllowlist} from "../../../src/ImageAllowlist.sol";
 
 /**
- * Purpose: deploy ImageAllowlist contract for CVM image validation
+ * Purpose: deploy ImageAllowlist contract for platform image validation
  */
 contract DeployImageAllowlist is EOADeployer {
     using Env for *;

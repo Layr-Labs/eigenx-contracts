@@ -2,11 +2,12 @@
 pragma solidity ^0.8.27;
 
 /// @title IImageAllowlist
-/// @notice Interface for managing CVM image allowlists using PCR measurements and TCB validation
+/// @notice Interface for managing image allowlists using PCR measurements and TCB validation
 interface IImageAllowlist {
-    enum CVM {
-        TDX,
-        SEV_SNP
+    enum Platform {
+        INTEL_TDX,
+        AMD_SEV_SNP,
+        GOOGLE_VTPM
     }
 
     struct PCR {
@@ -20,9 +21,9 @@ interface IImageAllowlist {
         string description;
     }
 
-    event ImageAdded(CVM indexed cvm, bytes32 indexed key, string version, string description);
-    event ImageRemoved(CVM indexed cvm, bytes32 indexed key);
-    event MinimumTCBUpdated(CVM indexed cvm, uint64 tcb);
+    event ImageAdded(Platform indexed platform, bytes32 indexed key, string version, string description);
+    event ImageRemoved(Platform indexed platform, bytes32 indexed key);
+    event MinimumTCBUpdated(Platform indexed platform, uint64 tcb);
 
     error NotSorted();
     error EmptyPCRs();
@@ -36,70 +37,70 @@ interface IImageAllowlist {
 
     /**
      * @notice Adds an image to the allowlist
-     * @param cvm The CVM type
+     * @param platform The Platform type
      * @param image The image to add
      * @return key The key (hash of PCR measurements) for the added image
      */
-    function addImage(CVM cvm, Image calldata image) external returns (bytes32 key);
+    function addImage(Platform platform, Image calldata image) external returns (bytes32 key);
 
     /**
      * @notice Removes an image from the allowlist
-     * @param cvm The CVM type
+     * @param platform The Platform type
      * @param key The key (hash of PCR measurements) to remove
      */
-    function removeImage(CVM cvm, bytes32 key) external;
+    function removeImage(Platform platform, bytes32 key) external;
 
     /**
      * @notice Adds multiple images to the allowlist
-     * @param cvm The CVM type
+     * @param platform The Platform type
      * @param images_ Array of images to add
      * @return keys The keys (hashes of PCR measurements) for the added images
      */
-    function addImages(CVM cvm, Image[] calldata images_) external returns (bytes32[] memory keys);
+    function addImages(Platform platform, Image[] calldata images_) external returns (bytes32[] memory keys);
 
     /**
      * @notice Removes multiple images from the allowlist
-     * @param cvm The CVM type
+     * @param platform The Platform type
      * @param keys Array of keys (hashes of PCR measurements) to remove
      */
-    function removeImages(CVM cvm, bytes32[] calldata keys) external;
+    function removeImages(Platform platform, bytes32[] calldata keys) external;
 
     /**
-     * @notice Sets the minimum TCB level for a CVM type
-     * @param cvm The CVM type
+     * @notice Sets the minimum TCB level for a Platform type
+     * @param platform The Platform type
      * @param tcb The minimum TCB level
      */
-    function setMinimumTCB(CVM cvm, uint64 tcb) external;
+    function setMinimumTCB(Platform platform, uint64 tcb) external;
 
     /**
      * @notice Checks if an image is allowed
-     * @param cvm The CVM type
+     * @param platform The Platform type
      * @param pcrs The PCR values identifying the image
      * @return Whether the image is allowed
      */
-    function isImageAllowed(CVM cvm, PCR[] calldata pcrs) external view returns (bool);
+    function isImageAllowed(Platform platform, PCR[] calldata pcrs) external view returns (bool);
 
     /**
      * @notice Checks if a TCB level meets the minimum requirement
-     * @param cvm The CVM type
+     * @param platform The Platform type
      * @param tcb The TCB level to check
      * @return Whether the TCB level is sufficient
      * @dev Returns true for any TCB if minimumTCB is unset (defaults to 0)
      */
-    function isTCBValid(CVM cvm, uint64 tcb) external view returns (bool);
+    function isTCBValid(Platform platform, uint64 tcb) external view returns (bool);
 
     /**
      * @notice Gets the allowed status for an image key
-     * @param cvm The CVM type
+     * @param platform The Platform type
      * @param key The key (hash of PCR measurements) to check
      * @return Whether the image is allowed
      */
-    function images(CVM cvm, bytes32 key) external view returns (bool);
+    function images(Platform platform, bytes32 key) external view returns (bool);
 
     /**
-     * @notice Gets the minimum TCB level for a CVM type
-     * @param cvm The CVM type
+     * @notice Gets the minimum TCB level for a Platform type
+     * @param platform The Platform type
      * @return The minimum TCB level
      */
-    function minimumTCB(CVM cvm) external view returns (uint64);
+    function minimumTCB(Platform platform) external view returns (uint64);
 }

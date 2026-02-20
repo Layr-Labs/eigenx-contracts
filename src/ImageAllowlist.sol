@@ -7,8 +7,8 @@ import {ImageAllowlistStorage} from "./storage/ImageAllowlistStorage.sol";
 import {IImageAllowlist} from "./interfaces/IImageAllowlist.sol";
 
 /// @title ImageAllowlist
-/// @notice Allowlist for CVM images using PCR measurements and minimum TCB versions
-/// @dev Separate allowlists are maintained per CVM type (TDX and SEV-SNP)
+/// @notice Allowlist for images using PCR measurements and minimum TCB versions
+/// @dev Separate allowlists are maintained per platform (TDX, SEV-SNP, vTPM)
 contract ImageAllowlist is Initializable, OwnableUpgradeable, ImageAllowlistStorage {
     constructor() {
         _disableInitializers();
@@ -20,70 +20,70 @@ contract ImageAllowlist is Initializable, OwnableUpgradeable, ImageAllowlistStor
     }
 
     /// @inheritdoc IImageAllowlist
-    function addImage(CVM cvm, Image calldata image) external onlyOwner returns (bytes32) {
-        return _addImage(cvm, image);
+    function addImage(Platform platform, Image calldata image) external onlyOwner returns (bytes32) {
+        return _addImage(platform, image);
     }
 
     /// @inheritdoc IImageAllowlist
-    function removeImage(CVM cvm, bytes32 key) external onlyOwner {
-        _removeImage(cvm, key);
+    function removeImage(Platform platform, bytes32 key) external onlyOwner {
+        _removeImage(platform, key);
     }
 
     /// @inheritdoc IImageAllowlist
-    function addImages(CVM cvm, Image[] calldata images_) external onlyOwner returns (bytes32[] memory keys) {
+    function addImages(Platform platform, Image[] calldata images_) external onlyOwner returns (bytes32[] memory keys) {
         keys = new bytes32[](images_.length);
         for (uint256 i = 0; i < images_.length; i++) {
-            keys[i] = _addImage(cvm, images_[i]);
+            keys[i] = _addImage(platform, images_[i]);
         }
     }
 
     /// @inheritdoc IImageAllowlist
-    function removeImages(CVM cvm, bytes32[] calldata keys) external onlyOwner {
+    function removeImages(Platform platform, bytes32[] calldata keys) external onlyOwner {
         for (uint256 i = 0; i < keys.length; i++) {
-            _removeImage(cvm, keys[i]);
+            _removeImage(platform, keys[i]);
         }
     }
 
     /// @inheritdoc IImageAllowlist
-    function setMinimumTCB(CVM cvm, uint64 tcb) external onlyOwner {
-        minimumTCB[cvm] = tcb;
-        emit MinimumTCBUpdated(cvm, tcb);
+    function setMinimumTCB(Platform platform, uint64 tcb) external onlyOwner {
+        minimumTCB[platform] = tcb;
+        emit MinimumTCBUpdated(platform, tcb);
     }
 
     /// @inheritdoc IImageAllowlist
-    function isImageAllowed(CVM cvm, PCR[] calldata pcrs) external view returns (bool) {
-        return images[cvm][_hashPCRs(pcrs)];
+    function isImageAllowed(Platform platform, PCR[] calldata pcrs) external view returns (bool) {
+        return images[platform][_hashPCRs(pcrs)];
     }
 
     /// @inheritdoc IImageAllowlist
-    function isTCBValid(CVM cvm, uint64 tcb) external view returns (bool) {
-        return tcb >= minimumTCB[cvm];
+    function isTCBValid(Platform platform, uint64 tcb) external view returns (bool) {
+        return tcb >= minimumTCB[platform];
     }
 
     /**
-     * @notice Adds an image to the allowlist for a CVM type
-     * @param cvm The CVM type to add the image for
+     * @notice Adds an image to the allowlist for a Platform type
+     * @param platform The Platform type to add the image for
      * @param image The image to add
      * @return key The key (hash of PCR measurements) for the added image
      */
-    function _addImage(CVM cvm, Image calldata image) private returns (bytes32 key) {
+    function _addImage(Platform platform, Image calldata image) private returns (bytes32 key) {
         require(image.pcrs.length != 0, EmptyPCRs());
         require(_isSorted(image.pcrs), NotSorted());
 
         key = _hashPCRs(image.pcrs);
-        images[cvm][key] = true;
-        emit ImageAdded(cvm, key, image.version, image.description);
+        images[platform][key] = true;
+        emit ImageAdded(platform, key, image.version, image.description);
     }
 
     /**
-     * @notice Removes an image from the allowlist for a CVM type
-     * @param cvm The CVM type to remove the image from
+     * @notice Removes an image from the allowlist for a Platform type
+     * @param platform The Platform type to remove the image from
      * @param key The key (hash of PCR measurements) identifying the image
      */
-    function _removeImage(CVM cvm, bytes32 key) private {
-        require(images[cvm][key], ImageNotFound());
-        images[cvm][key] = false;
-        emit ImageRemoved(cvm, key);
+    function _removeImage(Platform platform, bytes32 key) private {
+        require(images[platform][key], ImageNotFound());
+        images[platform][key] = false;
+        emit ImageRemoved(platform, key);
     }
 
     /**
