@@ -20,6 +20,7 @@ import {App} from "../../src/App.sol";
 import {AppController} from "../../src/AppController.sol";
 import {ComputeAVSRegistrar} from "../../src/ComputeAVSRegistrar.sol";
 import {ComputeOperator} from "../../src/ComputeOperator.sol";
+import {ImageAllowlist} from "../../src/ImageAllowlist.sol";
 
 library Env {
     using ZEnvHelpers for *;
@@ -100,6 +101,10 @@ library Env {
         return ComputeOperator(_deployedProxy(type(ComputeOperator).name));
     }
 
+    function imageAllowlist(DeployedProxy) internal view returns (ImageAllowlist) {
+        return ImageAllowlist(_deployedProxy(type(ImageAllowlist).name));
+    }
+
     function appBeacon(DeployedBeacon) internal view returns (UpgradeableBeacon) {
         return UpgradeableBeacon(_deployedBeacon(type(App).name));
     }
@@ -121,6 +126,10 @@ library Env {
 
     function computeOperator(DeployedImpl) internal view returns (ComputeOperator) {
         return ComputeOperator(_deployedImpl(type(ComputeOperator).name));
+    }
+
+    function imageAllowlist(DeployedImpl) internal view returns (ImageAllowlist) {
+        return ImageAllowlist(_deployedImpl(type(ImageAllowlist).name));
     }
 
     /**

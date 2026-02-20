@@ -7,6 +7,7 @@ import {Parser} from "../../script/Parser.s.sol";
 import {IAppController} from "../../src/interfaces/IAppController.sol";
 import {ComputeAVSRegistrar} from "../../src/ComputeAVSRegistrar.sol";
 import {ComputeOperator} from "../../src/ComputeOperator.sol";
+import {ImageAllowlist} from "../../src/ImageAllowlist.sol";
 import {PermissionController} from "@eigenlayer-contracts/src/contracts/permissions/PermissionController.sol";
 import {ReleaseManager} from "@eigenlayer-contracts/src/contracts/core/ReleaseManager.sol";
 import {AllocationManager} from "@eigenlayer-contracts/src/contracts/core/AllocationManager.sol";
@@ -36,6 +37,7 @@ contract ComputeDeployer is Test {
     EigenPodManager public eigenPodManager;
     ComputeAVSRegistrar public computeAVSRegistrar;
     ComputeOperator public computeOperator;
+    ImageAllowlist public imageAllowlist;
     Deploy public deployer;
 
     string public constant VERSION = "1.0.0-test";
@@ -66,6 +68,7 @@ contract ComputeDeployer is Test {
         appController = deployed.appController;
         computeAVSRegistrar = ComputeAVSRegistrar(address(deployed.computeAVSRegistrar));
         computeOperator = ComputeOperator(address(deployed.computeOperator));
+        imageAllowlist = ImageAllowlist(address(deployed.imageAllowlist));
 
         // Set up permission for AppController to call ReleaseManager.publishMetadataURI on behalf of ComputeAVSRegistrar
         vm.startPrank(address(computeAVSRegistrar));

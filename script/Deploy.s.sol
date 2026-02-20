@@ -22,8 +22,25 @@ import {IComputeOperator} from "../src/interfaces/IComputeOperator.sol";
 import {AppController} from "../src/AppController.sol";
 import {ComputeAVSRegistrar} from "../src/ComputeAVSRegistrar.sol";
 import {ComputeOperator} from "../src/ComputeOperator.sol";
+import {ImageAllowlist} from "../src/ImageAllowlist.sol";
+import {IImageAllowlist} from "../src/interfaces/IImageAllowlist.sol";
 
 contract Deploy is Parser {
+    struct Proxies {
+        TransparentUpgradeableProxy computeAVSRegistrar;
+        TransparentUpgradeableProxy computeOperator;
+        TransparentUpgradeableProxy appController;
+        TransparentUpgradeableProxy imageAllowlist;
+    }
+
+    struct Implementations {
+        App app;
+        ComputeAVSRegistrar computeAVSRegistrar;
+        ComputeOperator computeOperator;
+        AppController appController;
+        ImageAllowlist imageAllowlist;
+    }
+
     function run(string memory environment) public {
         run(environment, parseDeployParams(environment));
     }
@@ -54,87 +71,107 @@ contract Deploy is Parser {
         EmptyContract emptyContract = new EmptyContract();
 
         // Deploy proxies
-        TransparentUpgradeableProxy computeAVSRegistrarProxy =
-            new TransparentUpgradeableProxy(address(emptyContract), address(params.proxyAdmin), new bytes(0));
-        TransparentUpgradeableProxy computeOperatorProxy =
-            new TransparentUpgradeableProxy(address(emptyContract), address(params.proxyAdmin), new bytes(0));
-        TransparentUpgradeableProxy appControllerProxy =
-            new TransparentUpgradeableProxy(address(emptyContract), address(params.proxyAdmin), new bytes(0));
+        Proxies memory proxies = Proxies({
+            computeAVSRegistrar: new TransparentUpgradeableProxy(
+                address(emptyContract), address(params.proxyAdmin), new bytes(0)
+            ),
+            computeOperator: new TransparentUpgradeableProxy(
+                address(emptyContract), address(params.proxyAdmin), new bytes(0)
+            ),
+            appController: new TransparentUpgradeableProxy(
+                address(emptyContract), address(params.proxyAdmin), new bytes(0)
+            ),
+            imageAllowlist: new TransparentUpgradeableProxy(
+                address(emptyContract), address(params.proxyAdmin), new bytes(0)
+            )
+        });
 
-        // Deploy App implementation and beacon
-        App appImpl = new App(params.version, IPermissionController(params.permissionController));
-        UpgradeableBeacon appBeacon = new UpgradeableBeacon(address(appImpl));
+        // Deploy App beacon
+        UpgradeableBeacon appBeacon =
+            new UpgradeableBeacon(address(new App(params.version, IPermissionController(params.permissionController))));
 
         // Deploy implementation contracts
-
-        ComputeAVSRegistrar computeAVSRegistrarImpl = new ComputeAVSRegistrar({
-            _version: params.version,
-            _allocationManager: params.allocationManager,
-            _permissionController: params.permissionController,
-            _keyRegistrar: params.keyRegistrar,
-            _appController: IAppController(address(appControllerProxy))
-        });
-        ComputeOperator computeOperatorImpl = new ComputeOperator({
-            _version: params.version,
-            _delegationManager: params.delegationManager,
-            _allocationManager: params.allocationManager,
-            _permissionController: params.permissionController,
-            _appController: address(appControllerProxy),
-            _computeAVSRegistrar: address(computeAVSRegistrarProxy)
-        });
-        AppController appControllerImpl = new AppController({
-            _version: params.version,
-            _permissionController: params.permissionController,
-            _releaseManager: params.releaseManager,
-            _computeAVSRegistrar: IComputeAVSRegistrar(address(computeAVSRegistrarProxy)),
-            _computeOperator: IComputeOperator(address(computeOperatorProxy)),
-            _appBeacon: appBeacon
+        Implementations memory impls = Implementations({
+            app: App(appBeacon.implementation()),
+            computeAVSRegistrar: new ComputeAVSRegistrar({
+                _version: params.version,
+                _allocationManager: params.allocationManager,
+                _permissionController: params.permissionController,
+                _keyRegistrar: params.keyRegistrar,
+                _appController: IAppController(address(proxies.appController))
+            }),
+            computeOperator: new ComputeOperator({
+                _version: params.version,
+                _delegationManager: params.delegationManager,
+                _allocationManager: params.allocationManager,
+                _permissionController: params.permissionController,
+                _appController: address(proxies.appController),
+                _computeAVSRegistrar: address(proxies.computeAVSRegistrar)
+            }),
+            appController: new AppController({
+                _version: params.version,
+                _permissionController: params.permissionController,
+                _releaseManager: params.releaseManager,
+                _computeAVSRegistrar: IComputeAVSRegistrar(address(proxies.computeAVSRegistrar)),
+                _computeOperator: IComputeOperator(address(proxies.computeOperator)),
+                _appBeacon: appBeacon
+            }),
+            imageAllowlist: new ImageAllowlist()
         });
 
         // Upgrade proxies using ProxyAdmin
         params.proxyAdmin
             .upgradeAndCall(
-                ITransparentUpgradeableProxy(address(computeAVSRegistrarProxy)),
-                address(computeAVSRegistrarImpl),
+                ITransparentUpgradeableProxy(address(proxies.computeAVSRegistrar)),
+                address(impls.computeAVSRegistrar),
                 abi.encodeCall(ComputeAVSRegistrar.initialize, (params.avsMetadataURI))
             );
         params.proxyAdmin
             .upgradeAndCall(
-                ITransparentUpgradeableProxy(address(computeOperatorProxy)),
-                address(computeOperatorImpl),
+                ITransparentUpgradeableProxy(address(proxies.computeOperator)),
+                address(impls.computeOperator),
                 abi.encodeCall(ComputeOperator.initialize, (params.operatorMetadataURI))
             );
         params.proxyAdmin
-            .upgradeAndCall(
-                ITransparentUpgradeableProxy(address(appControllerProxy)),
-                address(appControllerImpl),
+                .upgradeAndCall(
+                ITransparentUpgradeableProxy(address(proxies.appController)),
+                address(impls.appController),
                 abi.encodeCall(AppController.initialize, (params.initialOwner))
+            );
+        params.proxyAdmin
+            .upgradeAndCall(
+                ITransparentUpgradeableProxy(address(proxies.imageAllowlist)),
+                address(impls.imageAllowlist),
+                abi.encodeCall(ImageAllowlist.initialize, (params.initialOwner))
             );
 
         // Accept admin role for AppController
-        IPermissionController(address(params.permissionController)).acceptAdmin(address(appControllerProxy));
+        IPermissionController(address(params.permissionController)).acceptAdmin(address(proxies.appController));
 
         // Set max global active apps and admin user limit
-        IAppController(address(appControllerProxy)).setMaxGlobalActiveApps(params.maxGlobalActiveApps);
-        IAppController(address(appControllerProxy))
+        IAppController(address(proxies.appController)).setMaxGlobalActiveApps(params.maxGlobalActiveApps);
+        IAppController(address(proxies.appController))
             .setMaxActiveAppsPerUser(params.initialOwner, params.adminMaxActiveApps);
 
         console.log("Proxy Admin:", address(params.proxyAdmin));
         console.log("App Beacon:", address(appBeacon));
-        console.log("AppController deployed at:", address(appControllerProxy));
-        console.log("ComputeAVSRegistrar deployed at:", address(computeAVSRegistrarProxy));
-        console.log("ComputeOperator deployed at:", address(computeOperatorProxy));
+        console.log("AppController deployed at:", address(proxies.appController));
+        console.log("ComputeAVSRegistrar deployed at:", address(proxies.computeAVSRegistrar));
+        console.log("ComputeOperator deployed at:", address(proxies.computeOperator));
+        console.log("ImageAllowlist deployed at:", address(proxies.imageAllowlist));
 
         return DeployedContracts({
             proxyAdmin: params.proxyAdmin,
             appBeacon: appBeacon,
-            appImpl: appImpl,
-            appController: IAppController(address(appControllerProxy)),
-            appControllerImpl: appControllerImpl,
-            computeAVSRegistrar: IComputeAVSRegistrar(address(computeAVSRegistrarProxy)),
-            computeAVSRegistrarImpl: computeAVSRegistrarImpl,
-            computeOperator: IComputeOperator(address(computeOperatorProxy)),
-            computeOperatorImpl: computeOperatorImpl
+            appImpl: impls.app,
+            appController: IAppController(address(proxies.appController)),
+            appControllerImpl: impls.appController,
+            computeAVSRegistrar: IComputeAVSRegistrar(address(proxies.computeAVSRegistrar)),
+            computeAVSRegistrarImpl: impls.computeAVSRegistrar,
+            computeOperator: IComputeOperator(address(proxies.computeOperator)),
+            computeOperatorImpl: impls.computeOperator,
+            imageAllowlist: IImageAllowlist(address(proxies.imageAllowlist)),
+            imageAllowlistImpl: impls.imageAllowlist
         });
     }
 
@@ -155,8 +192,9 @@ contract Deploy is Parser {
         vm.serializeAddress(addresses, "computeAVSRegistrar", address(deployedContracts.computeAVSRegistrar));
         vm.serializeAddress(addresses, "computeAVSRegistrarImpl", address(deployedContracts.computeAVSRegistrarImpl));
         vm.serializeAddress(addresses, "computeOperator", address(deployedContracts.computeOperator));
-        addresses =
-            vm.serializeAddress(addresses, "computeOperatorImpl", address(deployedContracts.computeOperatorImpl));
+        vm.serializeAddress(addresses, "computeOperatorImpl", address(deployedContracts.computeOperatorImpl));
+        vm.serializeAddress(addresses, "imageAllowlist", address(deployedContracts.imageAllowlist));
+        addresses = vm.serializeAddress(addresses, "imageAllowlistImpl", address(deployedContracts.imageAllowlistImpl));
 
         // Add the chainInfo object
         string memory chainInfo = "chainInfo";
