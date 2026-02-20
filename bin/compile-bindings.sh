@@ -54,6 +54,7 @@ contracts=(
     "ComputeOperator"
     "IReleaseManager"
     "IPermissionController"
+    "USDCDeposit"
 )
 
 forge b --no-metadata
