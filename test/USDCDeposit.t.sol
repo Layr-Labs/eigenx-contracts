@@ -258,6 +258,49 @@ contract USDCDepositTest is Test {
         usdcDeposit.sweep(IERC20(address(mockUSDC)));
     }
 
+    // ==================== Constructor/initializer validation tests ====================
+
+    function test_constructor_zeroUsdc() public {
+        vm.expectRevert(IUSDCDeposit.ZeroAddress.selector);
+        new USDCDeposit({
+            _version: VERSION,
+            _permissionController: IPermissionController(address(permissionController)),
+            _usdc: IERC20(address(0)),
+            _treasury: treasuryAddr
+        });
+    }
+
+    function test_constructor_zeroTreasury() public {
+        vm.expectRevert(IUSDCDeposit.ZeroAddress.selector);
+        new USDCDeposit({
+            _version: VERSION,
+            _permissionController: IPermissionController(address(permissionController)),
+            _usdc: IERC20(address(mockUSDC)),
+            _treasury: address(0)
+        });
+    }
+
+    function test_initialize_zeroAdmin() public {
+        ProxyAdmin newProxyAdmin = new ProxyAdmin();
+        EmptyContract emptyContract = new EmptyContract();
+        TransparentUpgradeableProxy proxy =
+            new TransparentUpgradeableProxy(address(emptyContract), address(newProxyAdmin), new bytes(0));
+
+        USDCDeposit impl = new USDCDeposit({
+            _version: VERSION,
+            _permissionController: IPermissionController(address(permissionController)),
+            _usdc: IERC20(address(mockUSDC)),
+            _treasury: treasuryAddr
+        });
+
+        vm.expectRevert(IUSDCDeposit.ZeroAddress.selector);
+        newProxyAdmin.upgradeAndCall(
+            ITransparentUpgradeableProxy(address(proxy)),
+            address(impl),
+            abi.encodeCall(USDCDeposit.initialize, (address(0), MINIMUM_DEPOSIT))
+        );
+    }
+
     // ==================== View function tests ====================
 
     function test_immutables() public view {

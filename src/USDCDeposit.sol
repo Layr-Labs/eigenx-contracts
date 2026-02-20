@@ -29,6 +29,7 @@ contract USDCDeposit is Initializable, SemVerMixin, PermissionControllerMixin, U
 
     /// @inheritdoc IUSDCDeposit
     function initialize(address admin, uint256 _minimumDeposit) external initializer {
+        require(admin != address(0), ZeroAddress());
         permissionController.addPendingAdmin(address(this), admin);
         minimumDeposit = _minimumDeposit;
     }

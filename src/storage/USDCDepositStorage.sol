@@ -16,6 +16,8 @@ abstract contract USDCDepositStorage is IUSDCDeposit {
     uint256 public minimumDeposit;
 
     constructor(IERC20 _usdc, address _treasury) {
+        require(address(_usdc) != address(0), ZeroAddress());
+        require(_treasury != address(0), ZeroAddress());
         usdc = _usdc;
         treasury = _treasury;
     }
