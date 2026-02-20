@@ -19,12 +19,11 @@ contract USDCDeposit is Initializable, SemVerMixin, PermissionControllerMixin, U
      * @param _usdc The USDC token contract address
      * @param _treasury The treasury address that receives all deposits
      */
-    constructor(
-        string memory _version,
-        IPermissionController _permissionController,
-        IERC20 _usdc,
-        address _treasury
-    ) SemVerMixin(_version) PermissionControllerMixin(_permissionController) USDCDepositStorage(_usdc, _treasury) {
+    constructor(string memory _version, IPermissionController _permissionController, IERC20 _usdc, address _treasury)
+        SemVerMixin(_version)
+        PermissionControllerMixin(_permissionController)
+        USDCDepositStorage(_usdc, _treasury)
+    {
         _disableInitializers();
     }
 

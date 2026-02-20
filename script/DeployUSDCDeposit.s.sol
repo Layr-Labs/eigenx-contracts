@@ -61,11 +61,12 @@ contract DeployUSDCDeposit is Script {
         });
 
         // Upgrade and initialize
-        params.proxyAdmin.upgradeAndCall(
-            ITransparentUpgradeableProxy(address(proxy)),
-            address(impl),
-            abi.encodeCall(USDCDeposit.initialize, (params.initialOwner, params.minimumDeposit))
-        );
+        params.proxyAdmin
+            .upgradeAndCall(
+                ITransparentUpgradeableProxy(address(proxy)),
+                address(impl),
+                abi.encodeCall(USDCDeposit.initialize, (params.initialOwner, params.minimumDeposit))
+            );
 
         // Accept admin role
         IPermissionController(address(params.permissionController)).acceptAdmin(address(proxy));
@@ -73,10 +74,7 @@ contract DeployUSDCDeposit is Script {
         console.log("USDCDeposit proxy:", address(proxy));
         console.log("USDCDeposit impl:", address(impl));
 
-        return DeployedContracts({
-            usdcDeposit: IUSDCDeposit(address(proxy)),
-            usdcDepositImpl: impl
-        });
+        return DeployedContracts({usdcDeposit: IUSDCDeposit(address(proxy)), usdcDepositImpl: impl});
     }
 
     function deployForTesting(DeployParams memory params) public returns (DeployedContracts memory deployment) {

@@ -6,7 +6,6 @@ import {IUSDCDeposit} from "../interfaces/IUSDCDeposit.sol";
 
 abstract contract USDCDepositStorage is IUSDCDeposit {
     /// CONSTANTS & IMMUTABLES
-
     /// @notice The USDC token contract
     IERC20 public immutable usdc;
 
