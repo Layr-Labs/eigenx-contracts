@@ -66,6 +66,7 @@ contract ImageAllowlistTest is ComputeDeployer {
 
         assertTrue(imageAllowlist.isImageAllowed(IImageAllowlist.Platform.INTEL_TDX, image.pcrs));
         assertFalse(imageAllowlist.isImageAllowed(IImageAllowlist.Platform.AMD_SEV_SNP, image.pcrs));
+        assertFalse(imageAllowlist.isImageAllowed(IImageAllowlist.Platform.GCP_SHIELDED_VM, image.pcrs));
     }
 
     function test_addImage_revertsIfNotOwner() public {
@@ -131,10 +132,12 @@ contract ImageAllowlistTest is ComputeDeployer {
         vm.startPrank(admin);
         imageAllowlist.setMinimumTCB(IImageAllowlist.Platform.INTEL_TDX, 100);
         imageAllowlist.setMinimumTCB(IImageAllowlist.Platform.AMD_SEV_SNP, 200);
+        imageAllowlist.setMinimumTCB(IImageAllowlist.Platform.GCP_SHIELDED_VM, 300);
         vm.stopPrank();
 
         assertEq(imageAllowlist.minimumTCB(IImageAllowlist.Platform.INTEL_TDX), 100);
         assertEq(imageAllowlist.minimumTCB(IImageAllowlist.Platform.AMD_SEV_SNP), 200);
+        assertEq(imageAllowlist.minimumTCB(IImageAllowlist.Platform.GCP_SHIELDED_VM), 300);
     }
 
     function test_setMinimumTCB_revertsIfNotOwner() public {

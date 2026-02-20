@@ -7,7 +7,7 @@ interface IImageAllowlist {
     enum Platform {
         INTEL_TDX,
         AMD_SEV_SNP,
-        GOOGLE_VTPM
+        GCP_SHIELDED_VM
     }
 
     struct PCR {
