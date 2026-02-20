@@ -44,7 +44,7 @@ type IImageAllowlistPCR struct {
 
 // ImageAllowlistMetaData contains all meta data concerning the ImageAllowlist contract.
 var ImageAllowlistMetaData = &bind.MetaData{
-	ABI: "[{\"type\":\"constructor\",\"inputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"addImage\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"image\",\"type\":\"tuple\",\"internalType\":\"structIImageAllowlist.Image\",\"components\":[{\"name\":\"pcrs\",\"type\":\"tuple[]\",\"internalType\":\"structIImageAllowlist.PCR[]\",\"components\":[{\"name\":\"index\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"value\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]},{\"name\":\"version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"description\",\"type\":\"string\",\"internalType\":\"string\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"addImages\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"images_\",\"type\":\"tuple[]\",\"internalType\":\"structIImageAllowlist.Image[]\",\"components\":[{\"name\":\"pcrs\",\"type\":\"tuple[]\",\"internalType\":\"structIImageAllowlist.PCR[]\",\"components\":[{\"name\":\"index\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"value\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]},{\"name\":\"version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"description\",\"type\":\"string\",\"internalType\":\"string\"}]}],\"outputs\":[{\"name\":\"keys\",\"type\":\"bytes32[]\",\"internalType\":\"bytes32[]\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"images\",\"inputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"initialOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"isImageAllowed\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"pcrs\",\"type\":\"tuple[]\",\"internalType\":\"structIImageAllowlist.PCR[]\",\"components\":[{\"name\":\"index\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"value\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"isTCBValid\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"tcb\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"minimumTCB\",\"inputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"owner\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"removeImage\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"key\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"removeImages\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"keys\",\"type\":\"bytes32[]\",\"internalType\":\"bytes32[]\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"renounceOwnership\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setMinimumTCB\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"tcb\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"transferOwnership\",\"inputs\":[{\"name\":\"newOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"event\",\"name\":\"ImageAdded\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"indexed\":true,\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"key\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"version\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"},{\"name\":\"description\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"ImageRemoved\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"indexed\":true,\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"key\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MinimumTCBUpdated\",\"inputs\":[{\"name\":\"cvm\",\"type\":\"uint8\",\"indexed\":true,\"internalType\":\"enumIImageAllowlist.CVM\"},{\"name\":\"tcb\",\"type\":\"uint64\",\"indexed\":false,\"internalType\":\"uint64\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OwnershipTransferred\",\"inputs\":[{\"name\":\"previousOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"newOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"EmptyPCRs\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ImageNotFound\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotSorted\",\"inputs\":[]}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"addImage\",\"inputs\":[{\"name\":\"platform\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.Platform\"},{\"name\":\"image\",\"type\":\"tuple\",\"internalType\":\"structIImageAllowlist.Image\",\"components\":[{\"name\":\"pcrs\",\"type\":\"tuple[]\",\"internalType\":\"structIImageAllowlist.PCR[]\",\"components\":[{\"name\":\"index\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"value\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]},{\"name\":\"version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"description\",\"type\":\"string\",\"internalType\":\"string\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"addImages\",\"inputs\":[{\"name\":\"platform\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.Platform\"},{\"name\":\"images_\",\"type\":\"tuple[]\",\"internalType\":\"structIImageAllowlist.Image[]\",\"components\":[{\"name\":\"pcrs\",\"type\":\"tuple[]\",\"internalType\":\"structIImageAllowlist.PCR[]\",\"components\":[{\"name\":\"index\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"value\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]},{\"name\":\"version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"description\",\"type\":\"string\",\"internalType\":\"string\"}]}],\"outputs\":[{\"name\":\"keys\",\"type\":\"bytes32[]\",\"internalType\":\"bytes32[]\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"images\",\"inputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.Platform\"},{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"initialOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"isImageAllowed\",\"inputs\":[{\"name\":\"platform\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.Platform\"},{\"name\":\"pcrs\",\"type\":\"tuple[]\",\"internalType\":\"structIImageAllowlist.PCR[]\",\"components\":[{\"name\":\"index\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"value\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"isTCBValid\",\"inputs\":[{\"name\":\"platform\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.Platform\"},{\"name\":\"tcb\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"minimumTCB\",\"inputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.Platform\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"owner\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"removeImage\",\"inputs\":[{\"name\":\"platform\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.Platform\"},{\"name\":\"key\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"removeImages\",\"inputs\":[{\"name\":\"platform\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.Platform\"},{\"name\":\"keys\",\"type\":\"bytes32[]\",\"internalType\":\"bytes32[]\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"renounceOwnership\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setMinimumTCB\",\"inputs\":[{\"name\":\"platform\",\"type\":\"uint8\",\"internalType\":\"enumIImageAllowlist.Platform\"},{\"name\":\"tcb\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"transferOwnership\",\"inputs\":[{\"name\":\"newOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"event\",\"name\":\"ImageAdded\",\"inputs\":[{\"name\":\"platform\",\"type\":\"uint8\",\"indexed\":true,\"internalType\":\"enumIImageAllowlist.Platform\"},{\"name\":\"key\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"version\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"},{\"name\":\"description\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"ImageRemoved\",\"inputs\":[{\"name\":\"platform\",\"type\":\"uint8\",\"indexed\":true,\"internalType\":\"enumIImageAllowlist.Platform\"},{\"name\":\"key\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MinimumTCBUpdated\",\"inputs\":[{\"name\":\"platform\",\"type\":\"uint8\",\"indexed\":true,\"internalType\":\"enumIImageAllowlist.Platform\"},{\"name\":\"tcb\",\"type\":\"uint64\",\"indexed\":false,\"internalType\":\"uint64\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OwnershipTransferred\",\"inputs\":[{\"name\":\"previousOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"newOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"EmptyPCRs\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ImageNotFound\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotSorted\",\"inputs\":[]}]",
 }
 
 // ImageAllowlistABI is the input ABI used to generate the binding from.
@@ -226,10 +226,10 @@ func (_ImageAllowlist *ImageAllowlistCallerSession) Images(arg0 uint8, arg1 [32]
 
 // IsImageAllowed is a free data retrieval call binding the contract method 0x2d5a1daf.
 //
-// Solidity: function isImageAllowed(uint8 cvm, (uint8,bytes32)[] pcrs) view returns(bool)
-func (_ImageAllowlist *ImageAllowlistCaller) IsImageAllowed(opts *bind.CallOpts, cvm uint8, pcrs []IImageAllowlistPCR) (bool, error) {
+// Solidity: function isImageAllowed(uint8 platform, (uint8,bytes32)[] pcrs) view returns(bool)
+func (_ImageAllowlist *ImageAllowlistCaller) IsImageAllowed(opts *bind.CallOpts, platform uint8, pcrs []IImageAllowlistPCR) (bool, error) {
 	var out []interface{}
-	err := _ImageAllowlist.contract.Call(opts, &out, "isImageAllowed", cvm, pcrs)
+	err := _ImageAllowlist.contract.Call(opts, &out, "isImageAllowed", platform, pcrs)
 
 	if err != nil {
 		return *new(bool), err
@@ -243,24 +243,24 @@ func (_ImageAllowlist *ImageAllowlistCaller) IsImageAllowed(opts *bind.CallOpts,
 
 // IsImageAllowed is a free data retrieval call binding the contract method 0x2d5a1daf.
 //
-// Solidity: function isImageAllowed(uint8 cvm, (uint8,bytes32)[] pcrs) view returns(bool)
-func (_ImageAllowlist *ImageAllowlistSession) IsImageAllowed(cvm uint8, pcrs []IImageAllowlistPCR) (bool, error) {
-	return _ImageAllowlist.Contract.IsImageAllowed(&_ImageAllowlist.CallOpts, cvm, pcrs)
+// Solidity: function isImageAllowed(uint8 platform, (uint8,bytes32)[] pcrs) view returns(bool)
+func (_ImageAllowlist *ImageAllowlistSession) IsImageAllowed(platform uint8, pcrs []IImageAllowlistPCR) (bool, error) {
+	return _ImageAllowlist.Contract.IsImageAllowed(&_ImageAllowlist.CallOpts, platform, pcrs)
 }
 
 // IsImageAllowed is a free data retrieval call binding the contract method 0x2d5a1daf.
 //
-// Solidity: function isImageAllowed(uint8 cvm, (uint8,bytes32)[] pcrs) view returns(bool)
-func (_ImageAllowlist *ImageAllowlistCallerSession) IsImageAllowed(cvm uint8, pcrs []IImageAllowlistPCR) (bool, error) {
-	return _ImageAllowlist.Contract.IsImageAllowed(&_ImageAllowlist.CallOpts, cvm, pcrs)
+// Solidity: function isImageAllowed(uint8 platform, (uint8,bytes32)[] pcrs) view returns(bool)
+func (_ImageAllowlist *ImageAllowlistCallerSession) IsImageAllowed(platform uint8, pcrs []IImageAllowlistPCR) (bool, error) {
+	return _ImageAllowlist.Contract.IsImageAllowed(&_ImageAllowlist.CallOpts, platform, pcrs)
 }
 
 // IsTCBValid is a free data retrieval call binding the contract method 0x43e3dd05.
 //
-// Solidity: function isTCBValid(uint8 cvm, uint64 tcb) view returns(bool)
-func (_ImageAllowlist *ImageAllowlistCaller) IsTCBValid(opts *bind.CallOpts, cvm uint8, tcb uint64) (bool, error) {
+// Solidity: function isTCBValid(uint8 platform, uint64 tcb) view returns(bool)
+func (_ImageAllowlist *ImageAllowlistCaller) IsTCBValid(opts *bind.CallOpts, platform uint8, tcb uint64) (bool, error) {
 	var out []interface{}
-	err := _ImageAllowlist.contract.Call(opts, &out, "isTCBValid", cvm, tcb)
+	err := _ImageAllowlist.contract.Call(opts, &out, "isTCBValid", platform, tcb)
 
 	if err != nil {
 		return *new(bool), err
@@ -274,16 +274,16 @@ func (_ImageAllowlist *ImageAllowlistCaller) IsTCBValid(opts *bind.CallOpts, cvm
 
 // IsTCBValid is a free data retrieval call binding the contract method 0x43e3dd05.
 //
-// Solidity: function isTCBValid(uint8 cvm, uint64 tcb) view returns(bool)
-func (_ImageAllowlist *ImageAllowlistSession) IsTCBValid(cvm uint8, tcb uint64) (bool, error) {
-	return _ImageAllowlist.Contract.IsTCBValid(&_ImageAllowlist.CallOpts, cvm, tcb)
+// Solidity: function isTCBValid(uint8 platform, uint64 tcb) view returns(bool)
+func (_ImageAllowlist *ImageAllowlistSession) IsTCBValid(platform uint8, tcb uint64) (bool, error) {
+	return _ImageAllowlist.Contract.IsTCBValid(&_ImageAllowlist.CallOpts, platform, tcb)
 }
 
 // IsTCBValid is a free data retrieval call binding the contract method 0x43e3dd05.
 //
-// Solidity: function isTCBValid(uint8 cvm, uint64 tcb) view returns(bool)
-func (_ImageAllowlist *ImageAllowlistCallerSession) IsTCBValid(cvm uint8, tcb uint64) (bool, error) {
-	return _ImageAllowlist.Contract.IsTCBValid(&_ImageAllowlist.CallOpts, cvm, tcb)
+// Solidity: function isTCBValid(uint8 platform, uint64 tcb) view returns(bool)
+func (_ImageAllowlist *ImageAllowlistCallerSession) IsTCBValid(platform uint8, tcb uint64) (bool, error) {
+	return _ImageAllowlist.Contract.IsTCBValid(&_ImageAllowlist.CallOpts, platform, tcb)
 }
 
 // MinimumTCB is a free data retrieval call binding the contract method 0x4ec8d4fa.
@@ -350,44 +350,44 @@ func (_ImageAllowlist *ImageAllowlistCallerSession) Owner() (common.Address, err
 
 // AddImage is a paid mutator transaction binding the contract method 0xffc2585d.
 //
-// Solidity: function addImage(uint8 cvm, ((uint8,bytes32)[],string,string) image) returns(bytes32)
-func (_ImageAllowlist *ImageAllowlistTransactor) AddImage(opts *bind.TransactOpts, cvm uint8, image IImageAllowlistImage) (*types.Transaction, error) {
-	return _ImageAllowlist.contract.Transact(opts, "addImage", cvm, image)
+// Solidity: function addImage(uint8 platform, ((uint8,bytes32)[],string,string) image) returns(bytes32)
+func (_ImageAllowlist *ImageAllowlistTransactor) AddImage(opts *bind.TransactOpts, platform uint8, image IImageAllowlistImage) (*types.Transaction, error) {
+	return _ImageAllowlist.contract.Transact(opts, "addImage", platform, image)
 }
 
 // AddImage is a paid mutator transaction binding the contract method 0xffc2585d.
 //
-// Solidity: function addImage(uint8 cvm, ((uint8,bytes32)[],string,string) image) returns(bytes32)
-func (_ImageAllowlist *ImageAllowlistSession) AddImage(cvm uint8, image IImageAllowlistImage) (*types.Transaction, error) {
-	return _ImageAllowlist.Contract.AddImage(&_ImageAllowlist.TransactOpts, cvm, image)
+// Solidity: function addImage(uint8 platform, ((uint8,bytes32)[],string,string) image) returns(bytes32)
+func (_ImageAllowlist *ImageAllowlistSession) AddImage(platform uint8, image IImageAllowlistImage) (*types.Transaction, error) {
+	return _ImageAllowlist.Contract.AddImage(&_ImageAllowlist.TransactOpts, platform, image)
 }
 
 // AddImage is a paid mutator transaction binding the contract method 0xffc2585d.
 //
-// Solidity: function addImage(uint8 cvm, ((uint8,bytes32)[],string,string) image) returns(bytes32)
-func (_ImageAllowlist *ImageAllowlistTransactorSession) AddImage(cvm uint8, image IImageAllowlistImage) (*types.Transaction, error) {
-	return _ImageAllowlist.Contract.AddImage(&_ImageAllowlist.TransactOpts, cvm, image)
+// Solidity: function addImage(uint8 platform, ((uint8,bytes32)[],string,string) image) returns(bytes32)
+func (_ImageAllowlist *ImageAllowlistTransactorSession) AddImage(platform uint8, image IImageAllowlistImage) (*types.Transaction, error) {
+	return _ImageAllowlist.Contract.AddImage(&_ImageAllowlist.TransactOpts, platform, image)
 }
 
 // AddImages is a paid mutator transaction binding the contract method 0x188675b3.
 //
-// Solidity: function addImages(uint8 cvm, ((uint8,bytes32)[],string,string)[] images_) returns(bytes32[] keys)
-func (_ImageAllowlist *ImageAllowlistTransactor) AddImages(opts *bind.TransactOpts, cvm uint8, images_ []IImageAllowlistImage) (*types.Transaction, error) {
-	return _ImageAllowlist.contract.Transact(opts, "addImages", cvm, images_)
+// Solidity: function addImages(uint8 platform, ((uint8,bytes32)[],string,string)[] images_) returns(bytes32[] keys)
+func (_ImageAllowlist *ImageAllowlistTransactor) AddImages(opts *bind.TransactOpts, platform uint8, images_ []IImageAllowlistImage) (*types.Transaction, error) {
+	return _ImageAllowlist.contract.Transact(opts, "addImages", platform, images_)
 }
 
 // AddImages is a paid mutator transaction binding the contract method 0x188675b3.
 //
-// Solidity: function addImages(uint8 cvm, ((uint8,bytes32)[],string,string)[] images_) returns(bytes32[] keys)
-func (_ImageAllowlist *ImageAllowlistSession) AddImages(cvm uint8, images_ []IImageAllowlistImage) (*types.Transaction, error) {
-	return _ImageAllowlist.Contract.AddImages(&_ImageAllowlist.TransactOpts, cvm, images_)
+// Solidity: function addImages(uint8 platform, ((uint8,bytes32)[],string,string)[] images_) returns(bytes32[] keys)
+func (_ImageAllowlist *ImageAllowlistSession) AddImages(platform uint8, images_ []IImageAllowlistImage) (*types.Transaction, error) {
+	return _ImageAllowlist.Contract.AddImages(&_ImageAllowlist.TransactOpts, platform, images_)
 }
 
 // AddImages is a paid mutator transaction binding the contract method 0x188675b3.
 //
-// Solidity: function addImages(uint8 cvm, ((uint8,bytes32)[],string,string)[] images_) returns(bytes32[] keys)
-func (_ImageAllowlist *ImageAllowlistTransactorSession) AddImages(cvm uint8, images_ []IImageAllowlistImage) (*types.Transaction, error) {
-	return _ImageAllowlist.Contract.AddImages(&_ImageAllowlist.TransactOpts, cvm, images_)
+// Solidity: function addImages(uint8 platform, ((uint8,bytes32)[],string,string)[] images_) returns(bytes32[] keys)
+func (_ImageAllowlist *ImageAllowlistTransactorSession) AddImages(platform uint8, images_ []IImageAllowlistImage) (*types.Transaction, error) {
+	return _ImageAllowlist.Contract.AddImages(&_ImageAllowlist.TransactOpts, platform, images_)
 }
 
 // Initialize is a paid mutator transaction binding the contract method 0xc4d66de8.
@@ -413,44 +413,44 @@ func (_ImageAllowlist *ImageAllowlistTransactorSession) Initialize(initialOwner 
 
 // RemoveImage is a paid mutator transaction binding the contract method 0x036257e2.
 //
-// Solidity: function removeImage(uint8 cvm, bytes32 key) returns()
-func (_ImageAllowlist *ImageAllowlistTransactor) RemoveImage(opts *bind.TransactOpts, cvm uint8, key [32]byte) (*types.Transaction, error) {
-	return _ImageAllowlist.contract.Transact(opts, "removeImage", cvm, key)
+// Solidity: function removeImage(uint8 platform, bytes32 key) returns()
+func (_ImageAllowlist *ImageAllowlistTransactor) RemoveImage(opts *bind.TransactOpts, platform uint8, key [32]byte) (*types.Transaction, error) {
+	return _ImageAllowlist.contract.Transact(opts, "removeImage", platform, key)
 }
 
 // RemoveImage is a paid mutator transaction binding the contract method 0x036257e2.
 //
-// Solidity: function removeImage(uint8 cvm, bytes32 key) returns()
-func (_ImageAllowlist *ImageAllowlistSession) RemoveImage(cvm uint8, key [32]byte) (*types.Transaction, error) {
-	return _ImageAllowlist.Contract.RemoveImage(&_ImageAllowlist.TransactOpts, cvm, key)
+// Solidity: function removeImage(uint8 platform, bytes32 key) returns()
+func (_ImageAllowlist *ImageAllowlistSession) RemoveImage(platform uint8, key [32]byte) (*types.Transaction, error) {
+	return _ImageAllowlist.Contract.RemoveImage(&_ImageAllowlist.TransactOpts, platform, key)
 }
 
 // RemoveImage is a paid mutator transaction binding the contract method 0x036257e2.
 //
-// Solidity: function removeImage(uint8 cvm, bytes32 key) returns()
-func (_ImageAllowlist *ImageAllowlistTransactorSession) RemoveImage(cvm uint8, key [32]byte) (*types.Transaction, error) {
-	return _ImageAllowlist.Contract.RemoveImage(&_ImageAllowlist.TransactOpts, cvm, key)
+// Solidity: function removeImage(uint8 platform, bytes32 key) returns()
+func (_ImageAllowlist *ImageAllowlistTransactorSession) RemoveImage(platform uint8, key [32]byte) (*types.Transaction, error) {
+	return _ImageAllowlist.Contract.RemoveImage(&_ImageAllowlist.TransactOpts, platform, key)
 }
 
 // RemoveImages is a paid mutator transaction binding the contract method 0xd79799b5.
 //
-// Solidity: function removeImages(uint8 cvm, bytes32[] keys) returns()
-func (_ImageAllowlist *ImageAllowlistTransactor) RemoveImages(opts *bind.TransactOpts, cvm uint8, keys [][32]byte) (*types.Transaction, error) {
-	return _ImageAllowlist.contract.Transact(opts, "removeImages", cvm, keys)
+// Solidity: function removeImages(uint8 platform, bytes32[] keys) returns()
+func (_ImageAllowlist *ImageAllowlistTransactor) RemoveImages(opts *bind.TransactOpts, platform uint8, keys [][32]byte) (*types.Transaction, error) {
+	return _ImageAllowlist.contract.Transact(opts, "removeImages", platform, keys)
 }
 
 // RemoveImages is a paid mutator transaction binding the contract method 0xd79799b5.
 //
-// Solidity: function removeImages(uint8 cvm, bytes32[] keys) returns()
-func (_ImageAllowlist *ImageAllowlistSession) RemoveImages(cvm uint8, keys [][32]byte) (*types.Transaction, error) {
-	return _ImageAllowlist.Contract.RemoveImages(&_ImageAllowlist.TransactOpts, cvm, keys)
+// Solidity: function removeImages(uint8 platform, bytes32[] keys) returns()
+func (_ImageAllowlist *ImageAllowlistSession) RemoveImages(platform uint8, keys [][32]byte) (*types.Transaction, error) {
+	return _ImageAllowlist.Contract.RemoveImages(&_ImageAllowlist.TransactOpts, platform, keys)
 }
 
 // RemoveImages is a paid mutator transaction binding the contract method 0xd79799b5.
 //
-// Solidity: function removeImages(uint8 cvm, bytes32[] keys) returns()
-func (_ImageAllowlist *ImageAllowlistTransactorSession) RemoveImages(cvm uint8, keys [][32]byte) (*types.Transaction, error) {
-	return _ImageAllowlist.Contract.RemoveImages(&_ImageAllowlist.TransactOpts, cvm, keys)
+// Solidity: function removeImages(uint8 platform, bytes32[] keys) returns()
+func (_ImageAllowlist *ImageAllowlistTransactorSession) RemoveImages(platform uint8, keys [][32]byte) (*types.Transaction, error) {
+	return _ImageAllowlist.Contract.RemoveImages(&_ImageAllowlist.TransactOpts, platform, keys)
 }
 
 // RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
@@ -476,23 +476,23 @@ func (_ImageAllowlist *ImageAllowlistTransactorSession) RenounceOwnership() (*ty
 
 // SetMinimumTCB is a paid mutator transaction binding the contract method 0xa54c8287.
 //
-// Solidity: function setMinimumTCB(uint8 cvm, uint64 tcb) returns()
-func (_ImageAllowlist *ImageAllowlistTransactor) SetMinimumTCB(opts *bind.TransactOpts, cvm uint8, tcb uint64) (*types.Transaction, error) {
-	return _ImageAllowlist.contract.Transact(opts, "setMinimumTCB", cvm, tcb)
+// Solidity: function setMinimumTCB(uint8 platform, uint64 tcb) returns()
+func (_ImageAllowlist *ImageAllowlistTransactor) SetMinimumTCB(opts *bind.TransactOpts, platform uint8, tcb uint64) (*types.Transaction, error) {
+	return _ImageAllowlist.contract.Transact(opts, "setMinimumTCB", platform, tcb)
 }
 
 // SetMinimumTCB is a paid mutator transaction binding the contract method 0xa54c8287.
 //
-// Solidity: function setMinimumTCB(uint8 cvm, uint64 tcb) returns()
-func (_ImageAllowlist *ImageAllowlistSession) SetMinimumTCB(cvm uint8, tcb uint64) (*types.Transaction, error) {
-	return _ImageAllowlist.Contract.SetMinimumTCB(&_ImageAllowlist.TransactOpts, cvm, tcb)
+// Solidity: function setMinimumTCB(uint8 platform, uint64 tcb) returns()
+func (_ImageAllowlist *ImageAllowlistSession) SetMinimumTCB(platform uint8, tcb uint64) (*types.Transaction, error) {
+	return _ImageAllowlist.Contract.SetMinimumTCB(&_ImageAllowlist.TransactOpts, platform, tcb)
 }
 
 // SetMinimumTCB is a paid mutator transaction binding the contract method 0xa54c8287.
 //
-// Solidity: function setMinimumTCB(uint8 cvm, uint64 tcb) returns()
-func (_ImageAllowlist *ImageAllowlistTransactorSession) SetMinimumTCB(cvm uint8, tcb uint64) (*types.Transaction, error) {
-	return _ImageAllowlist.Contract.SetMinimumTCB(&_ImageAllowlist.TransactOpts, cvm, tcb)
+// Solidity: function setMinimumTCB(uint8 platform, uint64 tcb) returns()
+func (_ImageAllowlist *ImageAllowlistTransactorSession) SetMinimumTCB(platform uint8, tcb uint64) (*types.Transaction, error) {
+	return _ImageAllowlist.Contract.SetMinimumTCB(&_ImageAllowlist.TransactOpts, platform, tcb)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
@@ -585,7 +585,7 @@ func (it *ImageAllowlistImageAddedIterator) Close() error {
 
 // ImageAllowlistImageAdded represents a ImageAdded event raised by the ImageAllowlist contract.
 type ImageAllowlistImageAdded struct {
-	Cvm         uint8
+	Platform    uint8
 	Key         [32]byte
 	Version     string
 	Description string
@@ -594,19 +594,19 @@ type ImageAllowlistImageAdded struct {
 
 // FilterImageAdded is a free log retrieval operation binding the contract event 0x4e54da158c3f3db628647ffcc4dde7cfb80f110852579df816369378d1f0e460.
 //
-// Solidity: event ImageAdded(uint8 indexed cvm, bytes32 indexed key, string version, string description)
-func (_ImageAllowlist *ImageAllowlistFilterer) FilterImageAdded(opts *bind.FilterOpts, cvm []uint8, key [][32]byte) (*ImageAllowlistImageAddedIterator, error) {
+// Solidity: event ImageAdded(uint8 indexed platform, bytes32 indexed key, string version, string description)
+func (_ImageAllowlist *ImageAllowlistFilterer) FilterImageAdded(opts *bind.FilterOpts, platform []uint8, key [][32]byte) (*ImageAllowlistImageAddedIterator, error) {
 
-	var cvmRule []interface{}
-	for _, cvmItem := range cvm {
-		cvmRule = append(cvmRule, cvmItem)
+	var platformRule []interface{}
+	for _, platformItem := range platform {
+		platformRule = append(platformRule, platformItem)
 	}
 	var keyRule []interface{}
 	for _, keyItem := range key {
 		keyRule = append(keyRule, keyItem)
 	}
 
-	logs, sub, err := _ImageAllowlist.contract.FilterLogs(opts, "ImageAdded", cvmRule, keyRule)
+	logs, sub, err := _ImageAllowlist.contract.FilterLogs(opts, "ImageAdded", platformRule, keyRule)
 	if err != nil {
 		return nil, err
 	}
@@ -615,19 +615,19 @@ func (_ImageAllowlist *ImageAllowlistFilterer) FilterImageAdded(opts *bind.Filte
 
 // WatchImageAdded is a free log subscription operation binding the contract event 0x4e54da158c3f3db628647ffcc4dde7cfb80f110852579df816369378d1f0e460.
 //
-// Solidity: event ImageAdded(uint8 indexed cvm, bytes32 indexed key, string version, string description)
-func (_ImageAllowlist *ImageAllowlistFilterer) WatchImageAdded(opts *bind.WatchOpts, sink chan<- *ImageAllowlistImageAdded, cvm []uint8, key [][32]byte) (event.Subscription, error) {
+// Solidity: event ImageAdded(uint8 indexed platform, bytes32 indexed key, string version, string description)
+func (_ImageAllowlist *ImageAllowlistFilterer) WatchImageAdded(opts *bind.WatchOpts, sink chan<- *ImageAllowlistImageAdded, platform []uint8, key [][32]byte) (event.Subscription, error) {
 
-	var cvmRule []interface{}
-	for _, cvmItem := range cvm {
-		cvmRule = append(cvmRule, cvmItem)
+	var platformRule []interface{}
+	for _, platformItem := range platform {
+		platformRule = append(platformRule, platformItem)
 	}
 	var keyRule []interface{}
 	for _, keyItem := range key {
 		keyRule = append(keyRule, keyItem)
 	}
 
-	logs, sub, err := _ImageAllowlist.contract.WatchLogs(opts, "ImageAdded", cvmRule, keyRule)
+	logs, sub, err := _ImageAllowlist.contract.WatchLogs(opts, "ImageAdded", platformRule, keyRule)
 	if err != nil {
 		return nil, err
 	}
@@ -661,7 +661,7 @@ func (_ImageAllowlist *ImageAllowlistFilterer) WatchImageAdded(opts *bind.WatchO
 
 // ParseImageAdded is a log parse operation binding the contract event 0x4e54da158c3f3db628647ffcc4dde7cfb80f110852579df816369378d1f0e460.
 //
-// Solidity: event ImageAdded(uint8 indexed cvm, bytes32 indexed key, string version, string description)
+// Solidity: event ImageAdded(uint8 indexed platform, bytes32 indexed key, string version, string description)
 func (_ImageAllowlist *ImageAllowlistFilterer) ParseImageAdded(log types.Log) (*ImageAllowlistImageAdded, error) {
 	event := new(ImageAllowlistImageAdded)
 	if err := _ImageAllowlist.contract.UnpackLog(event, "ImageAdded", log); err != nil {
@@ -740,26 +740,26 @@ func (it *ImageAllowlistImageRemovedIterator) Close() error {
 
 // ImageAllowlistImageRemoved represents a ImageRemoved event raised by the ImageAllowlist contract.
 type ImageAllowlistImageRemoved struct {
-	Cvm uint8
-	Key [32]byte
-	Raw types.Log // Blockchain specific contextual infos
+	Platform uint8
+	Key      [32]byte
+	Raw      types.Log // Blockchain specific contextual infos
 }
 
 // FilterImageRemoved is a free log retrieval operation binding the contract event 0xd855ac1cd71d5bd4e672e802d6eac6dc10e971cf55a870ee15586de49aeb3e77.
 //
-// Solidity: event ImageRemoved(uint8 indexed cvm, bytes32 indexed key)
-func (_ImageAllowlist *ImageAllowlistFilterer) FilterImageRemoved(opts *bind.FilterOpts, cvm []uint8, key [][32]byte) (*ImageAllowlistImageRemovedIterator, error) {
+// Solidity: event ImageRemoved(uint8 indexed platform, bytes32 indexed key)
+func (_ImageAllowlist *ImageAllowlistFilterer) FilterImageRemoved(opts *bind.FilterOpts, platform []uint8, key [][32]byte) (*ImageAllowlistImageRemovedIterator, error) {
 
-	var cvmRule []interface{}
-	for _, cvmItem := range cvm {
-		cvmRule = append(cvmRule, cvmItem)
+	var platformRule []interface{}
+	for _, platformItem := range platform {
+		platformRule = append(platformRule, platformItem)
 	}
 	var keyRule []interface{}
 	for _, keyItem := range key {
 		keyRule = append(keyRule, keyItem)
 	}
 
-	logs, sub, err := _ImageAllowlist.contract.FilterLogs(opts, "ImageRemoved", cvmRule, keyRule)
+	logs, sub, err := _ImageAllowlist.contract.FilterLogs(opts, "ImageRemoved", platformRule, keyRule)
 	if err != nil {
 		return nil, err
 	}
@@ -768,19 +768,19 @@ func (_ImageAllowlist *ImageAllowlistFilterer) FilterImageRemoved(opts *bind.Fil
 
 // WatchImageRemoved is a free log subscription operation binding the contract event 0xd855ac1cd71d5bd4e672e802d6eac6dc10e971cf55a870ee15586de49aeb3e77.
 //
-// Solidity: event ImageRemoved(uint8 indexed cvm, bytes32 indexed key)
-func (_ImageAllowlist *ImageAllowlistFilterer) WatchImageRemoved(opts *bind.WatchOpts, sink chan<- *ImageAllowlistImageRemoved, cvm []uint8, key [][32]byte) (event.Subscription, error) {
+// Solidity: event ImageRemoved(uint8 indexed platform, bytes32 indexed key)
+func (_ImageAllowlist *ImageAllowlistFilterer) WatchImageRemoved(opts *bind.WatchOpts, sink chan<- *ImageAllowlistImageRemoved, platform []uint8, key [][32]byte) (event.Subscription, error) {
 
-	var cvmRule []interface{}
-	for _, cvmItem := range cvm {
-		cvmRule = append(cvmRule, cvmItem)
+	var platformRule []interface{}
+	for _, platformItem := range platform {
+		platformRule = append(platformRule, platformItem)
 	}
 	var keyRule []interface{}
 	for _, keyItem := range key {
 		keyRule = append(keyRule, keyItem)
 	}
 
-	logs, sub, err := _ImageAllowlist.contract.WatchLogs(opts, "ImageRemoved", cvmRule, keyRule)
+	logs, sub, err := _ImageAllowlist.contract.WatchLogs(opts, "ImageRemoved", platformRule, keyRule)
 	if err != nil {
 		return nil, err
 	}
@@ -814,7 +814,7 @@ func (_ImageAllowlist *ImageAllowlistFilterer) WatchImageRemoved(opts *bind.Watc
 
 // ParseImageRemoved is a log parse operation binding the contract event 0xd855ac1cd71d5bd4e672e802d6eac6dc10e971cf55a870ee15586de49aeb3e77.
 //
-// Solidity: event ImageRemoved(uint8 indexed cvm, bytes32 indexed key)
+// Solidity: event ImageRemoved(uint8 indexed platform, bytes32 indexed key)
 func (_ImageAllowlist *ImageAllowlistFilterer) ParseImageRemoved(log types.Log) (*ImageAllowlistImageRemoved, error) {
 	event := new(ImageAllowlistImageRemoved)
 	if err := _ImageAllowlist.contract.UnpackLog(event, "ImageRemoved", log); err != nil {
@@ -1027,22 +1027,22 @@ func (it *ImageAllowlistMinimumTCBUpdatedIterator) Close() error {
 
 // ImageAllowlistMinimumTCBUpdated represents a MinimumTCBUpdated event raised by the ImageAllowlist contract.
 type ImageAllowlistMinimumTCBUpdated struct {
-	Cvm uint8
-	Tcb uint64
-	Raw types.Log // Blockchain specific contextual infos
+	Platform uint8
+	Tcb      uint64
+	Raw      types.Log // Blockchain specific contextual infos
 }
 
 // FilterMinimumTCBUpdated is a free log retrieval operation binding the contract event 0xaf8be91f34cee8255c2e461ce2588f8ffa3e5c01d2f0ec91b0f4a010bce9a392.
 //
-// Solidity: event MinimumTCBUpdated(uint8 indexed cvm, uint64 tcb)
-func (_ImageAllowlist *ImageAllowlistFilterer) FilterMinimumTCBUpdated(opts *bind.FilterOpts, cvm []uint8) (*ImageAllowlistMinimumTCBUpdatedIterator, error) {
+// Solidity: event MinimumTCBUpdated(uint8 indexed platform, uint64 tcb)
+func (_ImageAllowlist *ImageAllowlistFilterer) FilterMinimumTCBUpdated(opts *bind.FilterOpts, platform []uint8) (*ImageAllowlistMinimumTCBUpdatedIterator, error) {
 
-	var cvmRule []interface{}
-	for _, cvmItem := range cvm {
-		cvmRule = append(cvmRule, cvmItem)
+	var platformRule []interface{}
+	for _, platformItem := range platform {
+		platformRule = append(platformRule, platformItem)
 	}
 
-	logs, sub, err := _ImageAllowlist.contract.FilterLogs(opts, "MinimumTCBUpdated", cvmRule)
+	logs, sub, err := _ImageAllowlist.contract.FilterLogs(opts, "MinimumTCBUpdated", platformRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1051,15 +1051,15 @@ func (_ImageAllowlist *ImageAllowlistFilterer) FilterMinimumTCBUpdated(opts *bin
 
 // WatchMinimumTCBUpdated is a free log subscription operation binding the contract event 0xaf8be91f34cee8255c2e461ce2588f8ffa3e5c01d2f0ec91b0f4a010bce9a392.
 //
-// Solidity: event MinimumTCBUpdated(uint8 indexed cvm, uint64 tcb)
-func (_ImageAllowlist *ImageAllowlistFilterer) WatchMinimumTCBUpdated(opts *bind.WatchOpts, sink chan<- *ImageAllowlistMinimumTCBUpdated, cvm []uint8) (event.Subscription, error) {
+// Solidity: event MinimumTCBUpdated(uint8 indexed platform, uint64 tcb)
+func (_ImageAllowlist *ImageAllowlistFilterer) WatchMinimumTCBUpdated(opts *bind.WatchOpts, sink chan<- *ImageAllowlistMinimumTCBUpdated, platform []uint8) (event.Subscription, error) {
 
-	var cvmRule []interface{}
-	for _, cvmItem := range cvm {
-		cvmRule = append(cvmRule, cvmItem)
+	var platformRule []interface{}
+	for _, platformItem := range platform {
+		platformRule = append(platformRule, platformItem)
 	}
 
-	logs, sub, err := _ImageAllowlist.contract.WatchLogs(opts, "MinimumTCBUpdated", cvmRule)
+	logs, sub, err := _ImageAllowlist.contract.WatchLogs(opts, "MinimumTCBUpdated", platformRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1093,7 +1093,7 @@ func (_ImageAllowlist *ImageAllowlistFilterer) WatchMinimumTCBUpdated(opts *bind
 
 // ParseMinimumTCBUpdated is a log parse operation binding the contract event 0xaf8be91f34cee8255c2e461ce2588f8ffa3e5c01d2f0ec91b0f4a010bce9a392.
 //
-// Solidity: event MinimumTCBUpdated(uint8 indexed cvm, uint64 tcb)
+// Solidity: event MinimumTCBUpdated(uint8 indexed platform, uint64 tcb)
 func (_ImageAllowlist *ImageAllowlistFilterer) ParseMinimumTCBUpdated(log types.Log) (*ImageAllowlistMinimumTCBUpdated, error) {
 	event := new(ImageAllowlistMinimumTCBUpdated)
 	if err := _ImageAllowlist.contract.UnpackLog(event, "MinimumTCBUpdated", log); err != nil {
