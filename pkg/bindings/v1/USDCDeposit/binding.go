@@ -31,7 +31,7 @@ var (
 
 // USDCDepositMetaData contains all meta data concerning the USDCDeposit contract.
 var USDCDepositMetaData = &bind.MetaData{
-	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"_permissionController\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"},{\"name\":\"_usdc\",\"type\":\"address\",\"internalType\":\"contractIERC20\"},{\"name\":\"_treasury\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"deposit\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"depositFor\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"admin\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_minimumDeposit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"minimumDeposit\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"permissionController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"setMinimumDeposit\",\"inputs\":[{\"name\":\"newMinimum\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"sweep\",\"inputs\":[{\"name\":\"token\",\"type\":\"address\",\"internalType\":\"contractIERC20\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"treasury\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"usdc\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIERC20\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"Deposit\",\"inputs\":[{\"name\":\"depositor\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MinimumDepositSet\",\"inputs\":[{\"name\":\"oldMinimum\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"newMinimum\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"BelowMinimumDeposit\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidPermissions\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidShortString\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"StringTooLong\",\"inputs\":[{\"name\":\"str\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"type\":\"error\",\"name\":\"ZeroAddress\",\"inputs\":[]}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_usdc\",\"type\":\"address\",\"internalType\":\"contractIERC20\"},{\"name\":\"_treasury\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"deposit\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"depositFor\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"initialOwner\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_minimumDeposit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"minimumDeposit\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"owner\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"renounceOwnership\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setMinimumDeposit\",\"inputs\":[{\"name\":\"newMinimum\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"sweep\",\"inputs\":[{\"name\":\"token\",\"type\":\"address\",\"internalType\":\"contractIERC20\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"transferOwnership\",\"inputs\":[{\"name\":\"newOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"treasury\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"usdc\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIERC20\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"Deposit\",\"inputs\":[{\"name\":\"depositor\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MinimumDepositSet\",\"inputs\":[{\"name\":\"oldMinimum\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"newMinimum\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OwnershipTransferred\",\"inputs\":[{\"name\":\"previousOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"newOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"BelowMinimumDeposit\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ZeroAddress\",\"inputs\":[]}]",
 }
 
 // USDCDepositABI is the input ABI used to generate the binding from.
@@ -211,12 +211,12 @@ func (_USDCDeposit *USDCDepositCallerSession) MinimumDeposit() (*big.Int, error)
 	return _USDCDeposit.Contract.MinimumDeposit(&_USDCDeposit.CallOpts)
 }
 
-// PermissionController is a free data retrieval call binding the contract method 0x4657e26a.
+// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function permissionController() view returns(address)
-func (_USDCDeposit *USDCDepositCaller) PermissionController(opts *bind.CallOpts) (common.Address, error) {
+// Solidity: function owner() view returns(address)
+func (_USDCDeposit *USDCDepositCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
 	var out []interface{}
-	err := _USDCDeposit.contract.Call(opts, &out, "permissionController")
+	err := _USDCDeposit.contract.Call(opts, &out, "owner")
 
 	if err != nil {
 		return *new(common.Address), err
@@ -228,18 +228,18 @@ func (_USDCDeposit *USDCDepositCaller) PermissionController(opts *bind.CallOpts)
 
 }
 
-// PermissionController is a free data retrieval call binding the contract method 0x4657e26a.
+// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function permissionController() view returns(address)
-func (_USDCDeposit *USDCDepositSession) PermissionController() (common.Address, error) {
-	return _USDCDeposit.Contract.PermissionController(&_USDCDeposit.CallOpts)
+// Solidity: function owner() view returns(address)
+func (_USDCDeposit *USDCDepositSession) Owner() (common.Address, error) {
+	return _USDCDeposit.Contract.Owner(&_USDCDeposit.CallOpts)
 }
 
-// PermissionController is a free data retrieval call binding the contract method 0x4657e26a.
+// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function permissionController() view returns(address)
-func (_USDCDeposit *USDCDepositCallerSession) PermissionController() (common.Address, error) {
-	return _USDCDeposit.Contract.PermissionController(&_USDCDeposit.CallOpts)
+// Solidity: function owner() view returns(address)
+func (_USDCDeposit *USDCDepositCallerSession) Owner() (common.Address, error) {
+	return _USDCDeposit.Contract.Owner(&_USDCDeposit.CallOpts)
 }
 
 // Treasury is a free data retrieval call binding the contract method 0x61d027b3.
@@ -304,37 +304,6 @@ func (_USDCDeposit *USDCDepositCallerSession) Usdc() (common.Address, error) {
 	return _USDCDeposit.Contract.Usdc(&_USDCDeposit.CallOpts)
 }
 
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(string)
-func (_USDCDeposit *USDCDepositCaller) Version(opts *bind.CallOpts) (string, error) {
-	var out []interface{}
-	err := _USDCDeposit.contract.Call(opts, &out, "version")
-
-	if err != nil {
-		return *new(string), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(string)).(*string)
-
-	return out0, err
-
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(string)
-func (_USDCDeposit *USDCDepositSession) Version() (string, error) {
-	return _USDCDeposit.Contract.Version(&_USDCDeposit.CallOpts)
-}
-
-// Version is a free data retrieval call binding the contract method 0x54fd4d50.
-//
-// Solidity: function version() view returns(string)
-func (_USDCDeposit *USDCDepositCallerSession) Version() (string, error) {
-	return _USDCDeposit.Contract.Version(&_USDCDeposit.CallOpts)
-}
-
 // Deposit is a paid mutator transaction binding the contract method 0xb6b55f25.
 //
 // Solidity: function deposit(uint256 amount) returns()
@@ -379,23 +348,44 @@ func (_USDCDeposit *USDCDepositTransactorSession) DepositFor(amount *big.Int, ac
 
 // Initialize is a paid mutator transaction binding the contract method 0xcd6dc687.
 //
-// Solidity: function initialize(address admin, uint256 _minimumDeposit) returns()
-func (_USDCDeposit *USDCDepositTransactor) Initialize(opts *bind.TransactOpts, admin common.Address, _minimumDeposit *big.Int) (*types.Transaction, error) {
-	return _USDCDeposit.contract.Transact(opts, "initialize", admin, _minimumDeposit)
+// Solidity: function initialize(address initialOwner, uint256 _minimumDeposit) returns()
+func (_USDCDeposit *USDCDepositTransactor) Initialize(opts *bind.TransactOpts, initialOwner common.Address, _minimumDeposit *big.Int) (*types.Transaction, error) {
+	return _USDCDeposit.contract.Transact(opts, "initialize", initialOwner, _minimumDeposit)
 }
 
 // Initialize is a paid mutator transaction binding the contract method 0xcd6dc687.
 //
-// Solidity: function initialize(address admin, uint256 _minimumDeposit) returns()
-func (_USDCDeposit *USDCDepositSession) Initialize(admin common.Address, _minimumDeposit *big.Int) (*types.Transaction, error) {
-	return _USDCDeposit.Contract.Initialize(&_USDCDeposit.TransactOpts, admin, _minimumDeposit)
+// Solidity: function initialize(address initialOwner, uint256 _minimumDeposit) returns()
+func (_USDCDeposit *USDCDepositSession) Initialize(initialOwner common.Address, _minimumDeposit *big.Int) (*types.Transaction, error) {
+	return _USDCDeposit.Contract.Initialize(&_USDCDeposit.TransactOpts, initialOwner, _minimumDeposit)
 }
 
 // Initialize is a paid mutator transaction binding the contract method 0xcd6dc687.
 //
-// Solidity: function initialize(address admin, uint256 _minimumDeposit) returns()
-func (_USDCDeposit *USDCDepositTransactorSession) Initialize(admin common.Address, _minimumDeposit *big.Int) (*types.Transaction, error) {
-	return _USDCDeposit.Contract.Initialize(&_USDCDeposit.TransactOpts, admin, _minimumDeposit)
+// Solidity: function initialize(address initialOwner, uint256 _minimumDeposit) returns()
+func (_USDCDeposit *USDCDepositTransactorSession) Initialize(initialOwner common.Address, _minimumDeposit *big.Int) (*types.Transaction, error) {
+	return _USDCDeposit.Contract.Initialize(&_USDCDeposit.TransactOpts, initialOwner, _minimumDeposit)
+}
+
+// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
+//
+// Solidity: function renounceOwnership() returns()
+func (_USDCDeposit *USDCDepositTransactor) RenounceOwnership(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _USDCDeposit.contract.Transact(opts, "renounceOwnership")
+}
+
+// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
+//
+// Solidity: function renounceOwnership() returns()
+func (_USDCDeposit *USDCDepositSession) RenounceOwnership() (*types.Transaction, error) {
+	return _USDCDeposit.Contract.RenounceOwnership(&_USDCDeposit.TransactOpts)
+}
+
+// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
+//
+// Solidity: function renounceOwnership() returns()
+func (_USDCDeposit *USDCDepositTransactorSession) RenounceOwnership() (*types.Transaction, error) {
+	return _USDCDeposit.Contract.RenounceOwnership(&_USDCDeposit.TransactOpts)
 }
 
 // SetMinimumDeposit is a paid mutator transaction binding the contract method 0xe78ec42e.
@@ -438,6 +428,27 @@ func (_USDCDeposit *USDCDepositSession) Sweep(token common.Address) (*types.Tran
 // Solidity: function sweep(address token) returns()
 func (_USDCDeposit *USDCDepositTransactorSession) Sweep(token common.Address) (*types.Transaction, error) {
 	return _USDCDeposit.Contract.Sweep(&_USDCDeposit.TransactOpts, token)
+}
+
+// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
+//
+// Solidity: function transferOwnership(address newOwner) returns()
+func (_USDCDeposit *USDCDepositTransactor) TransferOwnership(opts *bind.TransactOpts, newOwner common.Address) (*types.Transaction, error) {
+	return _USDCDeposit.contract.Transact(opts, "transferOwnership", newOwner)
+}
+
+// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
+//
+// Solidity: function transferOwnership(address newOwner) returns()
+func (_USDCDeposit *USDCDepositSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
+	return _USDCDeposit.Contract.TransferOwnership(&_USDCDeposit.TransactOpts, newOwner)
+}
+
+// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
+//
+// Solidity: function transferOwnership(address newOwner) returns()
+func (_USDCDeposit *USDCDepositTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
+	return _USDCDeposit.Contract.TransferOwnership(&_USDCDeposit.TransactOpts, newOwner)
 }
 
 // USDCDepositDepositIterator is returned from FilterDeposit and is used to iterate over the raw logs and unpacked data for Deposit events raised by the USDCDeposit contract.
@@ -857,6 +868,159 @@ func (_USDCDeposit *USDCDepositFilterer) WatchMinimumDepositSet(opts *bind.Watch
 func (_USDCDeposit *USDCDepositFilterer) ParseMinimumDepositSet(log types.Log) (*USDCDepositMinimumDepositSet, error) {
 	event := new(USDCDepositMinimumDepositSet)
 	if err := _USDCDeposit.contract.UnpackLog(event, "MinimumDepositSet", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// USDCDepositOwnershipTransferredIterator is returned from FilterOwnershipTransferred and is used to iterate over the raw logs and unpacked data for OwnershipTransferred events raised by the USDCDeposit contract.
+type USDCDepositOwnershipTransferredIterator struct {
+	Event *USDCDepositOwnershipTransferred // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *USDCDepositOwnershipTransferredIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(USDCDepositOwnershipTransferred)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(USDCDepositOwnershipTransferred)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *USDCDepositOwnershipTransferredIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *USDCDepositOwnershipTransferredIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// USDCDepositOwnershipTransferred represents a OwnershipTransferred event raised by the USDCDeposit contract.
+type USDCDepositOwnershipTransferred struct {
+	PreviousOwner common.Address
+	NewOwner      common.Address
+	Raw           types.Log // Blockchain specific contextual infos
+}
+
+// FilterOwnershipTransferred is a free log retrieval operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
+//
+// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+func (_USDCDeposit *USDCDepositFilterer) FilterOwnershipTransferred(opts *bind.FilterOpts, previousOwner []common.Address, newOwner []common.Address) (*USDCDepositOwnershipTransferredIterator, error) {
+
+	var previousOwnerRule []interface{}
+	for _, previousOwnerItem := range previousOwner {
+		previousOwnerRule = append(previousOwnerRule, previousOwnerItem)
+	}
+	var newOwnerRule []interface{}
+	for _, newOwnerItem := range newOwner {
+		newOwnerRule = append(newOwnerRule, newOwnerItem)
+	}
+
+	logs, sub, err := _USDCDeposit.contract.FilterLogs(opts, "OwnershipTransferred", previousOwnerRule, newOwnerRule)
+	if err != nil {
+		return nil, err
+	}
+	return &USDCDepositOwnershipTransferredIterator{contract: _USDCDeposit.contract, event: "OwnershipTransferred", logs: logs, sub: sub}, nil
+}
+
+// WatchOwnershipTransferred is a free log subscription operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
+//
+// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+func (_USDCDeposit *USDCDepositFilterer) WatchOwnershipTransferred(opts *bind.WatchOpts, sink chan<- *USDCDepositOwnershipTransferred, previousOwner []common.Address, newOwner []common.Address) (event.Subscription, error) {
+
+	var previousOwnerRule []interface{}
+	for _, previousOwnerItem := range previousOwner {
+		previousOwnerRule = append(previousOwnerRule, previousOwnerItem)
+	}
+	var newOwnerRule []interface{}
+	for _, newOwnerItem := range newOwner {
+		newOwnerRule = append(newOwnerRule, newOwnerItem)
+	}
+
+	logs, sub, err := _USDCDeposit.contract.WatchLogs(opts, "OwnershipTransferred", previousOwnerRule, newOwnerRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(USDCDepositOwnershipTransferred)
+				if err := _USDCDeposit.contract.UnpackLog(event, "OwnershipTransferred", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseOwnershipTransferred is a log parse operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
+//
+// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+func (_USDCDeposit *USDCDepositFilterer) ParseOwnershipTransferred(log types.Log) (*USDCDepositOwnershipTransferred, error) {
+	event := new(USDCDepositOwnershipTransferred)
+	if err := _USDCDeposit.contract.UnpackLog(event, "OwnershipTransferred", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
