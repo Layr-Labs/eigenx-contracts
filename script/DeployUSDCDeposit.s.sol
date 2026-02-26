@@ -8,15 +8,12 @@ import {
     TransparentUpgradeableProxy,
     ITransparentUpgradeableProxy
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import {IPermissionController} from "@eigenlayer-contracts/src/contracts/interfaces/IPermissionController.sol";
 import {EmptyContract} from "@eigenlayer-contracts/src/test/mocks/EmptyContract.sol";
 import {USDCDeposit} from "../src/USDCDeposit.sol";
 import {IUSDCDeposit} from "../src/interfaces/IUSDCDeposit.sol";
 
 contract DeployUSDCDeposit is Script {
     struct DeployParams {
-        string version;
-        IPermissionController permissionController;
         ProxyAdmin proxyAdmin;
         address initialOwner;
         IERC20 usdc;
@@ -39,8 +36,6 @@ contract DeployUSDCDeposit is Script {
     }
 
     function deploy(DeployParams memory params) public returns (DeployedContracts memory) {
-        require(bytes(params.version).length != 0, "Version must not be empty");
-        require(address(params.permissionController) != address(0), "Permission controller must not be empty");
         require(address(params.proxyAdmin) != address(0), "Proxy admin must not be empty");
         require(address(params.initialOwner) != address(0), "Initial owner must not be empty");
         require(address(params.usdc) != address(0), "USDC address must not be empty");
@@ -53,12 +48,7 @@ contract DeployUSDCDeposit is Script {
             new TransparentUpgradeableProxy(address(emptyContract), address(params.proxyAdmin), new bytes(0));
 
         // Deploy implementation
-        USDCDeposit impl = new USDCDeposit({
-            _version: params.version,
-            _permissionController: params.permissionController,
-            _usdc: params.usdc,
-            _treasury: params.treasury
-        });
+        USDCDeposit impl = new USDCDeposit({_usdc: params.usdc, _treasury: params.treasury});
 
         // Upgrade and initialize
         params.proxyAdmin
@@ -67,9 +57,6 @@ contract DeployUSDCDeposit is Script {
                 address(impl),
                 abi.encodeCall(USDCDeposit.initialize, (params.initialOwner, params.minimumDeposit))
             );
-
-        // Accept admin role
-        IPermissionController(address(params.permissionController)).acceptAdmin(address(proxy));
 
         console.log("USDCDeposit proxy:", address(proxy));
         console.log("USDCDeposit impl:", address(impl));
@@ -88,8 +75,6 @@ contract DeployUSDCDeposit is Script {
         string memory json = vm.readFile(configPath);
 
         return DeployParams({
-            version: vm.parseJsonString(json, ".version"),
-            permissionController: IPermissionController(vm.parseJsonAddress(json, ".permissionController")),
             proxyAdmin: ProxyAdmin(vm.parseJsonAddress(json, ".proxyAdmin")),
             initialOwner: vm.parseJsonAddress(json, ".initialOwner"),
             usdc: IERC20(vm.parseJsonAddress(json, ".usdc")),

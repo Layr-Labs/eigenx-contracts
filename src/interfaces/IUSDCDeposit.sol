@@ -18,10 +18,10 @@ interface IUSDCDeposit {
 
     /**
      * @notice Initialize the USDCDeposit contract
-     * @param admin The admin address for the contract
+     * @param initialOwner The owner address for the contract
      * @param _minimumDeposit The initial minimum deposit amount (in USDC's 6-decimal base units)
      */
-    function initialize(address admin, uint256 _minimumDeposit) external;
+    function initialize(address initialOwner, uint256 _minimumDeposit) external;
 
     /**
      * @notice Deposits USDC for msg.sender
@@ -42,7 +42,7 @@ interface IUSDCDeposit {
     /**
      * @notice Sets the minimum deposit amount
      * @param newMinimum The new minimum deposit amount (in USDC's 6-decimal base units)
-     * @dev Caller must be UAM permissioned for this contract
+     * @dev Caller must be the contract owner
      */
     function setMinimumDeposit(uint256 newMinimum) external;
 
@@ -50,7 +50,7 @@ interface IUSDCDeposit {
      * @notice Recovers tokens accidentally sent directly to the contract
      * @param token The ERC20 token to sweep
      * @dev Transfers the contract's full balance of the token to the treasury
-     * @dev Caller must be UAM permissioned for this contract
+     * @dev Caller must be the contract owner
      */
     function sweep(IERC20 token) external;
 

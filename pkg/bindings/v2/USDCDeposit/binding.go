@@ -26,7 +26,7 @@ var (
 
 // USDCDepositMetaData contains all meta data concerning the USDCDeposit contract.
 var USDCDepositMetaData = bind.MetaData{
-	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"_permissionController\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"},{\"name\":\"_usdc\",\"type\":\"address\",\"internalType\":\"contractIERC20\"},{\"name\":\"_treasury\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"deposit\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"depositFor\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"admin\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_minimumDeposit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"minimumDeposit\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"permissionController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"setMinimumDeposit\",\"inputs\":[{\"name\":\"newMinimum\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"sweep\",\"inputs\":[{\"name\":\"token\",\"type\":\"address\",\"internalType\":\"contractIERC20\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"treasury\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"usdc\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIERC20\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"Deposit\",\"inputs\":[{\"name\":\"depositor\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MinimumDepositSet\",\"inputs\":[{\"name\":\"oldMinimum\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"newMinimum\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"BelowMinimumDeposit\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidPermissions\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidShortString\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"StringTooLong\",\"inputs\":[{\"name\":\"str\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"type\":\"error\",\"name\":\"ZeroAddress\",\"inputs\":[]}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_usdc\",\"type\":\"address\",\"internalType\":\"contractIERC20\"},{\"name\":\"_treasury\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"deposit\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"depositFor\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"initialOwner\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_minimumDeposit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"minimumDeposit\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"owner\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"renounceOwnership\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setMinimumDeposit\",\"inputs\":[{\"name\":\"newMinimum\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"sweep\",\"inputs\":[{\"name\":\"token\",\"type\":\"address\",\"internalType\":\"contractIERC20\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"transferOwnership\",\"inputs\":[{\"name\":\"newOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"treasury\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"usdc\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIERC20\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"Deposit\",\"inputs\":[{\"name\":\"depositor\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MinimumDepositSet\",\"inputs\":[{\"name\":\"oldMinimum\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"newMinimum\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OwnershipTransferred\",\"inputs\":[{\"name\":\"previousOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"newOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"BelowMinimumDeposit\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ZeroAddress\",\"inputs\":[]}]",
 	ID:  "USDCDeposit",
 }
 
@@ -53,9 +53,9 @@ func (c *USDCDeposit) Instance(backend bind.ContractBackend, addr common.Address
 // PackConstructor is the Go binding used to pack the parameters required for
 // contract deployment.
 //
-// Solidity: constructor(string _version, address _permissionController, address _usdc, address _treasury) returns()
-func (uSDCDeposit *USDCDeposit) PackConstructor(_version string, _permissionController common.Address, _usdc common.Address, _treasury common.Address) []byte {
-	enc, err := uSDCDeposit.abi.Pack("", _version, _permissionController, _usdc, _treasury)
+// Solidity: constructor(address _usdc, address _treasury) returns()
+func (uSDCDeposit *USDCDeposit) PackConstructor(_usdc common.Address, _treasury common.Address) []byte {
+	enc, err := uSDCDeposit.abi.Pack("", _usdc, _treasury)
 	if err != nil {
 		panic(err)
 	}
@@ -110,9 +110,9 @@ func (uSDCDeposit *USDCDeposit) TryPackDepositFor(amount *big.Int, account commo
 // the contract method with ID 0xcd6dc687.  This method will panic if any
 // invalid/nil inputs are passed.
 //
-// Solidity: function initialize(address admin, uint256 _minimumDeposit) returns()
-func (uSDCDeposit *USDCDeposit) PackInitialize(admin common.Address, minimumDeposit *big.Int) []byte {
-	enc, err := uSDCDeposit.abi.Pack("initialize", admin, minimumDeposit)
+// Solidity: function initialize(address initialOwner, uint256 _minimumDeposit) returns()
+func (uSDCDeposit *USDCDeposit) PackInitialize(initialOwner common.Address, minimumDeposit *big.Int) []byte {
+	enc, err := uSDCDeposit.abi.Pack("initialize", initialOwner, minimumDeposit)
 	if err != nil {
 		panic(err)
 	}
@@ -123,9 +123,9 @@ func (uSDCDeposit *USDCDeposit) PackInitialize(admin common.Address, minimumDepo
 // the contract method with ID 0xcd6dc687.  This method will return an error
 // if any inputs are invalid/nil.
 //
-// Solidity: function initialize(address admin, uint256 _minimumDeposit) returns()
-func (uSDCDeposit *USDCDeposit) TryPackInitialize(admin common.Address, minimumDeposit *big.Int) ([]byte, error) {
-	return uSDCDeposit.abi.Pack("initialize", admin, minimumDeposit)
+// Solidity: function initialize(address initialOwner, uint256 _minimumDeposit) returns()
+func (uSDCDeposit *USDCDeposit) TryPackInitialize(initialOwner common.Address, minimumDeposit *big.Int) ([]byte, error) {
+	return uSDCDeposit.abi.Pack("initialize", initialOwner, minimumDeposit)
 }
 
 // PackMinimumDeposit is the Go binding used to pack the parameters required for calling
@@ -163,39 +163,61 @@ func (uSDCDeposit *USDCDeposit) UnpackMinimumDeposit(data []byte) (*big.Int, err
 	return out0, nil
 }
 
-// PackPermissionController is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x4657e26a.  This method will panic if any
+// PackOwner is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x8da5cb5b.  This method will panic if any
 // invalid/nil inputs are passed.
 //
-// Solidity: function permissionController() view returns(address)
-func (uSDCDeposit *USDCDeposit) PackPermissionController() []byte {
-	enc, err := uSDCDeposit.abi.Pack("permissionController")
+// Solidity: function owner() view returns(address)
+func (uSDCDeposit *USDCDeposit) PackOwner() []byte {
+	enc, err := uSDCDeposit.abi.Pack("owner")
 	if err != nil {
 		panic(err)
 	}
 	return enc
 }
 
-// TryPackPermissionController is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x4657e26a.  This method will return an error
+// TryPackOwner is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x8da5cb5b.  This method will return an error
 // if any inputs are invalid/nil.
 //
-// Solidity: function permissionController() view returns(address)
-func (uSDCDeposit *USDCDeposit) TryPackPermissionController() ([]byte, error) {
-	return uSDCDeposit.abi.Pack("permissionController")
+// Solidity: function owner() view returns(address)
+func (uSDCDeposit *USDCDeposit) TryPackOwner() ([]byte, error) {
+	return uSDCDeposit.abi.Pack("owner")
 }
 
-// UnpackPermissionController is the Go binding that unpacks the parameters returned
-// from invoking the contract method with ID 0x4657e26a.
+// UnpackOwner is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x8da5cb5b.
 //
-// Solidity: function permissionController() view returns(address)
-func (uSDCDeposit *USDCDeposit) UnpackPermissionController(data []byte) (common.Address, error) {
-	out, err := uSDCDeposit.abi.Unpack("permissionController", data)
+// Solidity: function owner() view returns(address)
+func (uSDCDeposit *USDCDeposit) UnpackOwner(data []byte) (common.Address, error) {
+	out, err := uSDCDeposit.abi.Unpack("owner", data)
 	if err != nil {
 		return *new(common.Address), err
 	}
 	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
 	return out0, nil
+}
+
+// PackRenounceOwnership is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x715018a6.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function renounceOwnership() returns()
+func (uSDCDeposit *USDCDeposit) PackRenounceOwnership() []byte {
+	enc, err := uSDCDeposit.abi.Pack("renounceOwnership")
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackRenounceOwnership is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x715018a6.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function renounceOwnership() returns()
+func (uSDCDeposit *USDCDeposit) TryPackRenounceOwnership() ([]byte, error) {
+	return uSDCDeposit.abi.Pack("renounceOwnership")
 }
 
 // PackSetMinimumDeposit is the Go binding used to pack the parameters required for calling
@@ -240,6 +262,28 @@ func (uSDCDeposit *USDCDeposit) PackSweep(token common.Address) []byte {
 // Solidity: function sweep(address token) returns()
 func (uSDCDeposit *USDCDeposit) TryPackSweep(token common.Address) ([]byte, error) {
 	return uSDCDeposit.abi.Pack("sweep", token)
+}
+
+// PackTransferOwnership is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xf2fde38b.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function transferOwnership(address newOwner) returns()
+func (uSDCDeposit *USDCDeposit) PackTransferOwnership(newOwner common.Address) []byte {
+	enc, err := uSDCDeposit.abi.Pack("transferOwnership", newOwner)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackTransferOwnership is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xf2fde38b.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function transferOwnership(address newOwner) returns()
+func (uSDCDeposit *USDCDeposit) TryPackTransferOwnership(newOwner common.Address) ([]byte, error) {
+	return uSDCDeposit.abi.Pack("transferOwnership", newOwner)
 }
 
 // PackTreasury is the Go binding used to pack the parameters required for calling
@@ -309,41 +353,6 @@ func (uSDCDeposit *USDCDeposit) UnpackUsdc(data []byte) (common.Address, error) 
 		return *new(common.Address), err
 	}
 	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
-	return out0, nil
-}
-
-// PackVersion is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x54fd4d50.  This method will panic if any
-// invalid/nil inputs are passed.
-//
-// Solidity: function version() view returns(string)
-func (uSDCDeposit *USDCDeposit) PackVersion() []byte {
-	enc, err := uSDCDeposit.abi.Pack("version")
-	if err != nil {
-		panic(err)
-	}
-	return enc
-}
-
-// TryPackVersion is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x54fd4d50.  This method will return an error
-// if any inputs are invalid/nil.
-//
-// Solidity: function version() view returns(string)
-func (uSDCDeposit *USDCDeposit) TryPackVersion() ([]byte, error) {
-	return uSDCDeposit.abi.Pack("version")
-}
-
-// UnpackVersion is the Go binding that unpacks the parameters returned
-// from invoking the contract method with ID 0x54fd4d50.
-//
-// Solidity: function version() view returns(string)
-func (uSDCDeposit *USDCDeposit) UnpackVersion(data []byte) (string, error) {
-	out, err := uSDCDeposit.abi.Unpack("version", data)
-	if err != nil {
-		return *new(string), err
-	}
-	out0 := *abi.ConvertType(out[0], new(string)).(*string)
 	return out0, nil
 }
 
@@ -473,20 +482,53 @@ func (uSDCDeposit *USDCDeposit) UnpackMinimumDepositSetEvent(log *types.Log) (*U
 	return out, nil
 }
 
+// USDCDepositOwnershipTransferred represents a OwnershipTransferred event raised by the USDCDeposit contract.
+type USDCDepositOwnershipTransferred struct {
+	PreviousOwner common.Address
+	NewOwner      common.Address
+	Raw           *types.Log // Blockchain specific contextual infos
+}
+
+const USDCDepositOwnershipTransferredEventName = "OwnershipTransferred"
+
+// ContractEventName returns the user-defined event name.
+func (USDCDepositOwnershipTransferred) ContractEventName() string {
+	return USDCDepositOwnershipTransferredEventName
+}
+
+// UnpackOwnershipTransferredEvent is the Go binding that unpacks the event data emitted
+// by contract.
+//
+// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+func (uSDCDeposit *USDCDeposit) UnpackOwnershipTransferredEvent(log *types.Log) (*USDCDepositOwnershipTransferred, error) {
+	event := "OwnershipTransferred"
+	if len(log.Topics) == 0 || log.Topics[0] != uSDCDeposit.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
+	}
+	out := new(USDCDepositOwnershipTransferred)
+	if len(log.Data) > 0 {
+		if err := uSDCDeposit.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
+			return nil, err
+		}
+	}
+	var indexed abi.Arguments
+	for _, arg := range uSDCDeposit.abi.Events[event].Inputs {
+		if arg.Indexed {
+			indexed = append(indexed, arg)
+		}
+	}
+	if err := abi.ParseTopics(out, indexed, log.Topics[1:]); err != nil {
+		return nil, err
+	}
+	out.Raw = log
+	return out, nil
+}
+
 // UnpackError attempts to decode the provided error data using user-defined
 // error definitions.
 func (uSDCDeposit *USDCDeposit) UnpackError(raw []byte) (any, error) {
 	if bytes.Equal(raw[:4], uSDCDeposit.abi.Errors["BelowMinimumDeposit"].ID.Bytes()[:4]) {
 		return uSDCDeposit.UnpackBelowMinimumDepositError(raw[4:])
-	}
-	if bytes.Equal(raw[:4], uSDCDeposit.abi.Errors["InvalidPermissions"].ID.Bytes()[:4]) {
-		return uSDCDeposit.UnpackInvalidPermissionsError(raw[4:])
-	}
-	if bytes.Equal(raw[:4], uSDCDeposit.abi.Errors["InvalidShortString"].ID.Bytes()[:4]) {
-		return uSDCDeposit.UnpackInvalidShortStringError(raw[4:])
-	}
-	if bytes.Equal(raw[:4], uSDCDeposit.abi.Errors["StringTooLong"].ID.Bytes()[:4]) {
-		return uSDCDeposit.UnpackStringTooLongError(raw[4:])
 	}
 	if bytes.Equal(raw[:4], uSDCDeposit.abi.Errors["ZeroAddress"].ID.Bytes()[:4]) {
 		return uSDCDeposit.UnpackZeroAddressError(raw[4:])
@@ -512,76 +554,6 @@ func USDCDepositBelowMinimumDepositErrorID() common.Hash {
 func (uSDCDeposit *USDCDeposit) UnpackBelowMinimumDepositError(raw []byte) (*USDCDepositBelowMinimumDeposit, error) {
 	out := new(USDCDepositBelowMinimumDeposit)
 	if err := uSDCDeposit.abi.UnpackIntoInterface(out, "BelowMinimumDeposit", raw); err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// USDCDepositInvalidPermissions represents a InvalidPermissions error raised by the USDCDeposit contract.
-type USDCDepositInvalidPermissions struct {
-}
-
-// ErrorID returns the hash of canonical representation of the error's signature.
-//
-// Solidity: error InvalidPermissions()
-func USDCDepositInvalidPermissionsErrorID() common.Hash {
-	return common.HexToHash("0x932d94f726428388537b641940dd88f9f37f70be827ee507792b87e4d26875f9")
-}
-
-// UnpackInvalidPermissionsError is the Go binding used to decode the provided
-// error data into the corresponding Go error struct.
-//
-// Solidity: error InvalidPermissions()
-func (uSDCDeposit *USDCDeposit) UnpackInvalidPermissionsError(raw []byte) (*USDCDepositInvalidPermissions, error) {
-	out := new(USDCDepositInvalidPermissions)
-	if err := uSDCDeposit.abi.UnpackIntoInterface(out, "InvalidPermissions", raw); err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// USDCDepositInvalidShortString represents a InvalidShortString error raised by the USDCDeposit contract.
-type USDCDepositInvalidShortString struct {
-}
-
-// ErrorID returns the hash of canonical representation of the error's signature.
-//
-// Solidity: error InvalidShortString()
-func USDCDepositInvalidShortStringErrorID() common.Hash {
-	return common.HexToHash("0xb3512b0c6163e5f0bafab72bb631b9d58cd7a731b082f910338aa21c83d5c274")
-}
-
-// UnpackInvalidShortStringError is the Go binding used to decode the provided
-// error data into the corresponding Go error struct.
-//
-// Solidity: error InvalidShortString()
-func (uSDCDeposit *USDCDeposit) UnpackInvalidShortStringError(raw []byte) (*USDCDepositInvalidShortString, error) {
-	out := new(USDCDepositInvalidShortString)
-	if err := uSDCDeposit.abi.UnpackIntoInterface(out, "InvalidShortString", raw); err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// USDCDepositStringTooLong represents a StringTooLong error raised by the USDCDeposit contract.
-type USDCDepositStringTooLong struct {
-	Str string
-}
-
-// ErrorID returns the hash of canonical representation of the error's signature.
-//
-// Solidity: error StringTooLong(string str)
-func USDCDepositStringTooLongErrorID() common.Hash {
-	return common.HexToHash("0x305a27a93f8e33b7392df0a0f91d6fc63847395853c45991eec52dbf24d72381")
-}
-
-// UnpackStringTooLongError is the Go binding used to decode the provided
-// error data into the corresponding Go error struct.
-//
-// Solidity: error StringTooLong(string str)
-func (uSDCDeposit *USDCDeposit) UnpackStringTooLongError(raw []byte) (*USDCDepositStringTooLong, error) {
-	out := new(USDCDepositStringTooLong)
-	if err := uSDCDeposit.abi.UnpackIntoInterface(out, "StringTooLong", raw); err != nil {
 		return nil, err
 	}
 	return out, nil
