@@ -67,7 +67,7 @@ contract SafeTimelockFactoryTest is Test {
         SafeTimelockFactory factoryImpl = new SafeTimelockFactory({
             _safeSingleton: address(0),
             _safeProxyFactory: address(mockSafeProxyFactory),
-            _defaultFallbackHandler: address(0),
+            _safeFallbackHandler: address(0),
             _timelockImplementation: address(timelockImpl)
         });
 

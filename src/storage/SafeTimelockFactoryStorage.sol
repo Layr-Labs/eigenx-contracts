@@ -20,7 +20,7 @@ abstract contract SafeTimelockFactoryStorage is ISafeTimelockFactory {
     address public immutable safeProxyFactory;
 
     /// @notice The default fallback handler for Safes
-    address public immutable defaultFallbackHandler;
+    address public immutable safeFallbackHandler;
 
     /// @notice The TimelockController implementation for minimal proxies
     address public immutable timelockImplementation;
@@ -43,18 +43,18 @@ abstract contract SafeTimelockFactoryStorage is ISafeTimelockFactory {
     /**
      * @param _safeSingleton The official Gnosis Safe singleton address
      * @param _safeProxyFactory The official Gnosis Safe proxy factory address
-     * @param _defaultFallbackHandler The default fallback handler for Safes
+     * @param _safeFallbackHandler The default fallback handler for Safes
      * @param _timelockImplementation The TimelockController implementation for minimal proxies
      */
     constructor(
         address _safeSingleton,
         address _safeProxyFactory,
-        address _defaultFallbackHandler,
+        address _safeFallbackHandler,
         address _timelockImplementation
     ) {
         safeSingleton = _safeSingleton;
         safeProxyFactory = _safeProxyFactory;
-        defaultFallbackHandler = _defaultFallbackHandler;
+        safeFallbackHandler = _safeFallbackHandler;
         timelockImplementation = _timelockImplementation;
     }
 }

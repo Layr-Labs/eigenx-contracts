@@ -28,7 +28,7 @@ contract DeployContracts is EOADeployer {
         SafeTimelockFactory safeTimelockFactoryImpl = new SafeTimelockFactory({
             _safeSingleton: Env.safeSingleton(),
             _safeProxyFactory: Env.safeProxyFactory(),
-            _defaultFallbackHandler: Env.defaultFallbackHandler(),
+            _safeFallbackHandler: Env.safeFallbackHandler(),
             _timelockImplementation: address(timelockControllerImpl)
         });
         deployImpl({name: type(SafeTimelockFactory).name, deployedTo: address(safeTimelockFactoryImpl)});
