@@ -192,8 +192,8 @@ library Env {
         return _envAddress("safeProxyFactory");
     }
 
-    function defaultFallbackHandler() internal view returns (address) {
-        return _envAddress("defaultFallbackHandler");
+    function safeFallbackHandler() internal view returns (address) {
+        return _envAddress("safeFallbackHandler");
     }
 
     /**

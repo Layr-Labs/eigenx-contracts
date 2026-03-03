@@ -22,9 +22,9 @@ contract SafeTimelockFactory is Initializable, SafeTimelockFactoryStorage {
     constructor(
         address _safeSingleton,
         address _safeProxyFactory,
-        address _defaultFallbackHandler,
+        address _safeFallbackHandler,
         address _timelockImplementation
-    ) SafeTimelockFactoryStorage(_safeSingleton, _safeProxyFactory, _defaultFallbackHandler, _timelockImplementation) {
+    ) SafeTimelockFactoryStorage(_safeSingleton, _safeProxyFactory, _safeFallbackHandler, _timelockImplementation) {
         _disableInitializers();
     }
 
@@ -105,7 +105,7 @@ contract SafeTimelockFactory is Initializable, SafeTimelockFactoryStorage {
             config.threshold,
             address(0),
             "",
-            defaultFallbackHandler,
+            safeFallbackHandler,
             address(0),
             0,
             payable(address(0))
