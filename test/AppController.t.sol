@@ -1659,4 +1659,97 @@ contract AppControllerTest is ComputeDeployer {
         assertFalse(userApps[0].isOwner);
         assertEq(userApps[0].roles.length, 2); // PAUSER and DEVELOPER
     }
+
+    // ========== migrateAdmins Tests ==========
+
+    function test_migrateAdmins() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("migrate_admins"), _assembleRelease());
+
+        // Set up a permissionController admin for the app
+        address appAdmin = makeAddr("appAdmin");
+        vm.prank(address(app));
+        permissionController.addPendingAdmin(address(app), appAdmin);
+        vm.prank(appAdmin);
+        permissionController.acceptAdmin(address(app));
+
+        // Migrate admins
+        IApp[] memory apps = new IApp[](1);
+        apps[0] = app;
+        vm.prank(admin);
+        appController.migrateAdmins(apps);
+
+        // Verify the permissionController admin was granted the team ADMIN role
+        assertTrue(
+            appController.hasTeamRole(developer, IAppController.TeamRole.ADMIN, appAdmin),
+            "appAdmin should have ADMIN team role"
+        );
+    }
+
+    function test_migrateAdmins_revertsIfNotAuthorized() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("migrate_admins_auth"), _assembleRelease());
+
+        IApp[] memory apps = new IApp[](1);
+        apps[0] = app;
+
+        vm.prank(developer);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.migrateAdmins(apps);
+    }
+
+    function test_migrateAdmins_revertsIfAppDoesNotExist() public {
+        IApp fakeApp = IApp(address(0xDEADBEEF));
+
+        IApp[] memory apps = new IApp[](1);
+        apps[0] = fakeApp;
+
+        vm.prank(admin);
+        vm.expectRevert(abi.encodeWithSelector(IAppController.AppDoesNotExist.selector));
+        appController.migrateAdmins(apps);
+    }
+
+    function test_migrateAdmins_noAdmins() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("migrate_admins_empty"), _assembleRelease());
+
+        // No permissionController admins set — getAdmins returns empty array
+        IApp[] memory apps = new IApp[](1);
+        apps[0] = app;
+
+        vm.prank(admin);
+        appController.migrateAdmins(apps); // should succeed with no roles granted
+    }
+
+    function test_migrateAdmins_skipsAlreadyGranted() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("migrate_admins_idempotent"), _assembleRelease());
+
+        address appAdmin = makeAddr("appAdminIdempotent");
+        vm.prank(address(app));
+        permissionController.addPendingAdmin(address(app), appAdmin);
+        vm.prank(appAdmin);
+        permissionController.acceptAdmin(address(app));
+
+        IApp[] memory apps = new IApp[](1);
+        apps[0] = app;
+
+        // First call
+        vm.prank(admin);
+        appController.migrateAdmins(apps);
+
+        assertTrue(
+            appController.hasTeamRole(developer, IAppController.TeamRole.ADMIN, appAdmin),
+            "appAdmin should have ADMIN role after first migration"
+        );
+
+        // Second call — must not revert
+        vm.prank(admin);
+        appController.migrateAdmins(apps);
+
+        assertTrue(
+            appController.hasTeamRole(developer, IAppController.TeamRole.ADMIN, appAdmin),
+            "appAdmin should still have ADMIN role after second migration"
+        );
+    }
 }
