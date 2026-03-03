@@ -54,6 +54,8 @@ contracts=(
     "ComputeOperator"
     "IReleaseManager"
     "IPermissionController"
+    "SafeTimelockFactory"
+    "TimelockControllerImpl"
 )
 
 forge b --no-metadata

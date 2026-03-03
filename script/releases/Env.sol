@@ -19,6 +19,8 @@ import {App} from "../../src/App.sol";
 import {AppController} from "../../src/AppController.sol";
 import {ComputeAVSRegistrar} from "../../src/ComputeAVSRegistrar.sol";
 import {ComputeOperator} from "../../src/ComputeOperator.sol";
+import {SafeTimelockFactory} from "../../src/factories/SafeTimelockFactory.sol";
+import {TimelockControllerImpl} from "../../src/governance/TimelockControllerImpl.sol";
 
 library Env {
     using ZEnvHelpers for *;
@@ -99,6 +101,10 @@ library Env {
         return ComputeOperator(_deployedProxy(type(ComputeOperator).name));
     }
 
+    function safeTimelockFactory(DeployedProxy) internal view returns (SafeTimelockFactory) {
+        return SafeTimelockFactory(_deployedProxy(type(SafeTimelockFactory).name));
+    }
+
     function appBeacon(DeployedBeacon) internal view returns (UpgradeableBeacon) {
         return UpgradeableBeacon(_deployedBeacon(type(App).name));
     }
@@ -120,6 +126,10 @@ library Env {
 
     function computeOperator(DeployedImpl) internal view returns (ComputeOperator) {
         return ComputeOperator(_deployedImpl(type(ComputeOperator).name));
+    }
+
+    function safeTimelockFactory(DeployedImpl) internal view returns (SafeTimelockFactory) {
+        return SafeTimelockFactory(_deployedImpl(type(SafeTimelockFactory).name));
     }
 
     /**
@@ -145,8 +155,27 @@ library Env {
         return _envAddress("billingAdmin");
     }
 
+    function timelockControllerImpl() internal view returns (TimelockControllerImpl) {
+        return TimelockControllerImpl(payable(_deployedContract(type(TimelockControllerImpl).name)));
+    }
+
     function proxyAdmin() internal view returns (ProxyAdmin) {
         return ProxyAdmin(_deployedContract(type(ProxyAdmin).name));
+    }
+
+    /**
+     * Safe infrastructure
+     */
+    function safeSingleton() internal view returns (address) {
+        return _envAddress("safeSingleton");
+    }
+
+    function safeProxyFactory() internal view returns (address) {
+        return _envAddress("safeProxyFactory");
+    }
+
+    function defaultFallbackHandler() internal view returns (address) {
+        return _envAddress("defaultFallbackHandler");
     }
 
     /**
