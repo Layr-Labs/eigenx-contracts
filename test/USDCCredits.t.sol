@@ -10,8 +10,8 @@ import {
     ITransparentUpgradeableProxy
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {EmptyContract} from "@eigenlayer-contracts/src/test/mocks/EmptyContract.sol";
-import {USDCDeposit} from "../src/USDCDeposit.sol";
-import {IUSDCDeposit} from "../src/interfaces/IUSDCDeposit.sol";
+import {USDCCredits} from "../src/USDCCredits.sol";
+import {IUSDCCredits} from "../src/interfaces/IUSDCCredits.sol";
 
 /// @notice Mock ERC20 token for testing
 contract MockUSDC is ERC20 {
@@ -35,7 +35,7 @@ contract MockToken is ERC20 {
     }
 }
 
-contract USDCDepositTest is Test {
+contract USDCCreditsTest is Test {
     uint256 public constant MINIMUM_DEPOSIT = 5_000_000; // $5 USDC (6 decimals)
     uint256 public constant DEPOSIT_AMOUNT = 100_000_000; // $100 USDC
 
@@ -47,7 +47,7 @@ contract USDCDepositTest is Test {
 
     MockUSDC public mockUSDC;
     MockToken public mockToken;
-    USDCDeposit public usdcDeposit;
+    USDCCredits public usdcCredits;
     ProxyAdmin public proxyAdmin;
 
     event Deposit(address indexed depositor, address indexed account, uint256 amount);
@@ -66,136 +66,136 @@ contract USDCDepositTest is Test {
             new TransparentUpgradeableProxy(address(emptyContract), address(proxyAdmin), new bytes(0));
 
         // Deploy implementation
-        USDCDeposit impl = new USDCDeposit({_usdc: IERC20(address(mockUSDC)), _treasury: treasuryAddr});
+        USDCCredits impl = new USDCCredits({_usdc: IERC20(address(mockUSDC)), _treasury: treasuryAddr});
 
         // Upgrade and initialize
         proxyAdmin.upgradeAndCall(
             ITransparentUpgradeableProxy(address(proxy)),
             address(impl),
-            abi.encodeCall(USDCDeposit.initialize, (owner, MINIMUM_DEPOSIT))
+            abi.encodeCall(USDCCredits.initialize, (owner, MINIMUM_DEPOSIT))
         );
 
-        usdcDeposit = USDCDeposit(address(proxy));
+        usdcCredits = USDCCredits(address(proxy));
 
         // Fund depositor with USDC
         mockUSDC.mint(depositor, 1_000_000_000); // $1000
     }
 
-    // ==================== deposit() tests ====================
+    // ==================== purchaseCredits() tests ====================
 
-    function test_deposit() public {
+    function test_purchaseCredits() public {
         vm.startPrank(depositor);
-        mockUSDC.approve(address(usdcDeposit), DEPOSIT_AMOUNT);
+        mockUSDC.approve(address(usdcCredits), DEPOSIT_AMOUNT);
 
         vm.expectEmit(true, true, true, true);
         emit Deposit(depositor, depositor, DEPOSIT_AMOUNT);
 
-        usdcDeposit.deposit(DEPOSIT_AMOUNT);
+        usdcCredits.purchaseCredits(DEPOSIT_AMOUNT);
         vm.stopPrank();
 
         assertEq(mockUSDC.balanceOf(treasuryAddr), DEPOSIT_AMOUNT);
     }
 
-    function test_deposit_belowMinimum() public {
+    function test_purchaseCredits_belowMinimum() public {
         vm.startPrank(depositor);
-        mockUSDC.approve(address(usdcDeposit), MINIMUM_DEPOSIT - 1);
+        mockUSDC.approve(address(usdcCredits), MINIMUM_DEPOSIT - 1);
 
-        vm.expectRevert(IUSDCDeposit.BelowMinimumDeposit.selector);
-        usdcDeposit.deposit(MINIMUM_DEPOSIT - 1);
+        vm.expectRevert(IUSDCCredits.BelowMinimumDeposit.selector);
+        usdcCredits.purchaseCredits(MINIMUM_DEPOSIT - 1);
         vm.stopPrank();
     }
 
-    function test_deposit_exactMinimum() public {
+    function test_purchaseCredits_exactMinimum() public {
         vm.startPrank(depositor);
-        mockUSDC.approve(address(usdcDeposit), MINIMUM_DEPOSIT);
+        mockUSDC.approve(address(usdcCredits), MINIMUM_DEPOSIT);
 
-        usdcDeposit.deposit(MINIMUM_DEPOSIT);
+        usdcCredits.purchaseCredits(MINIMUM_DEPOSIT);
         vm.stopPrank();
 
         assertEq(mockUSDC.balanceOf(treasuryAddr), MINIMUM_DEPOSIT);
     }
 
-    function test_deposit_noApproval() public {
+    function test_purchaseCredits_noApproval() public {
         vm.prank(depositor);
         vm.expectRevert("ERC20: insufficient allowance");
-        usdcDeposit.deposit(DEPOSIT_AMOUNT);
+        usdcCredits.purchaseCredits(DEPOSIT_AMOUNT);
     }
 
-    // ==================== depositFor() tests ====================
+    // ==================== purchaseCreditsFor() tests ====================
 
-    function test_depositFor() public {
+    function test_purchaseCreditsFor() public {
         vm.startPrank(depositor);
-        mockUSDC.approve(address(usdcDeposit), DEPOSIT_AMOUNT);
+        mockUSDC.approve(address(usdcCredits), DEPOSIT_AMOUNT);
 
         vm.expectEmit(true, true, true, true);
         emit Deposit(depositor, recipient, DEPOSIT_AMOUNT);
 
-        usdcDeposit.depositFor(DEPOSIT_AMOUNT, recipient);
+        usdcCredits.purchaseCreditsFor(DEPOSIT_AMOUNT, recipient);
         vm.stopPrank();
 
         assertEq(mockUSDC.balanceOf(treasuryAddr), DEPOSIT_AMOUNT);
     }
 
-    function test_depositFor_zeroAddress() public {
+    function test_purchaseCreditsFor_zeroAddress() public {
         vm.startPrank(depositor);
-        mockUSDC.approve(address(usdcDeposit), DEPOSIT_AMOUNT);
+        mockUSDC.approve(address(usdcCredits), DEPOSIT_AMOUNT);
 
-        vm.expectRevert(IUSDCDeposit.ZeroAddress.selector);
-        usdcDeposit.depositFor(DEPOSIT_AMOUNT, address(0));
+        vm.expectRevert(IUSDCCredits.ZeroAddress.selector);
+        usdcCredits.purchaseCreditsFor(DEPOSIT_AMOUNT, address(0));
         vm.stopPrank();
     }
 
-    function test_depositFor_belowMinimum() public {
+    function test_purchaseCreditsFor_belowMinimum() public {
         vm.startPrank(depositor);
-        mockUSDC.approve(address(usdcDeposit), MINIMUM_DEPOSIT - 1);
+        mockUSDC.approve(address(usdcCredits), MINIMUM_DEPOSIT - 1);
 
-        vm.expectRevert(IUSDCDeposit.BelowMinimumDeposit.selector);
-        usdcDeposit.depositFor(MINIMUM_DEPOSIT - 1, recipient);
+        vm.expectRevert(IUSDCCredits.BelowMinimumDeposit.selector);
+        usdcCredits.purchaseCreditsFor(MINIMUM_DEPOSIT - 1, recipient);
         vm.stopPrank();
     }
 
-    function test_depositFor_multipleDeposits() public {
+    function test_purchaseCreditsFor_multipleDeposits() public {
         vm.startPrank(depositor);
-        mockUSDC.approve(address(usdcDeposit), DEPOSIT_AMOUNT * 3);
+        mockUSDC.approve(address(usdcCredits), DEPOSIT_AMOUNT * 3);
 
-        usdcDeposit.depositFor(DEPOSIT_AMOUNT, recipient);
-        usdcDeposit.depositFor(DEPOSIT_AMOUNT, recipient);
-        usdcDeposit.depositFor(DEPOSIT_AMOUNT, depositor);
+        usdcCredits.purchaseCreditsFor(DEPOSIT_AMOUNT, recipient);
+        usdcCredits.purchaseCreditsFor(DEPOSIT_AMOUNT, recipient);
+        usdcCredits.purchaseCreditsFor(DEPOSIT_AMOUNT, depositor);
         vm.stopPrank();
 
         assertEq(mockUSDC.balanceOf(treasuryAddr), DEPOSIT_AMOUNT * 3);
     }
 
-    // ==================== setMinimumDeposit() tests ====================
+    // ==================== setMinimumDepositFor() tests ====================
 
-    function test_setMinimumDeposit() public {
+    function test_setMinimumDepositFor() public {
         uint256 newMinimum = 10_000_000; // $10
 
         vm.prank(owner);
         vm.expectEmit(true, true, true, true);
         emit MinimumDepositSet(MINIMUM_DEPOSIT, newMinimum);
 
-        usdcDeposit.setMinimumDeposit(newMinimum);
+        usdcCredits.setMinimumDepositFor(newMinimum);
 
-        assertEq(usdcDeposit.minimumDeposit(), newMinimum);
+        assertEq(usdcCredits.minimumDeposit(), newMinimum);
     }
 
-    function test_setMinimumDeposit_unauthorized() public {
+    function test_setMinimumDepositFor_unauthorized() public {
         vm.prank(unauthorizedCaller);
         vm.expectRevert("Ownable: caller is not the owner");
-        usdcDeposit.setMinimumDeposit(10_000_000);
+        usdcCredits.setMinimumDepositFor(10_000_000);
     }
 
-    function test_setMinimumDeposit_toZero() public {
+    function test_setMinimumDepositFor_toZero() public {
         vm.prank(owner);
-        usdcDeposit.setMinimumDeposit(0);
+        usdcCredits.setMinimumDepositFor(0);
 
-        assertEq(usdcDeposit.minimumDeposit(), 0);
+        assertEq(usdcCredits.minimumDeposit(), 0);
 
         // Any amount should now work
         vm.startPrank(depositor);
-        mockUSDC.approve(address(usdcDeposit), 1);
-        usdcDeposit.deposit(1);
+        mockUSDC.approve(address(usdcCredits), 1);
+        usdcCredits.purchaseCredits(1);
         vm.stopPrank();
 
         assertEq(mockUSDC.balanceOf(treasuryAddr), 1);
@@ -205,52 +205,52 @@ contract USDCDepositTest is Test {
 
     function test_sweep_usdc() public {
         // Simulate accidental direct transfer
-        mockUSDC.mint(address(usdcDeposit), 50_000_000);
+        mockUSDC.mint(address(usdcCredits), 50_000_000);
 
         vm.prank(owner);
-        usdcDeposit.sweep(IERC20(address(mockUSDC)));
+        usdcCredits.sweep(IERC20(address(mockUSDC)));
 
-        assertEq(mockUSDC.balanceOf(address(usdcDeposit)), 0);
+        assertEq(mockUSDC.balanceOf(address(usdcCredits)), 0);
         assertEq(mockUSDC.balanceOf(treasuryAddr), 50_000_000);
     }
 
     function test_sweep_otherToken() public {
         // Simulate accidental send of another token
-        mockToken.mint(address(usdcDeposit), 1_000_000);
+        mockToken.mint(address(usdcCredits), 1_000_000);
 
         vm.prank(owner);
-        usdcDeposit.sweep(IERC20(address(mockToken)));
+        usdcCredits.sweep(IERC20(address(mockToken)));
 
-        assertEq(mockToken.balanceOf(address(usdcDeposit)), 0);
+        assertEq(mockToken.balanceOf(address(usdcCredits)), 0);
         assertEq(mockToken.balanceOf(treasuryAddr), 1_000_000);
     }
 
     function test_sweep_zeroBalance() public {
         // Should not revert on zero balance
         vm.prank(owner);
-        usdcDeposit.sweep(IERC20(address(mockUSDC)));
+        usdcCredits.sweep(IERC20(address(mockUSDC)));
 
         assertEq(mockUSDC.balanceOf(treasuryAddr), 0);
     }
 
     function test_sweep_unauthorized() public {
-        mockUSDC.mint(address(usdcDeposit), 50_000_000);
+        mockUSDC.mint(address(usdcCredits), 50_000_000);
 
         vm.prank(unauthorizedCaller);
         vm.expectRevert("Ownable: caller is not the owner");
-        usdcDeposit.sweep(IERC20(address(mockUSDC)));
+        usdcCredits.sweep(IERC20(address(mockUSDC)));
     }
 
     // ==================== Constructor/initializer validation tests ====================
 
     function test_constructor_zeroUsdc() public {
-        vm.expectRevert(IUSDCDeposit.ZeroAddress.selector);
-        new USDCDeposit({_usdc: IERC20(address(0)), _treasury: treasuryAddr});
+        vm.expectRevert(IUSDCCredits.ZeroAddress.selector);
+        new USDCCredits({_usdc: IERC20(address(0)), _treasury: treasuryAddr});
     }
 
     function test_constructor_zeroTreasury() public {
-        vm.expectRevert(IUSDCDeposit.ZeroAddress.selector);
-        new USDCDeposit({_usdc: IERC20(address(mockUSDC)), _treasury: address(0)});
+        vm.expectRevert(IUSDCCredits.ZeroAddress.selector);
+        new USDCCredits({_usdc: IERC20(address(mockUSDC)), _treasury: address(0)});
     }
 
     function test_initialize_zeroOwner() public {
@@ -259,25 +259,25 @@ contract USDCDepositTest is Test {
         TransparentUpgradeableProxy proxy =
             new TransparentUpgradeableProxy(address(emptyContract), address(newProxyAdmin), new bytes(0));
 
-        USDCDeposit impl = new USDCDeposit({_usdc: IERC20(address(mockUSDC)), _treasury: treasuryAddr});
+        USDCCredits impl = new USDCCredits({_usdc: IERC20(address(mockUSDC)), _treasury: treasuryAddr});
 
         // OwnableUpgradeable._transferOwnership does not revert on zero address,
         // but we verify the owner is correctly set in the normal path
         newProxyAdmin.upgradeAndCall(
             ITransparentUpgradeableProxy(address(proxy)),
             address(impl),
-            abi.encodeCall(USDCDeposit.initialize, (address(0), MINIMUM_DEPOSIT))
+            abi.encodeCall(USDCCredits.initialize, (address(0), MINIMUM_DEPOSIT))
         );
         // Owner should be zero — effectively locked, but not reverting
-        assertEq(USDCDeposit(address(proxy)).owner(), address(0));
+        assertEq(USDCCredits(address(proxy)).owner(), address(0));
     }
 
     // ==================== View function tests ====================
 
     function test_immutables() public view {
-        assertEq(address(usdcDeposit.usdc()), address(mockUSDC));
-        assertEq(usdcDeposit.treasury(), treasuryAddr);
-        assertEq(usdcDeposit.minimumDeposit(), MINIMUM_DEPOSIT);
-        assertEq(usdcDeposit.owner(), owner);
+        assertEq(address(usdcCredits.usdc()), address(mockUSDC));
+        assertEq(usdcCredits.treasury(), treasuryAddr);
+        assertEq(usdcCredits.minimumDeposit(), MINIMUM_DEPOSIT);
+        assertEq(usdcCredits.owner(), owner);
     }
 }

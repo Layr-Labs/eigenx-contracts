@@ -3,7 +3,7 @@ pragma solidity ^0.8.27;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface IUSDCDeposit {
+interface IUSDCCredits {
     /// @notice Thrown when deposit amount is below the minimum
     error BelowMinimumDeposit();
 
@@ -17,34 +17,34 @@ interface IUSDCDeposit {
     event MinimumDepositSet(uint256 oldMinimum, uint256 newMinimum);
 
     /**
-     * @notice Initialize the USDCDeposit contract
+     * @notice Initialize the USDCCredits contract
      * @param initialOwner The owner address for the contract
      * @param _minimumDeposit The initial minimum deposit amount (in USDC's 6-decimal base units)
      */
     function initialize(address initialOwner, uint256 _minimumDeposit) external;
 
     /**
-     * @notice Deposits USDC for msg.sender
+     * @notice Purchases USDC credits for msg.sender
      * @param amount The amount of USDC to deposit (in 6-decimal base units)
      * @dev Caller must have approved this contract to spend at least `amount` USDC
      */
-    function deposit(uint256 amount) external;
+    function purchaseCredits(uint256 amount) external;
 
     /**
-     * @notice Deposits USDC on behalf of any address
+     * @notice Purchases USDC credits on behalf of any address
      * @param amount The amount of USDC to deposit (in 6-decimal base units)
      * @param account The address to credit the deposit to
      * @dev Caller must have approved this contract to spend at least `amount` USDC
      * @dev Enables operators to fund agent accounts before the agent is deployed
      */
-    function depositFor(uint256 amount, address account) external;
+    function purchaseCreditsFor(uint256 amount, address account) external;
 
     /**
      * @notice Sets the minimum deposit amount
      * @param newMinimum The new minimum deposit amount (in USDC's 6-decimal base units)
      * @dev Caller must be the contract owner
      */
-    function setMinimumDeposit(uint256 newMinimum) external;
+    function setMinimumDepositFor(uint256 newMinimum) external;
 
     /**
      * @notice Recovers tokens accidentally sent directly to the contract

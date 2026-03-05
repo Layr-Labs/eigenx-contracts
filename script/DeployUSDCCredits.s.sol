@@ -9,10 +9,10 @@ import {
     ITransparentUpgradeableProxy
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {EmptyContract} from "@eigenlayer-contracts/src/test/mocks/EmptyContract.sol";
-import {USDCDeposit} from "../src/USDCDeposit.sol";
-import {IUSDCDeposit} from "../src/interfaces/IUSDCDeposit.sol";
+import {USDCCredits} from "../src/USDCCredits.sol";
+import {IUSDCCredits} from "../src/interfaces/IUSDCCredits.sol";
 
-contract DeployUSDCDeposit is Script {
+contract DeployUSDCCredits is Script {
     struct DeployParams {
         ProxyAdmin proxyAdmin;
         address initialOwner;
@@ -22,8 +22,8 @@ contract DeployUSDCDeposit is Script {
     }
 
     struct DeployedContracts {
-        IUSDCDeposit usdcDeposit;
-        USDCDeposit usdcDepositImpl;
+        IUSDCCredits usdcCredits;
+        USDCCredits usdcCreditsImpl;
     }
 
     function run(string memory environment) public {
@@ -48,20 +48,20 @@ contract DeployUSDCDeposit is Script {
             new TransparentUpgradeableProxy(address(emptyContract), address(params.proxyAdmin), new bytes(0));
 
         // Deploy implementation
-        USDCDeposit impl = new USDCDeposit({_usdc: params.usdc, _treasury: params.treasury});
+        USDCCredits impl = new USDCCredits({_usdc: params.usdc, _treasury: params.treasury});
 
         // Upgrade and initialize
         params.proxyAdmin
             .upgradeAndCall(
                 ITransparentUpgradeableProxy(address(proxy)),
                 address(impl),
-                abi.encodeCall(USDCDeposit.initialize, (params.initialOwner, params.minimumDeposit))
+                abi.encodeCall(USDCCredits.initialize, (params.initialOwner, params.minimumDeposit))
             );
 
-        console.log("USDCDeposit proxy:", address(proxy));
-        console.log("USDCDeposit impl:", address(impl));
+        console.log("USDCCredits proxy:", address(proxy));
+        console.log("USDCCredits impl:", address(impl));
 
-        return DeployedContracts({usdcDeposit: IUSDCDeposit(address(proxy)), usdcDepositImpl: impl});
+        return DeployedContracts({usdcCredits: IUSDCCredits(address(proxy)), usdcCreditsImpl: impl});
     }
 
     function deployForTesting(DeployParams memory params) public returns (DeployedContracts memory deployment) {
@@ -85,8 +85,8 @@ contract DeployUSDCDeposit is Script {
 
     function _writeOutputToJson(string memory environment, DeployedContracts memory deployedContracts) internal {
         string memory addresses = "addresses";
-        vm.serializeAddress(addresses, "usdcDeposit", address(deployedContracts.usdcDeposit));
-        addresses = vm.serializeAddress(addresses, "usdcDepositImpl", address(deployedContracts.usdcDepositImpl));
+        vm.serializeAddress(addresses, "usdcCredits", address(deployedContracts.usdcCredits));
+        addresses = vm.serializeAddress(addresses, "usdcCreditsImpl", address(deployedContracts.usdcCreditsImpl));
 
         string memory chainInfo = "chainInfo";
         chainInfo = vm.serializeUint(chainInfo, "chainId", block.chainid);

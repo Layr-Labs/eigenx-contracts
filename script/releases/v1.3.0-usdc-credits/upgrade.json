@@ -5,7 +5,7 @@
     "phases": [
         {
             "type": "eoa",
-            "filename": "1-deployUSDCDeposit.s.sol"
+            "filename": "1-deployUSDCCredits.s.sol"
         }
     ]
 }
