@@ -13,17 +13,17 @@ contract USDCCredits is Initializable, OwnableUpgradeable, USDCCreditsStorage {
 
     /**
      * @param _usdc The USDC token contract address
-     * @param _treasury The treasury address that receives all deposits
+     * @param _treasury The treasury address that receives all credit purchases
      */
     constructor(IERC20 _usdc, address _treasury) USDCCreditsStorage(_usdc, _treasury) {
         _disableInitializers();
     }
 
     /// @inheritdoc IUSDCCredits
-    function initialize(address initialOwner, uint256 _minimumDeposit) external initializer {
+    function initialize(address initialOwner, uint256 _minimumPurchase) external initializer {
         _transferOwnership(initialOwner);
-        minimumDeposit = _minimumDeposit;
-        emit MinimumDepositSet(0, _minimumDeposit);
+        minimumPurchase = _minimumPurchase;
+        emit MinimumPurchaseSet(0, _minimumPurchase);
     }
 
     /// @inheritdoc IUSDCCredits
@@ -34,18 +34,18 @@ contract USDCCredits is Initializable, OwnableUpgradeable, USDCCreditsStorage {
     /// @inheritdoc IUSDCCredits
     function purchaseCreditsFor(uint256 amount, address account) public {
         require(account != address(0), ZeroAddress());
-        require(amount >= minimumDeposit, BelowMinimumDeposit());
+        require(amount >= minimumPurchase, BelowMinimumPurchase());
 
         usdc.safeTransferFrom(msg.sender, treasury, amount);
 
-        emit Deposit(msg.sender, account, amount);
+        emit CreditsPurchased(msg.sender, account, amount);
     }
 
     /// @inheritdoc IUSDCCredits
-    function setMinimumDepositFor(uint256 newMinimum) external onlyOwner {
-        uint256 oldMinimum = minimumDeposit;
-        minimumDeposit = newMinimum;
-        emit MinimumDepositSet(oldMinimum, newMinimum);
+    function setMinimumPurchaseFor(uint256 newMinimum) external onlyOwner {
+        uint256 oldMinimum = minimumPurchase;
+        minimumPurchase = newMinimum;
+        emit MinimumPurchaseSet(oldMinimum, newMinimum);
     }
 
     /// @inheritdoc IUSDCCredits

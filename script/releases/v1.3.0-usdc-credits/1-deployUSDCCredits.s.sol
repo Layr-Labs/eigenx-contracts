@@ -11,7 +11,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {USDCCredits} from "../../../src/USDCCredits.sol";
 
 /**
- * Purpose: deploy USDCCredits contract for agent/contract wallet onboarding via USDC deposits
+ * Purpose: deploy USDCCredits contract for agent/contract wallet onboarding via USDC credit purchases
  */
 contract DeployUSDCCredits is EOADeployer {
     using Env for *;
@@ -23,11 +23,11 @@ contract DeployUSDCCredits is EOADeployer {
         USDCCredits impl = new USDCCredits({_usdc: IERC20(Env.USDC_TOKEN()), _treasury: Env.USDC_TREASURY()});
 
         // Deploy proxy with initialization
-        // initialize sets computeOpsMultisig as owner and configures minimum deposit
+        // initialize sets computeOpsMultisig as owner and configures minimum purchase
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
             address(impl),
             address(Env.proxyAdmin()),
-            abi.encodeCall(USDCCredits.initialize, (Env.computeOpsMultisig(), Env.USDC_MINIMUM_DEPOSIT()))
+            abi.encodeCall(USDCCredits.initialize, (Env.computeOpsMultisig(), Env.USDC_MINIMUM_PURCHASE()))
         );
 
         // Register in Env system
@@ -81,8 +81,8 @@ contract DeployUSDCCredits is EOADeployer {
         // Validate owner
         assertEq(usdcCredits.owner(), Env.computeOpsMultisig(), "USDCCredits owner mismatch");
 
-        // Validate minimum deposit
-        assertEq(usdcCredits.minimumDeposit(), Env.USDC_MINIMUM_DEPOSIT(), "USDCCredits minimumDeposit mismatch");
+        // Validate minimum purchase
+        assertEq(usdcCredits.minimumPurchase(), Env.USDC_MINIMUM_PURCHASE(), "USDCCredits minimumPurchase mismatch");
     }
 
     function _getProxyImpl(address proxy) internal view returns (address) {

@@ -9,11 +9,11 @@ abstract contract USDCCreditsStorage is IUSDCCredits {
     /// @notice The USDC token contract
     IERC20 public immutable usdc;
 
-    /// @notice The treasury address that receives all deposits
+    /// @notice The treasury address that receives all credit purchases
     address public immutable treasury;
 
-    /// @notice The minimum deposit amount (in USDC's 6-decimal base units)
-    uint256 public minimumDeposit;
+    /// @notice The minimum purchase amount (in USDC's 6-decimal base units)
+    uint256 public minimumPurchase;
 
     constructor(IERC20 _usdc, address _treasury) {
         require(address(_usdc) != address(0), ZeroAddress());

@@ -198,8 +198,8 @@ library Env {
         return _envAddress("USDC_TREASURY");
     }
 
-    function USDC_MINIMUM_DEPOSIT() internal view returns (uint256) {
-        return _envU256("USDC_MINIMUM_DEPOSIT");
+    function USDC_MINIMUM_PURCHASE() internal view returns (uint256) {
+        return _envU256("USDC_MINIMUM_PURCHASE");
     }
 
     /**

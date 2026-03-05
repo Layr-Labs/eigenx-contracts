@@ -36,11 +36,11 @@ contract MockToken is ERC20 {
 }
 
 contract USDCCreditsTest is Test {
-    uint256 public constant MINIMUM_DEPOSIT = 5_000_000; // $5 USDC (6 decimals)
-    uint256 public constant DEPOSIT_AMOUNT = 100_000_000; // $100 USDC
+    uint256 public constant MINIMUM_PURCHASE = 5_000_000; // $5 USDC (6 decimals)
+    uint256 public constant PURCHASE_AMOUNT = 100_000_000; // $100 USDC
 
     address public owner = makeAddr("owner");
-    address public depositor = makeAddr("depositor");
+    address public purchaser = makeAddr("purchaser");
     address public recipient = makeAddr("recipient");
     address public treasuryAddr = makeAddr("treasury");
     address public unauthorizedCaller = makeAddr("unauthorizedCaller");
@@ -50,8 +50,8 @@ contract USDCCreditsTest is Test {
     USDCCredits public usdcCredits;
     ProxyAdmin public proxyAdmin;
 
-    event Deposit(address indexed depositor, address indexed account, uint256 amount);
-    event MinimumDepositSet(uint256 oldMinimum, uint256 newMinimum);
+    event CreditsPurchased(address indexed purchaser, address indexed account, uint256 amount);
+    event MinimumPurchaseSet(uint256 oldMinimum, uint256 newMinimum);
 
     function setUp() public {
         // Deploy mock tokens
@@ -72,128 +72,128 @@ contract USDCCreditsTest is Test {
         proxyAdmin.upgradeAndCall(
             ITransparentUpgradeableProxy(address(proxy)),
             address(impl),
-            abi.encodeCall(USDCCredits.initialize, (owner, MINIMUM_DEPOSIT))
+            abi.encodeCall(USDCCredits.initialize, (owner, MINIMUM_PURCHASE))
         );
 
         usdcCredits = USDCCredits(address(proxy));
 
-        // Fund depositor with USDC
-        mockUSDC.mint(depositor, 1_000_000_000); // $1000
+        // Fund purchaser with USDC
+        mockUSDC.mint(purchaser, 1_000_000_000); // $1000
     }
 
     // ==================== purchaseCredits() tests ====================
 
     function test_purchaseCredits() public {
-        vm.startPrank(depositor);
-        mockUSDC.approve(address(usdcCredits), DEPOSIT_AMOUNT);
+        vm.startPrank(purchaser);
+        mockUSDC.approve(address(usdcCredits), PURCHASE_AMOUNT);
 
         vm.expectEmit(true, true, true, true);
-        emit Deposit(depositor, depositor, DEPOSIT_AMOUNT);
+        emit CreditsPurchased(purchaser, purchaser, PURCHASE_AMOUNT);
 
-        usdcCredits.purchaseCredits(DEPOSIT_AMOUNT);
+        usdcCredits.purchaseCredits(PURCHASE_AMOUNT);
         vm.stopPrank();
 
-        assertEq(mockUSDC.balanceOf(treasuryAddr), DEPOSIT_AMOUNT);
+        assertEq(mockUSDC.balanceOf(treasuryAddr), PURCHASE_AMOUNT);
     }
 
     function test_purchaseCredits_belowMinimum() public {
-        vm.startPrank(depositor);
-        mockUSDC.approve(address(usdcCredits), MINIMUM_DEPOSIT - 1);
+        vm.startPrank(purchaser);
+        mockUSDC.approve(address(usdcCredits), MINIMUM_PURCHASE - 1);
 
-        vm.expectRevert(IUSDCCredits.BelowMinimumDeposit.selector);
-        usdcCredits.purchaseCredits(MINIMUM_DEPOSIT - 1);
+        vm.expectRevert(IUSDCCredits.BelowMinimumPurchase.selector);
+        usdcCredits.purchaseCredits(MINIMUM_PURCHASE - 1);
         vm.stopPrank();
     }
 
     function test_purchaseCredits_exactMinimum() public {
-        vm.startPrank(depositor);
-        mockUSDC.approve(address(usdcCredits), MINIMUM_DEPOSIT);
+        vm.startPrank(purchaser);
+        mockUSDC.approve(address(usdcCredits), MINIMUM_PURCHASE);
 
-        usdcCredits.purchaseCredits(MINIMUM_DEPOSIT);
+        usdcCredits.purchaseCredits(MINIMUM_PURCHASE);
         vm.stopPrank();
 
-        assertEq(mockUSDC.balanceOf(treasuryAddr), MINIMUM_DEPOSIT);
+        assertEq(mockUSDC.balanceOf(treasuryAddr), MINIMUM_PURCHASE);
     }
 
     function test_purchaseCredits_noApproval() public {
-        vm.prank(depositor);
+        vm.prank(purchaser);
         vm.expectRevert("ERC20: insufficient allowance");
-        usdcCredits.purchaseCredits(DEPOSIT_AMOUNT);
+        usdcCredits.purchaseCredits(PURCHASE_AMOUNT);
     }
 
     // ==================== purchaseCreditsFor() tests ====================
 
     function test_purchaseCreditsFor() public {
-        vm.startPrank(depositor);
-        mockUSDC.approve(address(usdcCredits), DEPOSIT_AMOUNT);
+        vm.startPrank(purchaser);
+        mockUSDC.approve(address(usdcCredits), PURCHASE_AMOUNT);
 
         vm.expectEmit(true, true, true, true);
-        emit Deposit(depositor, recipient, DEPOSIT_AMOUNT);
+        emit CreditsPurchased(purchaser, recipient, PURCHASE_AMOUNT);
 
-        usdcCredits.purchaseCreditsFor(DEPOSIT_AMOUNT, recipient);
+        usdcCredits.purchaseCreditsFor(PURCHASE_AMOUNT, recipient);
         vm.stopPrank();
 
-        assertEq(mockUSDC.balanceOf(treasuryAddr), DEPOSIT_AMOUNT);
+        assertEq(mockUSDC.balanceOf(treasuryAddr), PURCHASE_AMOUNT);
     }
 
     function test_purchaseCreditsFor_zeroAddress() public {
-        vm.startPrank(depositor);
-        mockUSDC.approve(address(usdcCredits), DEPOSIT_AMOUNT);
+        vm.startPrank(purchaser);
+        mockUSDC.approve(address(usdcCredits), PURCHASE_AMOUNT);
 
         vm.expectRevert(IUSDCCredits.ZeroAddress.selector);
-        usdcCredits.purchaseCreditsFor(DEPOSIT_AMOUNT, address(0));
+        usdcCredits.purchaseCreditsFor(PURCHASE_AMOUNT, address(0));
         vm.stopPrank();
     }
 
     function test_purchaseCreditsFor_belowMinimum() public {
-        vm.startPrank(depositor);
-        mockUSDC.approve(address(usdcCredits), MINIMUM_DEPOSIT - 1);
+        vm.startPrank(purchaser);
+        mockUSDC.approve(address(usdcCredits), MINIMUM_PURCHASE - 1);
 
-        vm.expectRevert(IUSDCCredits.BelowMinimumDeposit.selector);
-        usdcCredits.purchaseCreditsFor(MINIMUM_DEPOSIT - 1, recipient);
+        vm.expectRevert(IUSDCCredits.BelowMinimumPurchase.selector);
+        usdcCredits.purchaseCreditsFor(MINIMUM_PURCHASE - 1, recipient);
         vm.stopPrank();
     }
 
-    function test_purchaseCreditsFor_multipleDeposits() public {
-        vm.startPrank(depositor);
-        mockUSDC.approve(address(usdcCredits), DEPOSIT_AMOUNT * 3);
+    function test_purchaseCreditsFor_multiplePurchases() public {
+        vm.startPrank(purchaser);
+        mockUSDC.approve(address(usdcCredits), PURCHASE_AMOUNT * 3);
 
-        usdcCredits.purchaseCreditsFor(DEPOSIT_AMOUNT, recipient);
-        usdcCredits.purchaseCreditsFor(DEPOSIT_AMOUNT, recipient);
-        usdcCredits.purchaseCreditsFor(DEPOSIT_AMOUNT, depositor);
+        usdcCredits.purchaseCreditsFor(PURCHASE_AMOUNT, recipient);
+        usdcCredits.purchaseCreditsFor(PURCHASE_AMOUNT, recipient);
+        usdcCredits.purchaseCreditsFor(PURCHASE_AMOUNT, purchaser);
         vm.stopPrank();
 
-        assertEq(mockUSDC.balanceOf(treasuryAddr), DEPOSIT_AMOUNT * 3);
+        assertEq(mockUSDC.balanceOf(treasuryAddr), PURCHASE_AMOUNT * 3);
     }
 
-    // ==================== setMinimumDepositFor() tests ====================
+    // ==================== setMinimumPurchaseFor() tests ====================
 
-    function test_setMinimumDepositFor() public {
+    function test_setMinimumPurchaseFor() public {
         uint256 newMinimum = 10_000_000; // $10
 
         vm.prank(owner);
         vm.expectEmit(true, true, true, true);
-        emit MinimumDepositSet(MINIMUM_DEPOSIT, newMinimum);
+        emit MinimumPurchaseSet(MINIMUM_PURCHASE, newMinimum);
 
-        usdcCredits.setMinimumDepositFor(newMinimum);
+        usdcCredits.setMinimumPurchaseFor(newMinimum);
 
-        assertEq(usdcCredits.minimumDeposit(), newMinimum);
+        assertEq(usdcCredits.minimumPurchase(), newMinimum);
     }
 
-    function test_setMinimumDepositFor_unauthorized() public {
+    function test_setMinimumPurchaseFor_unauthorized() public {
         vm.prank(unauthorizedCaller);
         vm.expectRevert("Ownable: caller is not the owner");
-        usdcCredits.setMinimumDepositFor(10_000_000);
+        usdcCredits.setMinimumPurchaseFor(10_000_000);
     }
 
-    function test_setMinimumDepositFor_toZero() public {
+    function test_setMinimumPurchaseFor_toZero() public {
         vm.prank(owner);
-        usdcCredits.setMinimumDepositFor(0);
+        usdcCredits.setMinimumPurchaseFor(0);
 
-        assertEq(usdcCredits.minimumDeposit(), 0);
+        assertEq(usdcCredits.minimumPurchase(), 0);
 
         // Any amount should now work
-        vm.startPrank(depositor);
+        vm.startPrank(purchaser);
         mockUSDC.approve(address(usdcCredits), 1);
         usdcCredits.purchaseCredits(1);
         vm.stopPrank();
@@ -266,7 +266,7 @@ contract USDCCreditsTest is Test {
         newProxyAdmin.upgradeAndCall(
             ITransparentUpgradeableProxy(address(proxy)),
             address(impl),
-            abi.encodeCall(USDCCredits.initialize, (address(0), MINIMUM_DEPOSIT))
+            abi.encodeCall(USDCCredits.initialize, (address(0), MINIMUM_PURCHASE))
         );
         // Owner should be zero — effectively locked, but not reverting
         assertEq(USDCCredits(address(proxy)).owner(), address(0));
@@ -277,7 +277,7 @@ contract USDCCreditsTest is Test {
     function test_immutables() public view {
         assertEq(address(usdcCredits.usdc()), address(mockUSDC));
         assertEq(usdcCredits.treasury(), treasuryAddr);
-        assertEq(usdcCredits.minimumDeposit(), MINIMUM_DEPOSIT);
+        assertEq(usdcCredits.minimumPurchase(), MINIMUM_PURCHASE);
         assertEq(usdcCredits.owner(), owner);
     }
 }

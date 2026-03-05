@@ -18,7 +18,7 @@ contract DeployUSDCCredits is Script {
         address initialOwner;
         IERC20 usdc;
         address treasury;
-        uint256 minimumDeposit;
+        uint256 minimumPurchase;
     }
 
     struct DeployedContracts {
@@ -55,7 +55,7 @@ contract DeployUSDCCredits is Script {
             .upgradeAndCall(
                 ITransparentUpgradeableProxy(address(proxy)),
                 address(impl),
-                abi.encodeCall(USDCCredits.initialize, (params.initialOwner, params.minimumDeposit))
+                abi.encodeCall(USDCCredits.initialize, (params.initialOwner, params.minimumPurchase))
             );
 
         console.log("USDCCredits proxy:", address(proxy));
@@ -71,7 +71,7 @@ contract DeployUSDCCredits is Script {
     }
 
     function parseDeployParams(string memory environment) public view returns (DeployParams memory) {
-        string memory configPath = string.concat("script/deploys/", environment, "/usdc-deposit-config.json");
+        string memory configPath = string.concat("script/deploys/", environment, "/usdc-credits-config.json");
         string memory json = vm.readFile(configPath);
 
         return DeployParams({
@@ -79,7 +79,7 @@ contract DeployUSDCCredits is Script {
             initialOwner: vm.parseJsonAddress(json, ".initialOwner"),
             usdc: IERC20(vm.parseJsonAddress(json, ".usdc")),
             treasury: vm.parseJsonAddress(json, ".treasury"),
-            minimumDeposit: vm.parseJsonUint(json, ".minimumDeposit")
+            minimumPurchase: vm.parseJsonUint(json, ".minimumPurchase")
         });
     }
 
@@ -98,7 +98,7 @@ contract DeployUSDCCredits is Script {
         string memory outputDir = string.concat("script/deploys/", environment);
         vm.createDir(outputDir, true);
 
-        string memory outputFile = string.concat(outputDir, "/usdc-deposit-output.json");
+        string memory outputFile = string.concat(outputDir, "/usdc-credits-output.json");
         vm.writeJson(finalJson, outputFile);
     }
 }

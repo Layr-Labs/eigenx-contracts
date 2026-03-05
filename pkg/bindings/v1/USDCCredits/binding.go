@@ -31,7 +31,7 @@ var (
 
 // USDCCreditsMetaData contains all meta data concerning the USDCCredits contract.
 var USDCCreditsMetaData = &bind.MetaData{
-	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_usdc\",\"type\":\"address\",\"internalType\":\"contractIERC20\"},{\"name\":\"_treasury\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"initialOwner\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_minimumDeposit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"minimumDeposit\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"owner\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"purchaseCredits\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"purchaseCreditsFor\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"renounceOwnership\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setMinimumDepositFor\",\"inputs\":[{\"name\":\"newMinimum\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"sweep\",\"inputs\":[{\"name\":\"token\",\"type\":\"address\",\"internalType\":\"contractIERC20\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"transferOwnership\",\"inputs\":[{\"name\":\"newOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"treasury\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"usdc\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIERC20\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"Deposit\",\"inputs\":[{\"name\":\"depositor\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MinimumDepositSet\",\"inputs\":[{\"name\":\"oldMinimum\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"newMinimum\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OwnershipTransferred\",\"inputs\":[{\"name\":\"previousOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"newOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"BelowMinimumDeposit\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ZeroAddress\",\"inputs\":[]}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_usdc\",\"type\":\"address\",\"internalType\":\"contractIERC20\"},{\"name\":\"_treasury\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"initialOwner\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_minimumPurchase\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"minimumPurchase\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"owner\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"purchaseCredits\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"purchaseCreditsFor\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"renounceOwnership\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setMinimumPurchaseFor\",\"inputs\":[{\"name\":\"newMinimum\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"sweep\",\"inputs\":[{\"name\":\"token\",\"type\":\"address\",\"internalType\":\"contractIERC20\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"transferOwnership\",\"inputs\":[{\"name\":\"newOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"treasury\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"usdc\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIERC20\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"CreditsPurchased\",\"inputs\":[{\"name\":\"purchaser\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MinimumPurchaseSet\",\"inputs\":[{\"name\":\"oldMinimum\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"newMinimum\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OwnershipTransferred\",\"inputs\":[{\"name\":\"previousOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"newOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"BelowMinimumPurchase\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ZeroAddress\",\"inputs\":[]}]",
 }
 
 // USDCCreditsABI is the input ABI used to generate the binding from.
@@ -180,12 +180,12 @@ func (_USDCCredits *USDCCreditsTransactorRaw) Transact(opts *bind.TransactOpts, 
 	return _USDCCredits.Contract.contract.Transact(opts, method, params...)
 }
 
-// MinimumDeposit is a free data retrieval call binding the contract method 0x636bfbab.
+// MinimumPurchase is a free data retrieval call binding the contract method 0xaa2de6c3.
 //
-// Solidity: function minimumDeposit() view returns(uint256)
-func (_USDCCredits *USDCCreditsCaller) MinimumDeposit(opts *bind.CallOpts) (*big.Int, error) {
+// Solidity: function minimumPurchase() view returns(uint256)
+func (_USDCCredits *USDCCreditsCaller) MinimumPurchase(opts *bind.CallOpts) (*big.Int, error) {
 	var out []interface{}
-	err := _USDCCredits.contract.Call(opts, &out, "minimumDeposit")
+	err := _USDCCredits.contract.Call(opts, &out, "minimumPurchase")
 
 	if err != nil {
 		return *new(*big.Int), err
@@ -197,18 +197,18 @@ func (_USDCCredits *USDCCreditsCaller) MinimumDeposit(opts *bind.CallOpts) (*big
 
 }
 
-// MinimumDeposit is a free data retrieval call binding the contract method 0x636bfbab.
+// MinimumPurchase is a free data retrieval call binding the contract method 0xaa2de6c3.
 //
-// Solidity: function minimumDeposit() view returns(uint256)
-func (_USDCCredits *USDCCreditsSession) MinimumDeposit() (*big.Int, error) {
-	return _USDCCredits.Contract.MinimumDeposit(&_USDCCredits.CallOpts)
+// Solidity: function minimumPurchase() view returns(uint256)
+func (_USDCCredits *USDCCreditsSession) MinimumPurchase() (*big.Int, error) {
+	return _USDCCredits.Contract.MinimumPurchase(&_USDCCredits.CallOpts)
 }
 
-// MinimumDeposit is a free data retrieval call binding the contract method 0x636bfbab.
+// MinimumPurchase is a free data retrieval call binding the contract method 0xaa2de6c3.
 //
-// Solidity: function minimumDeposit() view returns(uint256)
-func (_USDCCredits *USDCCreditsCallerSession) MinimumDeposit() (*big.Int, error) {
-	return _USDCCredits.Contract.MinimumDeposit(&_USDCCredits.CallOpts)
+// Solidity: function minimumPurchase() view returns(uint256)
+func (_USDCCredits *USDCCreditsCallerSession) MinimumPurchase() (*big.Int, error) {
+	return _USDCCredits.Contract.MinimumPurchase(&_USDCCredits.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -306,23 +306,23 @@ func (_USDCCredits *USDCCreditsCallerSession) Usdc() (common.Address, error) {
 
 // Initialize is a paid mutator transaction binding the contract method 0xcd6dc687.
 //
-// Solidity: function initialize(address initialOwner, uint256 _minimumDeposit) returns()
-func (_USDCCredits *USDCCreditsTransactor) Initialize(opts *bind.TransactOpts, initialOwner common.Address, _minimumDeposit *big.Int) (*types.Transaction, error) {
-	return _USDCCredits.contract.Transact(opts, "initialize", initialOwner, _minimumDeposit)
+// Solidity: function initialize(address initialOwner, uint256 _minimumPurchase) returns()
+func (_USDCCredits *USDCCreditsTransactor) Initialize(opts *bind.TransactOpts, initialOwner common.Address, _minimumPurchase *big.Int) (*types.Transaction, error) {
+	return _USDCCredits.contract.Transact(opts, "initialize", initialOwner, _minimumPurchase)
 }
 
 // Initialize is a paid mutator transaction binding the contract method 0xcd6dc687.
 //
-// Solidity: function initialize(address initialOwner, uint256 _minimumDeposit) returns()
-func (_USDCCredits *USDCCreditsSession) Initialize(initialOwner common.Address, _minimumDeposit *big.Int) (*types.Transaction, error) {
-	return _USDCCredits.Contract.Initialize(&_USDCCredits.TransactOpts, initialOwner, _minimumDeposit)
+// Solidity: function initialize(address initialOwner, uint256 _minimumPurchase) returns()
+func (_USDCCredits *USDCCreditsSession) Initialize(initialOwner common.Address, _minimumPurchase *big.Int) (*types.Transaction, error) {
+	return _USDCCredits.Contract.Initialize(&_USDCCredits.TransactOpts, initialOwner, _minimumPurchase)
 }
 
 // Initialize is a paid mutator transaction binding the contract method 0xcd6dc687.
 //
-// Solidity: function initialize(address initialOwner, uint256 _minimumDeposit) returns()
-func (_USDCCredits *USDCCreditsTransactorSession) Initialize(initialOwner common.Address, _minimumDeposit *big.Int) (*types.Transaction, error) {
-	return _USDCCredits.Contract.Initialize(&_USDCCredits.TransactOpts, initialOwner, _minimumDeposit)
+// Solidity: function initialize(address initialOwner, uint256 _minimumPurchase) returns()
+func (_USDCCredits *USDCCreditsTransactorSession) Initialize(initialOwner common.Address, _minimumPurchase *big.Int) (*types.Transaction, error) {
+	return _USDCCredits.Contract.Initialize(&_USDCCredits.TransactOpts, initialOwner, _minimumPurchase)
 }
 
 // PurchaseCredits is a paid mutator transaction binding the contract method 0xbef101fb.
@@ -388,25 +388,25 @@ func (_USDCCredits *USDCCreditsTransactorSession) RenounceOwnership() (*types.Tr
 	return _USDCCredits.Contract.RenounceOwnership(&_USDCCredits.TransactOpts)
 }
 
-// SetMinimumDepositFor is a paid mutator transaction binding the contract method 0x7110a9f6.
+// SetMinimumPurchaseFor is a paid mutator transaction binding the contract method 0x3a7f6b4e.
 //
-// Solidity: function setMinimumDepositFor(uint256 newMinimum) returns()
-func (_USDCCredits *USDCCreditsTransactor) SetMinimumDepositFor(opts *bind.TransactOpts, newMinimum *big.Int) (*types.Transaction, error) {
-	return _USDCCredits.contract.Transact(opts, "setMinimumDepositFor", newMinimum)
+// Solidity: function setMinimumPurchaseFor(uint256 newMinimum) returns()
+func (_USDCCredits *USDCCreditsTransactor) SetMinimumPurchaseFor(opts *bind.TransactOpts, newMinimum *big.Int) (*types.Transaction, error) {
+	return _USDCCredits.contract.Transact(opts, "setMinimumPurchaseFor", newMinimum)
 }
 
-// SetMinimumDepositFor is a paid mutator transaction binding the contract method 0x7110a9f6.
+// SetMinimumPurchaseFor is a paid mutator transaction binding the contract method 0x3a7f6b4e.
 //
-// Solidity: function setMinimumDepositFor(uint256 newMinimum) returns()
-func (_USDCCredits *USDCCreditsSession) SetMinimumDepositFor(newMinimum *big.Int) (*types.Transaction, error) {
-	return _USDCCredits.Contract.SetMinimumDepositFor(&_USDCCredits.TransactOpts, newMinimum)
+// Solidity: function setMinimumPurchaseFor(uint256 newMinimum) returns()
+func (_USDCCredits *USDCCreditsSession) SetMinimumPurchaseFor(newMinimum *big.Int) (*types.Transaction, error) {
+	return _USDCCredits.Contract.SetMinimumPurchaseFor(&_USDCCredits.TransactOpts, newMinimum)
 }
 
-// SetMinimumDepositFor is a paid mutator transaction binding the contract method 0x7110a9f6.
+// SetMinimumPurchaseFor is a paid mutator transaction binding the contract method 0x3a7f6b4e.
 //
-// Solidity: function setMinimumDepositFor(uint256 newMinimum) returns()
-func (_USDCCredits *USDCCreditsTransactorSession) SetMinimumDepositFor(newMinimum *big.Int) (*types.Transaction, error) {
-	return _USDCCredits.Contract.SetMinimumDepositFor(&_USDCCredits.TransactOpts, newMinimum)
+// Solidity: function setMinimumPurchaseFor(uint256 newMinimum) returns()
+func (_USDCCredits *USDCCreditsTransactorSession) SetMinimumPurchaseFor(newMinimum *big.Int) (*types.Transaction, error) {
+	return _USDCCredits.Contract.SetMinimumPurchaseFor(&_USDCCredits.TransactOpts, newMinimum)
 }
 
 // Sweep is a paid mutator transaction binding the contract method 0x01681a62.
@@ -451,9 +451,9 @@ func (_USDCCredits *USDCCreditsTransactorSession) TransferOwnership(newOwner com
 	return _USDCCredits.Contract.TransferOwnership(&_USDCCredits.TransactOpts, newOwner)
 }
 
-// USDCCreditsDepositIterator is returned from FilterDeposit and is used to iterate over the raw logs and unpacked data for Deposit events raised by the USDCCredits contract.
-type USDCCreditsDepositIterator struct {
-	Event *USDCCreditsDeposit // Event containing the contract specifics and raw log
+// USDCCreditsCreditsPurchasedIterator is returned from FilterCreditsPurchased and is used to iterate over the raw logs and unpacked data for CreditsPurchased events raised by the USDCCredits contract.
+type USDCCreditsCreditsPurchasedIterator struct {
+	Event *USDCCreditsCreditsPurchased // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -467,7 +467,7 @@ type USDCCreditsDepositIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *USDCCreditsDepositIterator) Next() bool {
+func (it *USDCCreditsCreditsPurchasedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -476,7 +476,7 @@ func (it *USDCCreditsDepositIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(USDCCreditsDeposit)
+			it.Event = new(USDCCreditsCreditsPurchased)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -491,7 +491,7 @@ func (it *USDCCreditsDepositIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(USDCCreditsDeposit)
+		it.Event = new(USDCCreditsCreditsPurchased)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -507,61 +507,61 @@ func (it *USDCCreditsDepositIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *USDCCreditsDepositIterator) Error() error {
+func (it *USDCCreditsCreditsPurchasedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *USDCCreditsDepositIterator) Close() error {
+func (it *USDCCreditsCreditsPurchasedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// USDCCreditsDeposit represents a Deposit event raised by the USDCCredits contract.
-type USDCCreditsDeposit struct {
-	Depositor common.Address
+// USDCCreditsCreditsPurchased represents a CreditsPurchased event raised by the USDCCredits contract.
+type USDCCreditsCreditsPurchased struct {
+	Purchaser common.Address
 	Account   common.Address
 	Amount    *big.Int
 	Raw       types.Log // Blockchain specific contextual infos
 }
 
-// FilterDeposit is a free log retrieval operation binding the contract event 0x5548c837ab068cf56a2c2479df0882a4922fd203edb7517321831d95078c5f62.
+// FilterCreditsPurchased is a free log retrieval operation binding the contract event 0x04297192211dd6ce4c4f2aac1d314a51360598d084022b5e7a4148b2dabc9898.
 //
-// Solidity: event Deposit(address indexed depositor, address indexed account, uint256 amount)
-func (_USDCCredits *USDCCreditsFilterer) FilterDeposit(opts *bind.FilterOpts, depositor []common.Address, account []common.Address) (*USDCCreditsDepositIterator, error) {
+// Solidity: event CreditsPurchased(address indexed purchaser, address indexed account, uint256 amount)
+func (_USDCCredits *USDCCreditsFilterer) FilterCreditsPurchased(opts *bind.FilterOpts, purchaser []common.Address, account []common.Address) (*USDCCreditsCreditsPurchasedIterator, error) {
 
-	var depositorRule []interface{}
-	for _, depositorItem := range depositor {
-		depositorRule = append(depositorRule, depositorItem)
+	var purchaserRule []interface{}
+	for _, purchaserItem := range purchaser {
+		purchaserRule = append(purchaserRule, purchaserItem)
 	}
 	var accountRule []interface{}
 	for _, accountItem := range account {
 		accountRule = append(accountRule, accountItem)
 	}
 
-	logs, sub, err := _USDCCredits.contract.FilterLogs(opts, "Deposit", depositorRule, accountRule)
+	logs, sub, err := _USDCCredits.contract.FilterLogs(opts, "CreditsPurchased", purchaserRule, accountRule)
 	if err != nil {
 		return nil, err
 	}
-	return &USDCCreditsDepositIterator{contract: _USDCCredits.contract, event: "Deposit", logs: logs, sub: sub}, nil
+	return &USDCCreditsCreditsPurchasedIterator{contract: _USDCCredits.contract, event: "CreditsPurchased", logs: logs, sub: sub}, nil
 }
 
-// WatchDeposit is a free log subscription operation binding the contract event 0x5548c837ab068cf56a2c2479df0882a4922fd203edb7517321831d95078c5f62.
+// WatchCreditsPurchased is a free log subscription operation binding the contract event 0x04297192211dd6ce4c4f2aac1d314a51360598d084022b5e7a4148b2dabc9898.
 //
-// Solidity: event Deposit(address indexed depositor, address indexed account, uint256 amount)
-func (_USDCCredits *USDCCreditsFilterer) WatchDeposit(opts *bind.WatchOpts, sink chan<- *USDCCreditsDeposit, depositor []common.Address, account []common.Address) (event.Subscription, error) {
+// Solidity: event CreditsPurchased(address indexed purchaser, address indexed account, uint256 amount)
+func (_USDCCredits *USDCCreditsFilterer) WatchCreditsPurchased(opts *bind.WatchOpts, sink chan<- *USDCCreditsCreditsPurchased, purchaser []common.Address, account []common.Address) (event.Subscription, error) {
 
-	var depositorRule []interface{}
-	for _, depositorItem := range depositor {
-		depositorRule = append(depositorRule, depositorItem)
+	var purchaserRule []interface{}
+	for _, purchaserItem := range purchaser {
+		purchaserRule = append(purchaserRule, purchaserItem)
 	}
 	var accountRule []interface{}
 	for _, accountItem := range account {
 		accountRule = append(accountRule, accountItem)
 	}
 
-	logs, sub, err := _USDCCredits.contract.WatchLogs(opts, "Deposit", depositorRule, accountRule)
+	logs, sub, err := _USDCCredits.contract.WatchLogs(opts, "CreditsPurchased", purchaserRule, accountRule)
 	if err != nil {
 		return nil, err
 	}
@@ -571,8 +571,8 @@ func (_USDCCredits *USDCCreditsFilterer) WatchDeposit(opts *bind.WatchOpts, sink
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(USDCCreditsDeposit)
-				if err := _USDCCredits.contract.UnpackLog(event, "Deposit", log); err != nil {
+				event := new(USDCCreditsCreditsPurchased)
+				if err := _USDCCredits.contract.UnpackLog(event, "CreditsPurchased", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -593,12 +593,12 @@ func (_USDCCredits *USDCCreditsFilterer) WatchDeposit(opts *bind.WatchOpts, sink
 	}), nil
 }
 
-// ParseDeposit is a log parse operation binding the contract event 0x5548c837ab068cf56a2c2479df0882a4922fd203edb7517321831d95078c5f62.
+// ParseCreditsPurchased is a log parse operation binding the contract event 0x04297192211dd6ce4c4f2aac1d314a51360598d084022b5e7a4148b2dabc9898.
 //
-// Solidity: event Deposit(address indexed depositor, address indexed account, uint256 amount)
-func (_USDCCredits *USDCCreditsFilterer) ParseDeposit(log types.Log) (*USDCCreditsDeposit, error) {
-	event := new(USDCCreditsDeposit)
-	if err := _USDCCredits.contract.UnpackLog(event, "Deposit", log); err != nil {
+// Solidity: event CreditsPurchased(address indexed purchaser, address indexed account, uint256 amount)
+func (_USDCCredits *USDCCreditsFilterer) ParseCreditsPurchased(log types.Log) (*USDCCreditsCreditsPurchased, error) {
+	event := new(USDCCreditsCreditsPurchased)
+	if err := _USDCCredits.contract.UnpackLog(event, "CreditsPurchased", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
@@ -739,9 +739,9 @@ func (_USDCCredits *USDCCreditsFilterer) ParseInitialized(log types.Log) (*USDCC
 	return event, nil
 }
 
-// USDCCreditsMinimumDepositSetIterator is returned from FilterMinimumDepositSet and is used to iterate over the raw logs and unpacked data for MinimumDepositSet events raised by the USDCCredits contract.
-type USDCCreditsMinimumDepositSetIterator struct {
-	Event *USDCCreditsMinimumDepositSet // Event containing the contract specifics and raw log
+// USDCCreditsMinimumPurchaseSetIterator is returned from FilterMinimumPurchaseSet and is used to iterate over the raw logs and unpacked data for MinimumPurchaseSet events raised by the USDCCredits contract.
+type USDCCreditsMinimumPurchaseSetIterator struct {
+	Event *USDCCreditsMinimumPurchaseSet // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -755,7 +755,7 @@ type USDCCreditsMinimumDepositSetIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *USDCCreditsMinimumDepositSetIterator) Next() bool {
+func (it *USDCCreditsMinimumPurchaseSetIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -764,7 +764,7 @@ func (it *USDCCreditsMinimumDepositSetIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(USDCCreditsMinimumDepositSet)
+			it.Event = new(USDCCreditsMinimumPurchaseSet)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -779,7 +779,7 @@ func (it *USDCCreditsMinimumDepositSetIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(USDCCreditsMinimumDepositSet)
+		it.Event = new(USDCCreditsMinimumPurchaseSet)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -795,42 +795,42 @@ func (it *USDCCreditsMinimumDepositSetIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *USDCCreditsMinimumDepositSetIterator) Error() error {
+func (it *USDCCreditsMinimumPurchaseSetIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *USDCCreditsMinimumDepositSetIterator) Close() error {
+func (it *USDCCreditsMinimumPurchaseSetIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// USDCCreditsMinimumDepositSet represents a MinimumDepositSet event raised by the USDCCredits contract.
-type USDCCreditsMinimumDepositSet struct {
+// USDCCreditsMinimumPurchaseSet represents a MinimumPurchaseSet event raised by the USDCCredits contract.
+type USDCCreditsMinimumPurchaseSet struct {
 	OldMinimum *big.Int
 	NewMinimum *big.Int
 	Raw        types.Log // Blockchain specific contextual infos
 }
 
-// FilterMinimumDepositSet is a free log retrieval operation binding the contract event 0x5da812c62f7dbf913260a291f7a1d45cb11ad9527d416f5affc1c3d348ea277e.
+// FilterMinimumPurchaseSet is a free log retrieval operation binding the contract event 0x5e8b575e5cb7032880f0fdfd3328e9bd70ecd2170c4875aa0eb267d553866b03.
 //
-// Solidity: event MinimumDepositSet(uint256 oldMinimum, uint256 newMinimum)
-func (_USDCCredits *USDCCreditsFilterer) FilterMinimumDepositSet(opts *bind.FilterOpts) (*USDCCreditsMinimumDepositSetIterator, error) {
+// Solidity: event MinimumPurchaseSet(uint256 oldMinimum, uint256 newMinimum)
+func (_USDCCredits *USDCCreditsFilterer) FilterMinimumPurchaseSet(opts *bind.FilterOpts) (*USDCCreditsMinimumPurchaseSetIterator, error) {
 
-	logs, sub, err := _USDCCredits.contract.FilterLogs(opts, "MinimumDepositSet")
+	logs, sub, err := _USDCCredits.contract.FilterLogs(opts, "MinimumPurchaseSet")
 	if err != nil {
 		return nil, err
 	}
-	return &USDCCreditsMinimumDepositSetIterator{contract: _USDCCredits.contract, event: "MinimumDepositSet", logs: logs, sub: sub}, nil
+	return &USDCCreditsMinimumPurchaseSetIterator{contract: _USDCCredits.contract, event: "MinimumPurchaseSet", logs: logs, sub: sub}, nil
 }
 
-// WatchMinimumDepositSet is a free log subscription operation binding the contract event 0x5da812c62f7dbf913260a291f7a1d45cb11ad9527d416f5affc1c3d348ea277e.
+// WatchMinimumPurchaseSet is a free log subscription operation binding the contract event 0x5e8b575e5cb7032880f0fdfd3328e9bd70ecd2170c4875aa0eb267d553866b03.
 //
-// Solidity: event MinimumDepositSet(uint256 oldMinimum, uint256 newMinimum)
-func (_USDCCredits *USDCCreditsFilterer) WatchMinimumDepositSet(opts *bind.WatchOpts, sink chan<- *USDCCreditsMinimumDepositSet) (event.Subscription, error) {
+// Solidity: event MinimumPurchaseSet(uint256 oldMinimum, uint256 newMinimum)
+func (_USDCCredits *USDCCreditsFilterer) WatchMinimumPurchaseSet(opts *bind.WatchOpts, sink chan<- *USDCCreditsMinimumPurchaseSet) (event.Subscription, error) {
 
-	logs, sub, err := _USDCCredits.contract.WatchLogs(opts, "MinimumDepositSet")
+	logs, sub, err := _USDCCredits.contract.WatchLogs(opts, "MinimumPurchaseSet")
 	if err != nil {
 		return nil, err
 	}
@@ -840,8 +840,8 @@ func (_USDCCredits *USDCCreditsFilterer) WatchMinimumDepositSet(opts *bind.Watch
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(USDCCreditsMinimumDepositSet)
-				if err := _USDCCredits.contract.UnpackLog(event, "MinimumDepositSet", log); err != nil {
+				event := new(USDCCreditsMinimumPurchaseSet)
+				if err := _USDCCredits.contract.UnpackLog(event, "MinimumPurchaseSet", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -862,12 +862,12 @@ func (_USDCCredits *USDCCreditsFilterer) WatchMinimumDepositSet(opts *bind.Watch
 	}), nil
 }
 
-// ParseMinimumDepositSet is a log parse operation binding the contract event 0x5da812c62f7dbf913260a291f7a1d45cb11ad9527d416f5affc1c3d348ea277e.
+// ParseMinimumPurchaseSet is a log parse operation binding the contract event 0x5e8b575e5cb7032880f0fdfd3328e9bd70ecd2170c4875aa0eb267d553866b03.
 //
-// Solidity: event MinimumDepositSet(uint256 oldMinimum, uint256 newMinimum)
-func (_USDCCredits *USDCCreditsFilterer) ParseMinimumDepositSet(log types.Log) (*USDCCreditsMinimumDepositSet, error) {
-	event := new(USDCCreditsMinimumDepositSet)
-	if err := _USDCCredits.contract.UnpackLog(event, "MinimumDepositSet", log); err != nil {
+// Solidity: event MinimumPurchaseSet(uint256 oldMinimum, uint256 newMinimum)
+func (_USDCCredits *USDCCreditsFilterer) ParseMinimumPurchaseSet(log types.Log) (*USDCCreditsMinimumPurchaseSet, error) {
+	event := new(USDCCreditsMinimumPurchaseSet)
+	if err := _USDCCredits.contract.UnpackLog(event, "MinimumPurchaseSet", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log

@@ -26,7 +26,7 @@ var (
 
 // USDCCreditsMetaData contains all meta data concerning the USDCCredits contract.
 var USDCCreditsMetaData = bind.MetaData{
-	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_usdc\",\"type\":\"address\",\"internalType\":\"contractIERC20\"},{\"name\":\"_treasury\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"initialOwner\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_minimumDeposit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"minimumDeposit\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"owner\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"purchaseCredits\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"purchaseCreditsFor\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"renounceOwnership\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setMinimumDepositFor\",\"inputs\":[{\"name\":\"newMinimum\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"sweep\",\"inputs\":[{\"name\":\"token\",\"type\":\"address\",\"internalType\":\"contractIERC20\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"transferOwnership\",\"inputs\":[{\"name\":\"newOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"treasury\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"usdc\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIERC20\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"Deposit\",\"inputs\":[{\"name\":\"depositor\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MinimumDepositSet\",\"inputs\":[{\"name\":\"oldMinimum\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"newMinimum\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OwnershipTransferred\",\"inputs\":[{\"name\":\"previousOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"newOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"BelowMinimumDeposit\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ZeroAddress\",\"inputs\":[]}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_usdc\",\"type\":\"address\",\"internalType\":\"contractIERC20\"},{\"name\":\"_treasury\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"initialOwner\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"_minimumPurchase\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"minimumPurchase\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"owner\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"purchaseCredits\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"purchaseCreditsFor\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"renounceOwnership\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setMinimumPurchaseFor\",\"inputs\":[{\"name\":\"newMinimum\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"sweep\",\"inputs\":[{\"name\":\"token\",\"type\":\"address\",\"internalType\":\"contractIERC20\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"transferOwnership\",\"inputs\":[{\"name\":\"newOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"treasury\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"usdc\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIERC20\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"CreditsPurchased\",\"inputs\":[{\"name\":\"purchaser\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MinimumPurchaseSet\",\"inputs\":[{\"name\":\"oldMinimum\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"newMinimum\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OwnershipTransferred\",\"inputs\":[{\"name\":\"previousOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"newOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"BelowMinimumPurchase\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ZeroAddress\",\"inputs\":[]}]",
 	ID:  "USDCCredits",
 }
 
@@ -66,9 +66,9 @@ func (uSDCCredits *USDCCredits) PackConstructor(_usdc common.Address, _treasury 
 // the contract method with ID 0xcd6dc687.  This method will panic if any
 // invalid/nil inputs are passed.
 //
-// Solidity: function initialize(address initialOwner, uint256 _minimumDeposit) returns()
-func (uSDCCredits *USDCCredits) PackInitialize(initialOwner common.Address, minimumDeposit *big.Int) []byte {
-	enc, err := uSDCCredits.abi.Pack("initialize", initialOwner, minimumDeposit)
+// Solidity: function initialize(address initialOwner, uint256 _minimumPurchase) returns()
+func (uSDCCredits *USDCCredits) PackInitialize(initialOwner common.Address, minimumPurchase *big.Int) []byte {
+	enc, err := uSDCCredits.abi.Pack("initialize", initialOwner, minimumPurchase)
 	if err != nil {
 		panic(err)
 	}
@@ -79,39 +79,39 @@ func (uSDCCredits *USDCCredits) PackInitialize(initialOwner common.Address, mini
 // the contract method with ID 0xcd6dc687.  This method will return an error
 // if any inputs are invalid/nil.
 //
-// Solidity: function initialize(address initialOwner, uint256 _minimumDeposit) returns()
-func (uSDCCredits *USDCCredits) TryPackInitialize(initialOwner common.Address, minimumDeposit *big.Int) ([]byte, error) {
-	return uSDCCredits.abi.Pack("initialize", initialOwner, minimumDeposit)
+// Solidity: function initialize(address initialOwner, uint256 _minimumPurchase) returns()
+func (uSDCCredits *USDCCredits) TryPackInitialize(initialOwner common.Address, minimumPurchase *big.Int) ([]byte, error) {
+	return uSDCCredits.abi.Pack("initialize", initialOwner, minimumPurchase)
 }
 
-// PackMinimumDeposit is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x636bfbab.  This method will panic if any
+// PackMinimumPurchase is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xaa2de6c3.  This method will panic if any
 // invalid/nil inputs are passed.
 //
-// Solidity: function minimumDeposit() view returns(uint256)
-func (uSDCCredits *USDCCredits) PackMinimumDeposit() []byte {
-	enc, err := uSDCCredits.abi.Pack("minimumDeposit")
+// Solidity: function minimumPurchase() view returns(uint256)
+func (uSDCCredits *USDCCredits) PackMinimumPurchase() []byte {
+	enc, err := uSDCCredits.abi.Pack("minimumPurchase")
 	if err != nil {
 		panic(err)
 	}
 	return enc
 }
 
-// TryPackMinimumDeposit is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x636bfbab.  This method will return an error
+// TryPackMinimumPurchase is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xaa2de6c3.  This method will return an error
 // if any inputs are invalid/nil.
 //
-// Solidity: function minimumDeposit() view returns(uint256)
-func (uSDCCredits *USDCCredits) TryPackMinimumDeposit() ([]byte, error) {
-	return uSDCCredits.abi.Pack("minimumDeposit")
+// Solidity: function minimumPurchase() view returns(uint256)
+func (uSDCCredits *USDCCredits) TryPackMinimumPurchase() ([]byte, error) {
+	return uSDCCredits.abi.Pack("minimumPurchase")
 }
 
-// UnpackMinimumDeposit is the Go binding that unpacks the parameters returned
-// from invoking the contract method with ID 0x636bfbab.
+// UnpackMinimumPurchase is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0xaa2de6c3.
 //
-// Solidity: function minimumDeposit() view returns(uint256)
-func (uSDCCredits *USDCCredits) UnpackMinimumDeposit(data []byte) (*big.Int, error) {
-	out, err := uSDCCredits.abi.Unpack("minimumDeposit", data)
+// Solidity: function minimumPurchase() view returns(uint256)
+func (uSDCCredits *USDCCredits) UnpackMinimumPurchase(data []byte) (*big.Int, error) {
+	out, err := uSDCCredits.abi.Unpack("minimumPurchase", data)
 	if err != nil {
 		return new(big.Int), err
 	}
@@ -220,26 +220,26 @@ func (uSDCCredits *USDCCredits) TryPackRenounceOwnership() ([]byte, error) {
 	return uSDCCredits.abi.Pack("renounceOwnership")
 }
 
-// PackSetMinimumDepositFor is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x7110a9f6.  This method will panic if any
+// PackSetMinimumPurchaseFor is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x3a7f6b4e.  This method will panic if any
 // invalid/nil inputs are passed.
 //
-// Solidity: function setMinimumDepositFor(uint256 newMinimum) returns()
-func (uSDCCredits *USDCCredits) PackSetMinimumDepositFor(newMinimum *big.Int) []byte {
-	enc, err := uSDCCredits.abi.Pack("setMinimumDepositFor", newMinimum)
+// Solidity: function setMinimumPurchaseFor(uint256 newMinimum) returns()
+func (uSDCCredits *USDCCredits) PackSetMinimumPurchaseFor(newMinimum *big.Int) []byte {
+	enc, err := uSDCCredits.abi.Pack("setMinimumPurchaseFor", newMinimum)
 	if err != nil {
 		panic(err)
 	}
 	return enc
 }
 
-// TryPackSetMinimumDepositFor is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x7110a9f6.  This method will return an error
+// TryPackSetMinimumPurchaseFor is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x3a7f6b4e.  This method will return an error
 // if any inputs are invalid/nil.
 //
-// Solidity: function setMinimumDepositFor(uint256 newMinimum) returns()
-func (uSDCCredits *USDCCredits) TryPackSetMinimumDepositFor(newMinimum *big.Int) ([]byte, error) {
-	return uSDCCredits.abi.Pack("setMinimumDepositFor", newMinimum)
+// Solidity: function setMinimumPurchaseFor(uint256 newMinimum) returns()
+func (uSDCCredits *USDCCredits) TryPackSetMinimumPurchaseFor(newMinimum *big.Int) ([]byte, error) {
+	return uSDCCredits.abi.Pack("setMinimumPurchaseFor", newMinimum)
 }
 
 // PackSweep is the Go binding used to pack the parameters required for calling
@@ -356,31 +356,31 @@ func (uSDCCredits *USDCCredits) UnpackUsdc(data []byte) (common.Address, error) 
 	return out0, nil
 }
 
-// USDCCreditsDeposit represents a Deposit event raised by the USDCCredits contract.
-type USDCCreditsDeposit struct {
-	Depositor common.Address
+// USDCCreditsCreditsPurchased represents a CreditsPurchased event raised by the USDCCredits contract.
+type USDCCreditsCreditsPurchased struct {
+	Purchaser common.Address
 	Account   common.Address
 	Amount    *big.Int
 	Raw       *types.Log // Blockchain specific contextual infos
 }
 
-const USDCCreditsDepositEventName = "Deposit"
+const USDCCreditsCreditsPurchasedEventName = "CreditsPurchased"
 
 // ContractEventName returns the user-defined event name.
-func (USDCCreditsDeposit) ContractEventName() string {
-	return USDCCreditsDepositEventName
+func (USDCCreditsCreditsPurchased) ContractEventName() string {
+	return USDCCreditsCreditsPurchasedEventName
 }
 
-// UnpackDepositEvent is the Go binding that unpacks the event data emitted
+// UnpackCreditsPurchasedEvent is the Go binding that unpacks the event data emitted
 // by contract.
 //
-// Solidity: event Deposit(address indexed depositor, address indexed account, uint256 amount)
-func (uSDCCredits *USDCCredits) UnpackDepositEvent(log *types.Log) (*USDCCreditsDeposit, error) {
-	event := "Deposit"
+// Solidity: event CreditsPurchased(address indexed purchaser, address indexed account, uint256 amount)
+func (uSDCCredits *USDCCredits) UnpackCreditsPurchasedEvent(log *types.Log) (*USDCCreditsCreditsPurchased, error) {
+	event := "CreditsPurchased"
 	if len(log.Topics) == 0 || log.Topics[0] != uSDCCredits.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
-	out := new(USDCCreditsDeposit)
+	out := new(USDCCreditsCreditsPurchased)
 	if len(log.Data) > 0 {
 		if err := uSDCCredits.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
 			return nil, err
@@ -440,30 +440,30 @@ func (uSDCCredits *USDCCredits) UnpackInitializedEvent(log *types.Log) (*USDCCre
 	return out, nil
 }
 
-// USDCCreditsMinimumDepositSet represents a MinimumDepositSet event raised by the USDCCredits contract.
-type USDCCreditsMinimumDepositSet struct {
+// USDCCreditsMinimumPurchaseSet represents a MinimumPurchaseSet event raised by the USDCCredits contract.
+type USDCCreditsMinimumPurchaseSet struct {
 	OldMinimum *big.Int
 	NewMinimum *big.Int
 	Raw        *types.Log // Blockchain specific contextual infos
 }
 
-const USDCCreditsMinimumDepositSetEventName = "MinimumDepositSet"
+const USDCCreditsMinimumPurchaseSetEventName = "MinimumPurchaseSet"
 
 // ContractEventName returns the user-defined event name.
-func (USDCCreditsMinimumDepositSet) ContractEventName() string {
-	return USDCCreditsMinimumDepositSetEventName
+func (USDCCreditsMinimumPurchaseSet) ContractEventName() string {
+	return USDCCreditsMinimumPurchaseSetEventName
 }
 
-// UnpackMinimumDepositSetEvent is the Go binding that unpacks the event data emitted
+// UnpackMinimumPurchaseSetEvent is the Go binding that unpacks the event data emitted
 // by contract.
 //
-// Solidity: event MinimumDepositSet(uint256 oldMinimum, uint256 newMinimum)
-func (uSDCCredits *USDCCredits) UnpackMinimumDepositSetEvent(log *types.Log) (*USDCCreditsMinimumDepositSet, error) {
-	event := "MinimumDepositSet"
+// Solidity: event MinimumPurchaseSet(uint256 oldMinimum, uint256 newMinimum)
+func (uSDCCredits *USDCCredits) UnpackMinimumPurchaseSetEvent(log *types.Log) (*USDCCreditsMinimumPurchaseSet, error) {
+	event := "MinimumPurchaseSet"
 	if len(log.Topics) == 0 || log.Topics[0] != uSDCCredits.abi.Events[event].ID {
 		return nil, errors.New("event signature mismatch")
 	}
-	out := new(USDCCreditsMinimumDepositSet)
+	out := new(USDCCreditsMinimumPurchaseSet)
 	if len(log.Data) > 0 {
 		if err := uSDCCredits.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
 			return nil, err
@@ -527,8 +527,8 @@ func (uSDCCredits *USDCCredits) UnpackOwnershipTransferredEvent(log *types.Log) 
 // UnpackError attempts to decode the provided error data using user-defined
 // error definitions.
 func (uSDCCredits *USDCCredits) UnpackError(raw []byte) (any, error) {
-	if bytes.Equal(raw[:4], uSDCCredits.abi.Errors["BelowMinimumDeposit"].ID.Bytes()[:4]) {
-		return uSDCCredits.UnpackBelowMinimumDepositError(raw[4:])
+	if bytes.Equal(raw[:4], uSDCCredits.abi.Errors["BelowMinimumPurchase"].ID.Bytes()[:4]) {
+		return uSDCCredits.UnpackBelowMinimumPurchaseError(raw[4:])
 	}
 	if bytes.Equal(raw[:4], uSDCCredits.abi.Errors["ZeroAddress"].ID.Bytes()[:4]) {
 		return uSDCCredits.UnpackZeroAddressError(raw[4:])
@@ -536,24 +536,24 @@ func (uSDCCredits *USDCCredits) UnpackError(raw []byte) (any, error) {
 	return nil, errors.New("Unknown error")
 }
 
-// USDCCreditsBelowMinimumDeposit represents a BelowMinimumDeposit error raised by the USDCCredits contract.
-type USDCCreditsBelowMinimumDeposit struct {
+// USDCCreditsBelowMinimumPurchase represents a BelowMinimumPurchase error raised by the USDCCredits contract.
+type USDCCreditsBelowMinimumPurchase struct {
 }
 
 // ErrorID returns the hash of canonical representation of the error's signature.
 //
-// Solidity: error BelowMinimumDeposit()
-func USDCCreditsBelowMinimumDepositErrorID() common.Hash {
-	return common.HexToHash("0x5bbe86227276c69438659323dae1bd8779fe44e8baecbdf64f7c198d89e7773b")
+// Solidity: error BelowMinimumPurchase()
+func USDCCreditsBelowMinimumPurchaseErrorID() common.Hash {
+	return common.HexToHash("0xfcd2aaeb2bc6df208c0090d05eb618ec2e0797f0f02d64db4a5a0f07df469148")
 }
 
-// UnpackBelowMinimumDepositError is the Go binding used to decode the provided
+// UnpackBelowMinimumPurchaseError is the Go binding used to decode the provided
 // error data into the corresponding Go error struct.
 //
-// Solidity: error BelowMinimumDeposit()
-func (uSDCCredits *USDCCredits) UnpackBelowMinimumDepositError(raw []byte) (*USDCCreditsBelowMinimumDeposit, error) {
-	out := new(USDCCreditsBelowMinimumDeposit)
-	if err := uSDCCredits.abi.UnpackIntoInterface(out, "BelowMinimumDeposit", raw); err != nil {
+// Solidity: error BelowMinimumPurchase()
+func (uSDCCredits *USDCCredits) UnpackBelowMinimumPurchaseError(raw []byte) (*USDCCreditsBelowMinimumPurchase, error) {
+	out := new(USDCCreditsBelowMinimumPurchase)
+	if err := uSDCCredits.abi.UnpackIntoInterface(out, "BelowMinimumPurchase", raw); err != nil {
 		return nil, err
 	}
 	return out, nil
