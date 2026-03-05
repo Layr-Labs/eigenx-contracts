@@ -21,7 +21,7 @@ import {AppController} from "../../src/AppController.sol";
 import {ComputeAVSRegistrar} from "../../src/ComputeAVSRegistrar.sol";
 import {ComputeOperator} from "../../src/ComputeOperator.sol";
 import {ImageAllowlist} from "../../src/ImageAllowlist.sol";
-import {USDCDeposit} from "../../src/USDCDeposit.sol";
+import {USDCCredits} from "../../src/USDCCredits.sol";
 
 library Env {
     using ZEnvHelpers for *;
@@ -106,8 +106,8 @@ library Env {
         return ImageAllowlist(_deployedProxy(type(ImageAllowlist).name));
     }
 
-    function usdcDeposit(DeployedProxy) internal view returns (USDCDeposit) {
-        return USDCDeposit(_deployedProxy(type(USDCDeposit).name));
+    function usdcCredits(DeployedProxy) internal view returns (USDCCredits) {
+        return USDCCredits(_deployedProxy(type(USDCCredits).name));
     }
 
     function appBeacon(DeployedBeacon) internal view returns (UpgradeableBeacon) {
@@ -137,8 +137,8 @@ library Env {
         return ImageAllowlist(_deployedImpl(type(ImageAllowlist).name));
     }
 
-    function usdcDeposit(DeployedImpl) internal view returns (USDCDeposit) {
-        return USDCDeposit(_deployedImpl(type(USDCDeposit).name));
+    function usdcCredits(DeployedImpl) internal view returns (USDCCredits) {
+        return USDCCredits(_deployedImpl(type(USDCCredits).name));
     }
 
     /**
@@ -198,8 +198,8 @@ library Env {
         return _envAddress("USDC_TREASURY");
     }
 
-    function USDC_MINIMUM_DEPOSIT() internal view returns (uint256) {
-        return _envU256("USDC_MINIMUM_DEPOSIT");
+    function USDC_MINIMUM_PURCHASE() internal view returns (uint256) {
+        return _envU256("USDC_MINIMUM_PURCHASE");
     }
 
     /**
