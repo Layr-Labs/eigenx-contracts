@@ -16,8 +16,5 @@ contract App is Initializable, SemVerMixin, AppStorage {
     }
 
     /// @inheritdoc IApp
-    function initialize(address admin) external initializer {
-        // Grant admin permissions to the owner
-        permissionController.addPendingAdmin(address(this), admin);
-    }
+    function initialize(address) external initializer {}
 }

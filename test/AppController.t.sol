@@ -11,7 +11,7 @@ contract AppControllerTest is ComputeDeployer {
     bytes32 public constant SALT = keccak256("test_salt");
 
     // Event definitions for testing
-    event AppCreated(address indexed creator, IApp indexed app, uint32 operatorSetId);
+    event AppCreated(address indexed owner, IApp indexed app, uint32 operatorSetId);
     event AppTerminatedByAdmin(IApp indexed app);
     event AppSuspended(IApp indexed app);
     event AppSuspendedByAdmin(IApp indexed app);
@@ -200,6 +200,120 @@ contract AppControllerTest is ComputeDeployer {
         appController.createApp(keccak256("test2"), _assembleRelease());
     }
 
+    // ========== createAppForTeam Tests ==========
+
+    function test_createAppForTeam_adminCanCreateForTeam() public {
+        // Developer first creates an app to become admin of their team
+        vm.prank(developer);
+        appController.createApp(keccak256("initial_app"), _assembleRelease());
+
+        // Grant admin role to adminAddress on developer's team
+        address adminAddress = makeAddr("teamAdmin");
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.ADMIN, adminAddress);
+
+        // Admin creates app for developer's team
+        vm.prank(adminAddress);
+        IApp app = appController.createAppForTeam(developer, keccak256("team_app"), _assembleRelease());
+
+        // Verify app is owned by developer (team)
+        assertEq(appController.getAppOwner(app), developer);
+        // Verify quota was deducted from developer, not adminAddress
+        assertEq(appController.getActiveAppCount(developer), 2); // 1 initial + 1 team app
+        assertEq(appController.getActiveAppCount(adminAddress), 0);
+    }
+
+    function test_createAppForTeam_ownerCanCreateForOwnTeam() public {
+        // Developer (team owner) can also use createAppForTeam for themselves
+        vm.prank(developer);
+        IApp app = appController.createAppForTeam(developer, keccak256("own_team_app"), _assembleRelease());
+
+        assertEq(appController.getAppOwner(app), developer);
+        assertEq(appController.getActiveAppCount(developer), 1);
+    }
+
+    function test_createAppForTeam_nonAdminCannotCreate() public {
+        address nonAdmin = makeAddr("nonAdmin");
+
+        vm.prank(nonAdmin);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.createAppForTeam(developer, keccak256("unauthorized"), _assembleRelease());
+    }
+
+    function test_createAppForTeam_pauserCannotCreate() public {
+        // Developer first creates an app to become admin of their team
+        vm.prank(developer);
+        appController.createApp(keccak256("initial_app"), _assembleRelease());
+
+        address pauser = makeAddr("pauser");
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.PAUSER, pauser);
+
+        vm.prank(pauser);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.createAppForTeam(developer, keccak256("pauser_app"), _assembleRelease());
+    }
+
+    function test_createAppForTeam_developerRoleCannotCreate() public {
+        // Developer first creates an app to become admin of their team
+        vm.prank(developer);
+        appController.createApp(keccak256("initial_app"), _assembleRelease());
+
+        address dev = makeAddr("dev");
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.DEVELOPER, dev);
+
+        vm.prank(dev);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.createAppForTeam(developer, keccak256("dev_app"), _assembleRelease());
+    }
+
+    function test_createAppForTeam_quotaDeductedFromTeam() public {
+        // Set up team with limited quota
+        _setMaxActiveAppsPerUser(developer, 3);
+
+        // Developer first creates an app to become admin of their team
+        vm.prank(developer);
+        appController.createApp(keccak256("initial_app"), _assembleRelease());
+
+        address teamAdmin = makeAddr("teamAdmin");
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.ADMIN, teamAdmin);
+
+        // Admin creates 2 more apps for the team
+        vm.startPrank(teamAdmin);
+        appController.createAppForTeam(developer, keccak256("app1"), _assembleRelease());
+        appController.createAppForTeam(developer, keccak256("app2"), _assembleRelease());
+        vm.stopPrank();
+
+        // Team quota is exhausted (1 initial + 2 admin created = 3)
+        assertEq(appController.getActiveAppCount(developer), 3);
+
+        // Admin cannot create more apps for the team
+        vm.prank(teamAdmin);
+        vm.expectRevert(abi.encodeWithSelector(IAppController.MaxActiveAppsExceeded.selector));
+        appController.createAppForTeam(developer, keccak256("app3"), _assembleRelease());
+    }
+
+    function test_createAppForTeam_deterministicAddress() public {
+        // Developer first creates an app to become admin of their team
+        vm.prank(developer);
+        appController.createApp(keccak256("initial_app"), _assembleRelease());
+
+        address teamAdmin = makeAddr("teamAdmin");
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.ADMIN, teamAdmin);
+
+        // Calculate expected app address using team (developer), not caller (teamAdmin)
+        bytes32 salt = keccak256("deterministic");
+        IApp expectedApp = appController.calculateAppId(developer, salt);
+
+        vm.prank(teamAdmin);
+        IApp actualApp = appController.createAppForTeam(developer, salt, _assembleRelease());
+
+        assertEq(address(actualApp), address(expectedApp));
+    }
+
     // Admin and permission tests
     function test_setMaxGlobalActiveApps() public {
         vm.prank(admin);
@@ -231,7 +345,6 @@ contract AppControllerTest is ComputeDeployer {
         // Create an app first
         vm.prank(developer);
         IApp app = appController.createApp(keccak256("upgrade_test"), _assembleRelease());
-        _acceptAppAdmin(app);
 
         // Prepare a release
         IReleaseManagerTypes.Artifact[] memory artifacts = new IReleaseManagerTypes.Artifact[](1);
@@ -279,7 +392,6 @@ contract AppControllerTest is ComputeDeployer {
         // Create an app
         vm.prank(developer);
         IApp app = appController.createApp(keccak256("stop_test"), _assembleRelease());
-        _acceptAppAdmin(app);
 
         // Stop the app
         vm.prank(developer);
@@ -294,7 +406,6 @@ contract AppControllerTest is ComputeDeployer {
         // Create an app
         vm.prank(developer);
         IApp app = appController.createApp(keccak256("stop_test"), _assembleRelease());
-        _acceptAppAdmin(app);
 
         // Stop the app
         vm.prank(developer);
@@ -310,7 +421,6 @@ contract AppControllerTest is ComputeDeployer {
         // Create an app
         vm.prank(developer);
         IApp app = appController.createApp(keccak256("start_test"), _assembleRelease());
-        _acceptAppAdmin(app);
 
         // Stop the app first
         vm.prank(developer);
@@ -329,7 +439,6 @@ contract AppControllerTest is ComputeDeployer {
         // Create an app
         vm.prank(developer);
         IApp app = appController.createApp(keccak256("start_test"), _assembleRelease());
-        _acceptAppAdmin(app);
 
         // Verify status changed to STARTED
         IAppController.AppStatus statusBefore = appController.getAppStatus(app);
@@ -348,7 +457,6 @@ contract AppControllerTest is ComputeDeployer {
         // Create and terminate an app
         vm.prank(developer);
         IApp app = appController.createApp(keccak256("start_terminated"), _assembleRelease());
-        _acceptAppAdmin(app);
 
         vm.prank(developer);
         appController.terminateApp(app);
@@ -379,7 +487,6 @@ contract AppControllerTest is ComputeDeployer {
     function test_terminateApp() public {
         vm.prank(developer);
         IApp app = appController.createApp(keccak256("terminate_test"), _assembleRelease());
-        _acceptAppAdmin(app);
 
         // Terminate the app (can be done from any active status)
         vm.prank(developer);
@@ -393,7 +500,6 @@ contract AppControllerTest is ComputeDeployer {
     function test_terminateApp_alreadyTerminated() public {
         vm.prank(developer);
         IApp app = appController.createApp(keccak256("double_terminate"), _assembleRelease());
-        _acceptAppAdmin(app);
 
         vm.prank(developer);
         appController.terminateApp(app);
@@ -439,7 +545,6 @@ contract AppControllerTest is ComputeDeployer {
         for (uint256 i = 0; i < 5; i++) {
             vm.prank(developer);
             createdApps[i] = appController.createApp(keccak256(abi.encodePacked("offset_test_", i)), _assembleRelease());
-            _acceptAppAdmin(createdApps[i]);
         }
 
         // Test 1: Normal pagination - offset 0, limit 3
@@ -486,7 +591,6 @@ contract AppControllerTest is ComputeDeployer {
             vm.prank(developer);
             createdApps[i] =
                 appController.createApp(keccak256(abi.encodePacked("dev_offset_test_", i)), _assembleRelease());
-            _acceptAppAdmin(createdApps[i]);
         }
 
         // Test 1: Developer pagination - offset 0, limit 3 (first 3 of developer's apps)
@@ -525,13 +629,9 @@ contract AppControllerTest is ComputeDeployer {
         _setMaxActiveAppsPerUser(otherDev, 10);
         vm.prank(otherDev);
         IApp otherApp1 = appController.createApp(keccak256("mixed_test_1"), _assembleRelease());
-        vm.prank(otherDev);
-        permissionController.acceptAdmin(address(otherApp1));
 
         vm.prank(otherDev);
         IApp otherApp2 = appController.createApp(keccak256("mixed_test_2"), _assembleRelease());
-        vm.prank(otherDev);
-        permissionController.acceptAdmin(address(otherApp2));
 
         // Test true pagination: first developer should still get their 5 apps in order
         (IApp[] memory devApps,) = appController.getAppsByDeveloper(developer, 0, 10);
@@ -561,8 +661,7 @@ contract AppControllerTest is ComputeDeployer {
         IApp[] memory createdApps = new IApp[](5);
         for (uint256 i = 0; i < 5; i++) {
             vm.prank(developer);
-            createdApps[i] =
-                appController.createApp(keccak256(abi.encodePacked("creator_test_", i)), _assembleRelease());
+            createdApps[i] = appController.createApp(keccak256(abi.encodePacked("owner_test_", i)), _assembleRelease());
         }
 
         // Test 1: Creator pagination - offset 0, limit 3 (first 3 of creator's apps)
@@ -593,16 +692,16 @@ contract AppControllerTest is ComputeDeployer {
         assertEq(apps5.length, 0);
 
         // Test 6: Unknown creator (should return empty)
-        address otherDev = makeAddr("otherCreator");
+        address otherDev = makeAddr("otherOwner");
         (IApp[] memory apps6,) = appController.getAppsByCreator(otherDev, 0, 10);
         assertEq(apps6.length, 0);
 
         // Test 7: Mixed ownership scenario - create app for another creator
         _setMaxActiveAppsPerUser(otherDev, 10);
         vm.prank(otherDev);
-        IApp otherApp1 = appController.createApp(keccak256("creator_mixed_test_1"), _assembleRelease());
+        IApp otherApp1 = appController.createApp(keccak256("owner_mixed_test_1"), _assembleRelease());
         vm.prank(otherDev);
-        IApp otherApp2 = appController.createApp(keccak256("creator_mixed_test_2"), _assembleRelease());
+        IApp otherApp2 = appController.createApp(keccak256("owner_mixed_test_2"), _assembleRelease());
 
         // Test pagination: first creator should still get their 5 apps in order
         (IApp[] memory devApps,) = appController.getAppsByCreator(developer, 0, 10);
@@ -619,42 +718,33 @@ contract AppControllerTest is ComputeDeployer {
     }
 
     function test_getAppsByCreator_worksWithoutAdminRights() public {
+        // Developer creates two apps
         vm.prank(developer);
         IApp app1 = appController.createApp(keccak256("admin_test_1"), _assembleRelease());
         vm.prank(developer);
         IApp app2 = appController.createApp(keccak256("admin_test_2"), _assembleRelease());
 
-        // Only accept admin on app1, leave app2 without accepting admin
-        vm.prank(developer);
-        permissionController.acceptAdmin(address(app1));
-
-        // getAppsByCreator should return BOTH apps (filters by creator, not admin)
+        // getAppsByCreator should return BOTH apps (filters by creator)
         (IApp[] memory creatorApps,) = appController.getAppsByCreator(developer, 0, 10);
         assertEq(creatorApps.length, 2);
         assertEq(address(creatorApps[0]), address(app1));
         assertEq(address(creatorApps[1]), address(app2));
 
-        // getAppsByDeveloper should only return app1 (developer only accepted admin on app1)
+        // getAppsByDeveloper should also return both (developer has ADMIN role on their own team)
         (IApp[] memory devApps,) = appController.getAppsByDeveloper(developer, 0, 10);
-        assertEq(devApps.length, 1);
+        assertEq(devApps.length, 2);
         assertEq(address(devApps[0]), address(app1));
+        assertEq(address(devApps[1]), address(app2));
 
-        // Verify the creator field is set correctly for both apps
-        assertEq(appController.getAppCreator(app1), developer);
-        assertEq(appController.getAppCreator(app2), developer);
+        // Verify the owner field is set correctly for both apps
+        assertEq(appController.getAppOwner(app1), developer);
+        assertEq(appController.getAppOwner(app2), developer);
 
-        // Verify developer is only admin of app1
-        assertTrue(permissionController.isAdmin(address(app1), developer));
-        assertFalse(permissionController.isAdmin(address(app2), developer));
+        // Verify developer has ADMIN role via AccessControl
+        assertTrue(appController.hasTeamRole(developer, IAppController.TeamRole.ADMIN, developer));
     }
 
     // ========== Helper Functions ==========
-
-    function _acceptAppAdmin(IApp app) internal {
-        // Accept admin permissions on the app (developer should be pending admin after app creation)
-        vm.prank(developer);
-        permissionController.acceptAdmin(address(app));
-    }
 
     function test_activeAppCounting_terminationFreesUpCapacity() public {
         // Set user to have only 2 active apps max
@@ -676,10 +766,6 @@ contract AppControllerTest is ComputeDeployer {
         vm.expectRevert(abi.encodeWithSelector(IAppController.MaxActiveAppsExceeded.selector));
         appController.createApp(keccak256("capacity_test_3"), _assembleRelease());
 
-        // Accept admin for app1 so we can terminate it
-        vm.prank(user);
-        permissionController.acceptAdmin(address(app1));
-
         // Terminate app1 - should free up capacity
         vm.prank(user);
         appController.terminateApp(app1);
@@ -696,8 +782,8 @@ contract AppControllerTest is ComputeDeployer {
         assertEq(appController.getActiveAppCount(user), 2);
         assertEq(appController.globalActiveAppCount(), 2);
 
-        // Verify app creator is tracked correctly
-        assertEq(appController.getAppCreator(app3), user);
+        // Verify app owner is tracked correctly
+        assertEq(appController.getAppOwner(app3), user);
     }
 
     function test_terminateAppByAdmin_notAuthorized() public {
@@ -739,7 +825,6 @@ contract AppControllerTest is ComputeDeployer {
         // Create an app
         vm.prank(developer);
         IApp app = appController.createApp(keccak256("metadata_test"), _assembleRelease());
-        _acceptAppAdmin(app);
 
         string memory newMetadataURI = "https://example.com/metadata";
 
@@ -767,7 +852,6 @@ contract AppControllerTest is ComputeDeployer {
         // Create an app
         vm.prank(developer);
         IApp app = appController.createApp(keccak256("metadata_terminated"), _assembleRelease());
-        _acceptAppAdmin(app);
 
         // Terminate the app
         vm.prank(developer);
@@ -967,14 +1051,6 @@ contract AppControllerTest is ComputeDeployer {
         vm.prank(admin);
         appController.setMaxActiveAppsPerUser(user, 10);
 
-        // Accept admin for apps we want to manipulate
-        vm.prank(user);
-        permissionController.acceptAdmin(address(app1));
-        vm.prank(user);
-        permissionController.acceptAdmin(address(app2));
-        vm.prank(user);
-        permissionController.acceptAdmin(address(app4));
-
         // Set up different states:
         // app1 -> STARTED
         vm.prank(user);
@@ -1065,12 +1141,6 @@ contract AppControllerTest is ComputeDeployer {
         vm.prank(admin);
         appController.setMaxActiveAppsPerUser(user, 2);
 
-        // Accept admin to start apps
-        vm.prank(user);
-        permissionController.acceptAdmin(address(app1));
-        vm.prank(user);
-        permissionController.acceptAdmin(address(app2));
-
         // User resumes apps
         vm.prank(user);
         appController.startApp(app1);
@@ -1082,5 +1152,604 @@ contract AppControllerTest is ComputeDeployer {
         assertEq(uint256(appController.getAppStatus(app2)), uint256(IAppController.AppStatus.STARTED));
         assertEq(appController.getActiveAppCount(user), 2);
         assertEq(appController.getMaxActiveAppsPerUser(user), 2);
+    }
+
+    // ========== Team Role-Based Access Control Tests ==========
+
+    function test_teamAdminHasImplicitAccess() public {
+        // Developer creates an app (developer is the team admin via PermissionController)
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("admin_access"), _assembleRelease());
+
+        // Team admin should have implicit access to all roles
+        assertTrue(appController.hasTeamRole(developer, IAppController.TeamRole.DEVELOPER, developer));
+        assertTrue(appController.hasTeamRole(developer, IAppController.TeamRole.PAUSER, developer));
+
+        // Team admin can perform all actions
+        vm.prank(developer);
+        appController.stopApp(app);
+
+        vm.prank(developer);
+        appController.startApp(app);
+
+        vm.prank(developer);
+        appController.updateAppMetadataURI(app, "https://example.com/admin");
+    }
+
+    function test_grantTeamRole_byAdmin() public {
+        // Developer creates an app
+        vm.prank(developer);
+        appController.createApp(keccak256("grant_role"), _assembleRelease());
+
+        // Admin grants PAUSER role to user
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.PAUSER, user);
+
+        // Verify user has PAUSER role
+        assertTrue(appController.hasTeamRole(developer, IAppController.TeamRole.PAUSER, user));
+
+        // User should not have DEVELOPER role
+        assertFalse(appController.hasTeamRole(developer, IAppController.TeamRole.DEVELOPER, user));
+    }
+
+    function test_grantTeamRole_byGrantedAdmin() public {
+        // Developer creates an app
+        vm.prank(developer);
+        appController.createApp(keccak256("granted_admin_grant"), _assembleRelease());
+
+        // Grant ADMIN role to user
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.ADMIN, user);
+
+        // User (now admin) can grant roles to others
+        address otherUser = makeAddr("otherUser");
+        vm.prank(user);
+        appController.grantTeamRole(developer, IAppController.TeamRole.DEVELOPER, otherUser);
+
+        // Verify otherUser has DEVELOPER role
+        assertTrue(appController.hasTeamRole(developer, IAppController.TeamRole.DEVELOPER, otherUser));
+    }
+
+    function test_grantTeamRole_unauthorized() public {
+        // Developer creates an app
+        vm.prank(developer);
+        appController.createApp(keccak256("unauth_grant"), _assembleRelease());
+
+        // User (not owner or admin) tries to grant role - should fail
+        vm.prank(user);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.grantTeamRole(developer, IAppController.TeamRole.PAUSER, makeAddr("someone"));
+    }
+
+    function test_revokeTeamRole() public {
+        // Developer creates an app
+        vm.prank(developer);
+        appController.createApp(keccak256("revoke_role"), _assembleRelease());
+
+        // Owner grants DEVELOPER role to user
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.DEVELOPER, user);
+        assertTrue(appController.hasTeamRole(developer, IAppController.TeamRole.DEVELOPER, user));
+
+        // Owner revokes the role
+        vm.prank(developer);
+        appController.revokeTeamRole(developer, IAppController.TeamRole.DEVELOPER, user);
+
+        // Verify role is revoked
+        assertFalse(appController.hasTeamRole(developer, IAppController.TeamRole.DEVELOPER, user));
+    }
+
+    function test_renounceTeamRole() public {
+        // Developer creates an app
+        vm.prank(developer);
+        appController.createApp(keccak256("renounce_role"), _assembleRelease());
+
+        // Admin grants DEVELOPER role to user
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.DEVELOPER, user);
+        assertTrue(appController.hasTeamRole(developer, IAppController.TeamRole.DEVELOPER, user));
+
+        // User renounces their own role
+        vm.prank(user);
+        appController.renounceTeamRole(developer, IAppController.TeamRole.DEVELOPER);
+
+        // Verify role is renounced
+        assertFalse(appController.hasTeamRole(developer, IAppController.TeamRole.DEVELOPER, user));
+    }
+
+    function test_renounceTeamRole_cannotRenounceLastAdmin() public {
+        // Developer creates an app (becomes sole admin)
+        vm.prank(developer);
+        appController.createApp(keccak256("last_admin"), _assembleRelease());
+
+        // Developer tries to renounce their admin role - should fail
+        vm.prank(developer);
+        vm.expectRevert(IAppController.CannotRevokeLastAdmin.selector);
+        appController.renounceTeamRole(developer, IAppController.TeamRole.ADMIN);
+
+        // Verify developer is still admin
+        assertTrue(appController.hasTeamRole(developer, IAppController.TeamRole.ADMIN, developer));
+    }
+
+    function test_renounceTeamRole_canRenounceIfNotLastAdmin() public {
+        // Developer creates an app (becomes sole admin)
+        vm.prank(developer);
+        appController.createApp(keccak256("multi_admin"), _assembleRelease());
+
+        // Grant admin to another user
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.ADMIN, user);
+
+        // Now developer can renounce their admin role
+        vm.prank(developer);
+        appController.renounceTeamRole(developer, IAppController.TeamRole.ADMIN);
+
+        // Verify developer is no longer admin
+        assertFalse(appController.hasTeamRole(developer, IAppController.TeamRole.ADMIN, developer));
+        // But user is still admin
+        assertTrue(appController.hasTeamRole(developer, IAppController.TeamRole.ADMIN, user));
+    }
+
+    function test_revokeTeamRole_cannotRevokeLastAdmin() public {
+        // Developer creates an app (becomes sole admin)
+        vm.prank(developer);
+        appController.createApp(keccak256("revoke_last_admin"), _assembleRelease());
+
+        // Developer tries to revoke their own admin role - should fail
+        vm.prank(developer);
+        vm.expectRevert(IAppController.CannotRevokeLastAdmin.selector);
+        appController.revokeTeamRole(developer, IAppController.TeamRole.ADMIN, developer);
+
+        // Verify developer is still admin
+        assertTrue(appController.hasTeamRole(developer, IAppController.TeamRole.ADMIN, developer));
+    }
+
+    function test_getTeamRoleMemberCount() public {
+        // Developer creates an app
+        vm.prank(developer);
+        appController.createApp(keccak256("member_count"), _assembleRelease());
+
+        // Initially only developer is admin
+        assertEq(appController.getTeamRoleMemberCount(developer, IAppController.TeamRole.ADMIN), 1);
+        assertEq(appController.getTeamRoleMemberCount(developer, IAppController.TeamRole.DEVELOPER), 0);
+
+        // Grant admin to user
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.ADMIN, user);
+        assertEq(appController.getTeamRoleMemberCount(developer, IAppController.TeamRole.ADMIN), 2);
+
+        // Grant developer role to user
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.DEVELOPER, user);
+        assertEq(appController.getTeamRoleMemberCount(developer, IAppController.TeamRole.DEVELOPER), 1);
+    }
+
+    function test_getTeamRoleMember() public {
+        // Developer creates an app
+        vm.prank(developer);
+        appController.createApp(keccak256("role_member"), _assembleRelease());
+
+        // Developer is at index 0
+        assertEq(appController.getTeamRoleMember(developer, IAppController.TeamRole.ADMIN, 0), developer);
+
+        // Grant admin to user
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.ADMIN, user);
+
+        // User is at index 1
+        assertEq(appController.getTeamRoleMember(developer, IAppController.TeamRole.ADMIN, 1), user);
+    }
+
+    function test_getTeamRoleMembers() public {
+        // Developer creates an app
+        vm.prank(developer);
+        appController.createApp(keccak256("role_members"), _assembleRelease());
+
+        // Initially only developer is admin
+        address[] memory admins = appController.getTeamRoleMembers(developer, IAppController.TeamRole.ADMIN);
+        assertEq(admins.length, 1);
+        assertEq(admins[0], developer);
+
+        // Empty role returns empty array
+        address[] memory pausers = appController.getTeamRoleMembers(developer, IAppController.TeamRole.PAUSER);
+        assertEq(pausers.length, 0);
+
+        // Grant admin and pauser to user
+        vm.startPrank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.ADMIN, user);
+        appController.grantTeamRole(developer, IAppController.TeamRole.PAUSER, user);
+        vm.stopPrank();
+
+        // Check admins
+        admins = appController.getTeamRoleMembers(developer, IAppController.TeamRole.ADMIN);
+        assertEq(admins.length, 2);
+        assertEq(admins[0], developer);
+        assertEq(admins[1], user);
+
+        // Check pausers
+        pausers = appController.getTeamRoleMembers(developer, IAppController.TeamRole.PAUSER);
+        assertEq(pausers.length, 1);
+        assertEq(pausers[0], user);
+    }
+
+    function test_grantedAdmin_hasAllPermissions() public {
+        // Developer creates an app
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("granted_admin_perms"), _assembleRelease());
+
+        // Grant ADMIN role to user
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.ADMIN, user);
+
+        // Admin should have all role permissions
+        assertTrue(appController.hasTeamRole(developer, IAppController.TeamRole.DEVELOPER, user));
+        assertTrue(appController.hasTeamRole(developer, IAppController.TeamRole.PAUSER, user));
+
+        // Admin can do PAUSER actions (stop app)
+        vm.prank(user);
+        appController.stopApp(app);
+
+        // Admin can do DEVELOPER actions (update metadata)
+        vm.prank(user);
+        appController.updateAppMetadataURI(app, "https://admin-updated.com");
+
+        // Admin can do ADMIN actions (start app)
+        vm.prank(user);
+        appController.startApp(app);
+    }
+
+    function test_developerRole_canOnlyUpdateMetadata() public {
+        // Developer creates an app
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("dev_role"), _assembleRelease());
+
+        // Admin grants DEVELOPER role to user
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.DEVELOPER, user);
+
+        // Developer should only have DEVELOPER permission (no overlap with PAUSER)
+        assertTrue(appController.hasTeamRole(developer, IAppController.TeamRole.DEVELOPER, user));
+        assertFalse(appController.hasTeamRole(developer, IAppController.TeamRole.PAUSER, user));
+
+        // Developer can update metadata
+        vm.prank(user);
+        appController.updateAppMetadataURI(app, "https://dev-updated.com");
+
+        // Developer cannot stop app (PAUSER action - no overlap)
+        vm.prank(user);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.stopApp(app);
+
+        // Developer cannot start app (ADMIN action)
+        vm.prank(user);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.startApp(app);
+    }
+
+    function test_pauserRole_canOnlyStopApps() public {
+        // Developer creates an app
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("pauser_role"), _assembleRelease());
+
+        // Admin grants PAUSER role to user
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.PAUSER, user);
+
+        // Pauser should only have PAUSER permission (no overlap with DEVELOPER)
+        assertTrue(appController.hasTeamRole(developer, IAppController.TeamRole.PAUSER, user));
+        assertFalse(appController.hasTeamRole(developer, IAppController.TeamRole.DEVELOPER, user));
+
+        // Pauser can stop app
+        vm.prank(user);
+        appController.stopApp(app);
+
+        // Pauser cannot update metadata (DEVELOPER action - no overlap)
+        vm.prank(user);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.updateAppMetadataURI(app, "https://pauser-attempted.com");
+    }
+
+    function test_teamIsolation() public {
+        _setMaxActiveAppsPerUser(user, 10);
+
+        // Developer creates an app (owner = developer)
+        vm.prank(developer);
+        IApp devApp = appController.createApp(keccak256("dev_owner_app"), _assembleRelease());
+
+        // User creates their own app (owner = user)
+        vm.prank(user);
+        IApp userApp = appController.createApp(keccak256("user_owner_app"), _assembleRelease());
+
+        // Grant PAUSER role on developer's team to someone
+        address teamMember = makeAddr("teamMember");
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.PAUSER, teamMember);
+
+        // Team member can access developer's app
+        vm.prank(teamMember);
+        appController.stopApp(devApp);
+
+        // Team member cannot access user's app (different owner)
+        vm.prank(teamMember);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.stopApp(userApp);
+    }
+
+    function test_stopApp_withPauserRole() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("stop_pauser"), _assembleRelease());
+
+        // Grant PAUSER role to user
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.PAUSER, user);
+
+        // User with PAUSER can stop the app
+        vm.prank(user);
+        appController.stopApp(app);
+
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.STOPPED));
+    }
+
+    function test_updateAppMetadataURI_withDeveloperRole() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("metadata_dev"), _assembleRelease());
+
+        // Grant DEVELOPER role to user
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.DEVELOPER, user);
+
+        // User with DEVELOPER can update metadata
+        vm.prank(user);
+        appController.updateAppMetadataURI(app, "https://dev-updated.com");
+    }
+
+    function test_upgradeApp_requiresAdmin() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("upgrade_admin"), _assembleRelease());
+
+        // Grant DEVELOPER role to user (not enough for upgrade)
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.DEVELOPER, user);
+
+        // User with DEVELOPER cannot upgrade
+        vm.prank(user);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.upgradeApp(app, _assembleRelease());
+
+        // Grant ADMIN role to user
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.ADMIN, user);
+
+        // Now user can upgrade
+        vm.prank(user);
+        appController.upgradeApp(app, _assembleRelease());
+    }
+
+    function test_startApp_requiresAdmin() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("start_admin"), _assembleRelease());
+
+        // Stop the app first (as admin)
+        vm.prank(developer);
+        appController.stopApp(app);
+
+        // Grant PAUSER role to user (not enough for start)
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.PAUSER, user);
+
+        // User with PAUSER cannot start
+        vm.prank(user);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.startApp(app);
+
+        // Grant ADMIN role to user
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.ADMIN, user);
+
+        // Now user can start
+        vm.prank(user);
+        appController.startApp(app);
+    }
+
+    function test_terminateApp_requiresAdmin() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("terminate_admin"), _assembleRelease());
+
+        // Grant DEVELOPER role to user (not enough for terminate)
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.DEVELOPER, user);
+
+        // User with DEVELOPER cannot terminate
+        vm.prank(user);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.terminateApp(app);
+
+        // Grant ADMIN role to user
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.ADMIN, user);
+
+        // Now user can terminate
+        vm.prank(user);
+        appController.terminateApp(app);
+    }
+
+    // ========== getAppsForAccount Tests ==========
+
+    function test_getAppsForAccount() public {
+        _setMaxActiveAppsPerUser(user, 10);
+
+        // Developer creates 2 apps
+        vm.prank(developer);
+        IApp app1 = appController.createApp(keccak256("account_test_1"), _assembleRelease());
+        vm.prank(developer);
+        IApp app2 = appController.createApp(keccak256("account_test_2"), _assembleRelease());
+
+        // User creates 1 app
+        vm.prank(user);
+        IApp app3 = appController.createApp(keccak256("account_test_3"), _assembleRelease());
+
+        // Grant user PAUSER role on developer's team
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.PAUSER, user);
+
+        // Get apps for developer (should have 2 apps as owner + admin)
+        IAppController.AppRoles[] memory developerApps = appController.getAppsForAccount(developer, 0, 10);
+        assertEq(developerApps.length, 2);
+        assertEq(address(developerApps[0].app), address(app1));
+        assertTrue(developerApps[0].isOwner);
+        assertEq(developerApps[0].roles.length, 1);
+        assertEq(uint256(developerApps[0].roles[0]), uint256(IAppController.TeamRole.ADMIN));
+
+        // Get apps for user (should have 2 apps - 1 as owner+admin, 1 as pauser)
+        IAppController.AppRoles[] memory userApps = appController.getAppsForAccount(user, 0, 10);
+        assertEq(userApps.length, 3); // app1, app2 (pauser), app3 (owner+admin)
+
+        // Find user's own app (app3)
+        bool foundOwnApp = false;
+        for (uint256 i = 0; i < userApps.length; i++) {
+            if (address(userApps[i].app) == address(app3)) {
+                foundOwnApp = true;
+                assertTrue(userApps[i].isOwner);
+                assertEq(userApps[i].roles.length, 1);
+                assertEq(uint256(userApps[i].roles[0]), uint256(IAppController.TeamRole.ADMIN));
+            }
+        }
+        assertTrue(foundOwnApp);
+    }
+
+    function test_getAppsForAccount_pagination() public {
+        // Create 5 apps as developer
+        IApp[] memory apps = new IApp[](5);
+        for (uint256 i = 0; i < 5; i++) {
+            vm.prank(developer);
+            apps[i] = appController.createApp(keccak256(abi.encodePacked("pagination_", i)), _assembleRelease());
+        }
+
+        // Test pagination - first 2 apps
+        IAppController.AppRoles[] memory page1 = appController.getAppsForAccount(developer, 0, 2);
+        assertEq(page1.length, 2);
+
+        // Test pagination - next 2 apps
+        IAppController.AppRoles[] memory page2 = appController.getAppsForAccount(developer, 2, 2);
+        assertEq(page2.length, 2);
+
+        // Test pagination - last app
+        IAppController.AppRoles[] memory page3 = appController.getAppsForAccount(developer, 4, 10);
+        assertEq(page3.length, 1);
+
+        // Test pagination - beyond total
+        IAppController.AppRoles[] memory page4 = appController.getAppsForAccount(developer, 10, 10);
+        assertEq(page4.length, 0);
+    }
+
+    function test_getAppsForAccount_multipleRoles() public {
+        // Developer creates an app
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("multi_role"), _assembleRelease());
+
+        // Grant user both PAUSER and DEVELOPER roles
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.PAUSER, user);
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.DEVELOPER, user);
+
+        // Get apps for user
+        IAppController.AppRoles[] memory userApps = appController.getAppsForAccount(user, 0, 10);
+        assertEq(userApps.length, 1);
+        assertFalse(userApps[0].isOwner);
+        assertEq(userApps[0].roles.length, 2); // PAUSER and DEVELOPER
+    }
+
+    // ========== migrateAdmins Tests ==========
+
+    function test_migrateAdmins() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("migrate_admins"), _assembleRelease());
+
+        // Set up a permissionController admin for the app
+        address appAdmin = makeAddr("appAdmin");
+        vm.prank(address(app));
+        permissionController.addPendingAdmin(address(app), appAdmin);
+        vm.prank(appAdmin);
+        permissionController.acceptAdmin(address(app));
+
+        // Migrate admins
+        IApp[] memory apps = new IApp[](1);
+        apps[0] = app;
+        vm.prank(admin);
+        appController.migrateAdmins(apps);
+
+        // Verify the permissionController admin was granted the team ADMIN role
+        assertTrue(
+            appController.hasTeamRole(developer, IAppController.TeamRole.ADMIN, appAdmin),
+            "appAdmin should have ADMIN team role"
+        );
+    }
+
+    function test_migrateAdmins_revertsIfNotAuthorized() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("migrate_admins_auth"), _assembleRelease());
+
+        IApp[] memory apps = new IApp[](1);
+        apps[0] = app;
+
+        vm.prank(developer);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.migrateAdmins(apps);
+    }
+
+    function test_migrateAdmins_revertsIfAppDoesNotExist() public {
+        IApp fakeApp = IApp(address(0xDEADBEEF));
+
+        IApp[] memory apps = new IApp[](1);
+        apps[0] = fakeApp;
+
+        vm.prank(admin);
+        vm.expectRevert(abi.encodeWithSelector(IAppController.AppDoesNotExist.selector));
+        appController.migrateAdmins(apps);
+    }
+
+    function test_migrateAdmins_noAdmins() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("migrate_admins_empty"), _assembleRelease());
+
+        // No permissionController admins set — getAdmins returns empty array
+        IApp[] memory apps = new IApp[](1);
+        apps[0] = app;
+
+        vm.prank(admin);
+        appController.migrateAdmins(apps); // should succeed with no roles granted
+    }
+
+    function test_migrateAdmins_skipsAlreadyGranted() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("migrate_admins_idempotent"), _assembleRelease());
+
+        address appAdmin = makeAddr("appAdminIdempotent");
+        vm.prank(address(app));
+        permissionController.addPendingAdmin(address(app), appAdmin);
+        vm.prank(appAdmin);
+        permissionController.acceptAdmin(address(app));
+
+        IApp[] memory apps = new IApp[](1);
+        apps[0] = app;
+
+        // First call
+        vm.prank(admin);
+        appController.migrateAdmins(apps);
+
+        assertTrue(
+            appController.hasTeamRole(developer, IAppController.TeamRole.ADMIN, appAdmin),
+            "appAdmin should have ADMIN role after first migration"
+        );
+
+        // Second call — must not revert
+        vm.prank(admin);
+        appController.migrateAdmins(apps);
+
+        assertTrue(
+            appController.hasTeamRole(developer, IAppController.TeamRole.ADMIN, appAdmin),
+            "appAdmin should still have ADMIN role after second migration"
+        );
     }
 }

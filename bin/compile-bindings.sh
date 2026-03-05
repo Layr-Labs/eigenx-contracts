@@ -55,6 +55,8 @@ contracts=(
     "ImageAllowlist"
     "IReleaseManager"
     "IPermissionController"
+    "SafeTimelockFactory"
+    "TimelockControllerImpl"
     "USDCDeposit"
 )
 
