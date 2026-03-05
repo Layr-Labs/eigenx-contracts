@@ -21,6 +21,8 @@ import {ComputeAVSRegistrar} from "../../src/ComputeAVSRegistrar.sol";
 import {ComputeOperator} from "../../src/ComputeOperator.sol";
 import {SafeTimelockFactory} from "../../src/factories/SafeTimelockFactory.sol";
 import {TimelockControllerImpl} from "../../src/governance/TimelockControllerImpl.sol";
+import {ImageAllowlist} from "../../src/ImageAllowlist.sol";
+import {USDCDeposit} from "../../src/USDCDeposit.sol";
 
 library Env {
     using ZEnvHelpers for *;
@@ -105,6 +107,14 @@ library Env {
         return SafeTimelockFactory(_deployedProxy(type(SafeTimelockFactory).name));
     }
 
+    function imageAllowlist(DeployedProxy) internal view returns (ImageAllowlist) {
+        return ImageAllowlist(_deployedProxy(type(ImageAllowlist).name));
+    }
+
+    function usdcDeposit(DeployedProxy) internal view returns (USDCDeposit) {
+        return USDCDeposit(_deployedProxy(type(USDCDeposit).name));
+    }
+
     function appBeacon(DeployedBeacon) internal view returns (UpgradeableBeacon) {
         return UpgradeableBeacon(_deployedBeacon(type(App).name));
     }
@@ -130,6 +140,14 @@ library Env {
 
     function safeTimelockFactory(DeployedImpl) internal view returns (SafeTimelockFactory) {
         return SafeTimelockFactory(_deployedImpl(type(SafeTimelockFactory).name));
+    }
+
+    function imageAllowlist(DeployedImpl) internal view returns (ImageAllowlist) {
+        return ImageAllowlist(_deployedImpl(type(ImageAllowlist).name));
+    }
+
+    function usdcDeposit(DeployedImpl) internal view returns (USDCDeposit) {
+        return USDCDeposit(_deployedImpl(type(USDCDeposit).name));
     }
 
     /**
@@ -198,6 +216,18 @@ library Env {
 
     function AVS_METADATA_URI() internal view returns (string memory) {
         return _envString("AVS_METADATA_URI");
+    }
+
+    function USDC_TOKEN() internal view returns (address) {
+        return _envAddress("USDC_TOKEN");
+    }
+
+    function USDC_TREASURY() internal view returns (address) {
+        return _envAddress("USDC_TREASURY");
+    }
+
+    function USDC_MINIMUM_DEPOSIT() internal view returns (uint256) {
+        return _envU256("USDC_MINIMUM_DEPOSIT");
     }
 
     /**

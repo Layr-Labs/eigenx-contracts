@@ -17,6 +17,8 @@ import {IComputeOperator} from "../src/interfaces/IComputeOperator.sol";
 import {AppController} from "../src/AppController.sol";
 import {ComputeAVSRegistrar} from "../src/ComputeAVSRegistrar.sol";
 import {ComputeOperator} from "../src/ComputeOperator.sol";
+import {ImageAllowlist} from "../src/ImageAllowlist.sol";
+import {IImageAllowlist} from "../src/interfaces/IImageAllowlist.sol";
 
 contract Parser is Script {
     struct DeployParams {
@@ -44,6 +46,8 @@ contract Parser is Script {
         ComputeAVSRegistrar computeAVSRegistrarImpl;
         IComputeOperator computeOperator;
         ComputeOperator computeOperatorImpl;
+        IImageAllowlist imageAllowlist;
+        ImageAllowlist imageAllowlistImpl;
     }
 
     function parseDeployParams(string memory environment) public view returns (DeployParams memory) {
@@ -83,7 +87,9 @@ contract Parser is Script {
                 vm.parseJsonAddress(json, ".addresses.computeAVSRegistrarImpl")
             ),
             computeOperator: IComputeOperator(vm.parseJsonAddress(json, ".addresses.computeOperator")),
-            computeOperatorImpl: ComputeOperator(vm.parseJsonAddress(json, ".addresses.computeOperatorImpl"))
+            computeOperatorImpl: ComputeOperator(vm.parseJsonAddress(json, ".addresses.computeOperatorImpl")),
+            imageAllowlist: IImageAllowlist(vm.parseJsonAddress(json, ".addresses.imageAllowlist")),
+            imageAllowlistImpl: ImageAllowlist(vm.parseJsonAddress(json, ".addresses.imageAllowlistImpl"))
         });
 
         return deployedContracts;

@@ -52,10 +52,12 @@ contracts=(
     "AppController"
     "ComputeAVSRegistrar"
     "ComputeOperator"
+    "ImageAllowlist"
     "IReleaseManager"
     "IPermissionController"
     "SafeTimelockFactory"
     "TimelockControllerImpl"
+    "USDCDeposit"
 )
 
 forge b --no-metadata
