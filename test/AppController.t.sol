@@ -245,8 +245,9 @@ contract AppControllerTest is ComputeDeployer {
             IReleaseManagerTypes.Release({artifacts: artifacts, upgradeByTime: uint32(block.timestamp + 1 days)});
 
         IAppController.ContainerPolicy memory emptyPolicy;
-        IAppController.Release memory release =
-            IAppController.Release({rmsRelease: rmsRelease, publicEnv: "", encryptedEnv: "", containerPolicy: emptyPolicy});
+        IAppController.Release memory release = IAppController.Release({
+            rmsRelease: rmsRelease, publicEnv: "", encryptedEnv: "", containerPolicy: emptyPolicy
+        });
 
         // Upgrade the app (should also start it since it's in CREATED status)
         vm.prank(developer);
@@ -271,8 +272,9 @@ contract AppControllerTest is ComputeDeployer {
             IReleaseManagerTypes.Release({artifacts: artifacts, upgradeByTime: uint32(block.timestamp + 1 days)});
 
         IAppController.ContainerPolicy memory emptyPolicy;
-        IAppController.Release memory release =
-            IAppController.Release({rmsRelease: rmsRelease, publicEnv: "", encryptedEnv: "", containerPolicy: emptyPolicy});
+        IAppController.Release memory release = IAppController.Release({
+            rmsRelease: rmsRelease, publicEnv: "", encryptedEnv: "", containerPolicy: emptyPolicy
+        });
 
         // Try to upgrade as unauthorized user
         vm.prank(user);
@@ -811,8 +813,9 @@ contract AppControllerTest is ComputeDeployer {
             IReleaseManagerTypes.Release({artifacts: artifacts, upgradeByTime: uint32(block.timestamp + 1 days)});
 
         IAppController.ContainerPolicy memory emptyPolicy;
-        IAppController.Release memory release =
-            IAppController.Release({rmsRelease: rmsRelease, publicEnv: "", encryptedEnv: "", containerPolicy: emptyPolicy});
+        IAppController.Release memory release = IAppController.Release({
+            rmsRelease: rmsRelease, publicEnv: "", encryptedEnv: "", containerPolicy: emptyPolicy
+        });
 
         return release;
     }
