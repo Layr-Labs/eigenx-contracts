@@ -24,6 +24,9 @@ import {ComputeAVSRegistrar} from "../src/ComputeAVSRegistrar.sol";
 import {ComputeOperator} from "../src/ComputeOperator.sol";
 import {ImageAllowlist} from "../src/ImageAllowlist.sol";
 import {IImageAllowlist} from "../src/interfaces/IImageAllowlist.sol";
+import {ISafeTimelockFactory} from "../src/interfaces/ISafeTimelockFactory.sol";
+import {SafeTimelockFactory} from "../src/factories/SafeTimelockFactory.sol";
+import {TimelockControllerImpl} from "../src/governance/TimelockControllerImpl.sol";
 
 contract Deploy is Parser {
     struct Proxies {
@@ -86,6 +89,24 @@ contract Deploy is Parser {
             )
         });
 
+        // Deploy SafeTimelockFactory if not provided
+        ISafeTimelockFactory safeTimelockFactory = params.safeTimelockFactory;
+        if (address(safeTimelockFactory) == address(0)) {
+            TimelockControllerImpl timelockImpl = new TimelockControllerImpl();
+            SafeTimelockFactory factoryImpl = new SafeTimelockFactory({
+                _safeSingleton: address(0),
+                _safeProxyFactory: address(0),
+                _safeFallbackHandler: address(0),
+                _timelockImplementation: address(timelockImpl)
+            });
+            TransparentUpgradeableProxy factoryProxy = new TransparentUpgradeableProxy(
+                address(factoryImpl),
+                address(params.proxyAdmin),
+                abi.encodeCall(SafeTimelockFactory.initialize, ())
+            );
+            safeTimelockFactory = ISafeTimelockFactory(address(factoryProxy));
+        }
+
         // Deploy App beacon
         UpgradeableBeacon appBeacon =
             new UpgradeableBeacon(address(new App(params.version, IPermissionController(params.permissionController))));
@@ -114,7 +135,8 @@ contract Deploy is Parser {
                 _releaseManager: params.releaseManager,
                 _computeAVSRegistrar: IComputeAVSRegistrar(address(proxies.computeAVSRegistrar)),
                 _computeOperator: IComputeOperator(address(proxies.computeOperator)),
-                _appBeacon: appBeacon
+                _appBeacon: appBeacon,
+                _safeTimelockFactory: safeTimelockFactory
             }),
             imageAllowlist: new ImageAllowlist()
         });
@@ -171,7 +193,8 @@ contract Deploy is Parser {
             computeOperator: IComputeOperator(address(proxies.computeOperator)),
             computeOperatorImpl: impls.computeOperator,
             imageAllowlist: IImageAllowlist(address(proxies.imageAllowlist)),
-            imageAllowlistImpl: impls.imageAllowlist
+            imageAllowlistImpl: impls.imageAllowlist,
+            safeTimelockFactory: safeTimelockFactory
         });
     }
 
