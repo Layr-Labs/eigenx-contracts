@@ -23,6 +23,7 @@ import {IAppController} from "./interfaces/IAppController.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {IApp} from "./interfaces/IApp.sol";
+import {ISafeTimelockFactory} from "./interfaces/ISafeTimelockFactory.sol";
 
 contract AppController is
     Initializable,
@@ -72,11 +73,12 @@ contract AppController is
         IReleaseManager _releaseManager,
         IComputeAVSRegistrar _computeAVSRegistrar,
         IComputeOperator _computeOperator,
-        IBeacon _appBeacon
+        IBeacon _appBeacon,
+        ISafeTimelockFactory _safeTimelockFactory
     )
         SignatureUtilsMixin(_version)
         PermissionControllerMixin(_permissionController)
-        AppControllerStorage(_releaseManager, _computeOperator, _computeAVSRegistrar, _appBeacon)
+        AppControllerStorage(_releaseManager, _computeOperator, _computeAVSRegistrar, _appBeacon, _safeTimelockFactory)
     {
         _disableInitializers();
     }
@@ -177,6 +179,42 @@ contract AppController is
 
     /// @inheritdoc IAppController
     function upgradeApp(IApp app, Release calldata release) external appIsActive(app) onlyAdmin(app) returns (uint256) {
+        require(!_appConfigs[app].governed, DirectUpgradeNotAllowed());
+        return _upgradeApp(app, release);
+    }
+
+    /// @inheritdoc IAppController
+    function transferOwnership(IApp app, address newOwner) external appExists(app) onlyAdmin(app) {
+        require(newOwner != address(0), InvalidPermissions());
+        address previousOwner = _appConfigs[app].owner;
+        _appConfigs[app].owner = newOwner;
+        _appConfigs[app].governed =
+            safeTimelockFactory.isSafe(newOwner) || safeTimelockFactory.isTimelock(newOwner);
+        _grantRole(_teamRole(newOwner, TeamRole.ADMIN), newOwner);
+        emit AppOwnershipTransferred(app, previousOwner, newOwner);
+    }
+
+    /// @inheritdoc IAppController
+    function scheduleUpgrade(IApp app, Release calldata release, uint256 delay)
+        external
+        appIsActive(app)
+        onlyAdmin(app)
+    {
+        require(_appConfigs[app].governed, GovernanceRequired());
+        require(release.rmsRelease.artifacts.length == 1, MoreThanOneArtifact());
+        uint256 readyAt = block.timestamp + delay;
+        _pendingUpgrades[app] = PendingUpgrade({releaseHash: keccak256(abi.encode(release)), readyAt: readyAt});
+        emit AppUpgradeScheduled(app, readyAt, release);
+    }
+
+    /// @inheritdoc IAppController
+    function executeUpgrade(IApp app, Release calldata release) external appIsActive(app) onlyAdmin(app) returns (uint256) {
+        require(_appConfigs[app].governed, GovernanceRequired());
+        PendingUpgrade memory pending = _pendingUpgrades[app];
+        require(pending.readyAt != 0, NoScheduledUpgrade());
+        require(block.timestamp >= pending.readyAt, UpgradeNotReady());
+        require(keccak256(abi.encode(release)) == pending.releaseHash, ReleaseMismatch());
+        delete _pendingUpgrades[app];
         return _upgradeApp(app, release);
     }
 
@@ -533,6 +571,11 @@ contract AppController is
     }
 
     /// VIEW FUNCTIONS
+
+    /// @inheritdoc IAppController
+    function getPendingUpgrade(IApp app) external view returns (PendingUpgrade memory) {
+        return _pendingUpgrades[app];
+    }
 
     /// @inheritdoc IAppController
     function getMaxActiveAppsPerUser(address user) external view returns (uint32) {

@@ -48,7 +48,8 @@ contract DeployContracts is EOADeployer {
             _releaseManager: Env.releaseManager(),
             _computeAVSRegistrar: Env.proxy.computeAVSRegistrar(),
             _computeOperator: Env.proxy.computeOperator(),
-            _appBeacon: Env.beacon.appBeacon()
+            _appBeacon: Env.beacon.appBeacon(),
+            _safeTimelockFactory: Env.proxy.safeTimelockFactory()
         });
         deployImpl({name: type(AppController).name, deployedTo: address(newAppControllerImpl)});
 
@@ -145,6 +146,11 @@ contract DeployContracts is EOADeployer {
             address(appController.appBeacon()),
             address(Env.beacon.appBeacon()),
             "AppController appBeacon mismatch"
+        );
+        assertEq(
+            address(appController.safeTimelockFactory()),
+            address(Env.proxy.safeTimelockFactory()),
+            "AppController safeTimelockFactory mismatch"
         );
     }
 

@@ -3,6 +3,7 @@ pragma solidity ^0.8.27;
 
 import {IReleaseManagerTypes} from "@eigenlayer-contracts/src/contracts/interfaces/IReleaseManager.sol";
 import {IApp} from "./IApp.sol";
+import {ISafeTimelockFactory} from "./ISafeTimelockFactory.sol";
 
 interface IAppController {
     /// @notice Thrown when trying to create an app that already exists
@@ -31,6 +32,21 @@ interface IAppController {
 
     /// @notice Thrown when trying to revoke or renounce the last admin
     error CannotRevokeLastAdmin();
+
+    /// @notice Thrown when trying to directly upgrade an app that requires governance
+    error DirectUpgradeNotAllowed();
+
+    /// @notice Thrown when trying to schedule/execute an upgrade on a non-governed app
+    error GovernanceRequired();
+
+    /// @notice Thrown when trying to execute an upgrade before the delay has elapsed
+    error UpgradeNotReady();
+
+    /// @notice Thrown when trying to execute with no pending upgrade
+    error NoScheduledUpgrade();
+
+    /// @notice Thrown when the release supplied to executeUpgrade does not match the scheduled hash
+    error ReleaseMismatch();
 
     /// @notice Emitted when a new app is successfully created
     event AppCreated(address indexed owner, IApp indexed app, uint32 operatorSetId);
@@ -61,6 +77,12 @@ interface IAppController {
 
     /// @notice Emitted when an app's metadata URI is updated
     event AppMetadataURIUpdated(IApp indexed app, string metadataURI);
+
+    /// @notice Emitted when app ownership is transferred and governance mode is enabled
+    event AppOwnershipTransferred(IApp indexed app, address indexed previousOwner, address indexed newOwner);
+
+    /// @notice Emitted when an upgrade is scheduled for a governed app; off-chain controller takes no action
+    event AppUpgradeScheduled(IApp indexed app, uint256 readyAt, Release release);
 
     /**
      * @notice Enum for app status
@@ -109,6 +131,13 @@ interface IAppController {
         uint32 operatorSetId;
         uint32 latestReleaseBlockNumber;
         AppStatus status;
+        bool governed; // true = direct upgradeApp() blocked; must use scheduleUpgrade + executeUpgrade
+    }
+
+    /// @notice A pending upgrade scheduled for a governed app
+    struct PendingUpgrade {
+        bytes32 releaseHash; // keccak256(abi.encode(release)) — verified at execution time
+        uint256 readyAt;     // block.timestamp after which executeUpgrade() is allowed (0 = none pending)
     }
 
     /// @notice User configuration and state
@@ -180,6 +209,45 @@ interface IAppController {
     function upgradeApp(IApp app, Release calldata release) external returns (uint256);
 
     /**
+     * @notice Transfers app ownership to a new address and enables governance mode
+     * @param app The app to transfer ownership of
+     * @param newOwner The new owner address (multisig or timelock)
+     * @dev Caller must be an ADMIN for the app
+     * @dev Once transferred, governance mode is permanent: upgradeApp() is blocked
+     * @dev Grants ADMIN role to newOwner under the new team namespace
+     */
+    function transferOwnership(IApp app, address newOwner) external;
+
+    /**
+     * @notice Schedules an upgrade for a governed app
+     * @param app The app to schedule an upgrade for
+     * @param release The release to upgrade to
+     * @param delay Seconds from now until the upgrade can be executed
+     * @dev Caller must be an ADMIN for the app
+     * @dev App must be in governance mode (governed == true)
+     * @dev A new schedule call overwrites any existing pending upgrade
+     */
+    function scheduleUpgrade(IApp app, Release calldata release, uint256 delay) external;
+
+    /**
+     * @notice Executes a previously scheduled upgrade after the delay has elapsed
+     * @param app The app to execute the pending upgrade for
+     * @param release The release to upgrade to — must match the hash committed in scheduleUpgrade
+     * @return releaseId The unique identifier for the published release
+     * @dev Caller must be an ADMIN for the app
+     * @dev App must be in governance mode with a pending upgrade whose readyAt <= block.timestamp
+     * @dev The release is not stored on-chain; callers must retrieve it from the AppUpgradeScheduled event
+     */
+    function executeUpgrade(IApp app, Release calldata release) external returns (uint256);
+
+    /**
+     * @notice Returns the pending upgrade for a governed app
+     * @param app The app to query
+     * @return The PendingUpgrade struct (readyAt == 0 means no pending upgrade)
+     */
+    function getPendingUpgrade(IApp app) external view returns (PendingUpgrade memory);
+
+    /**
      * @notice Updates the metadata URI for an app
      * @param app The app to update the metadata URI for
      * @param metadataURI The new metadata URI
@@ -228,6 +296,11 @@ interface IAppController {
      * @dev Apps already suspended or terminated are silently skipped
      */
     function suspend(address account, IApp[] calldata apps) external;
+
+    /**
+     * @notice Returns the SafeTimelockFactory used to detect governed ownership
+     */
+    function safeTimelockFactory() external view returns (ISafeTimelockFactory);
 
     /**
      * @notice Gets the maximum global active apps limit
