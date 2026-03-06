@@ -74,16 +74,41 @@ interface IAppController {
         ISOLATED // Billed to the app's own address
     }
 
+    /// @notice A key-value pair representing an environment variable
+    struct EnvVar {
+        string key;
+        string value;
+    }
+
+    /**
+     * @notice Container execution policy set by the app developer at createApp/upgradeApp time.
+     * @dev Each field is opt-in: an empty/zero-length field means "no restriction" for that field.
+     * @param args Expected container arguments (exact match)
+     * @param cmdOverride Expected command override (exact match)
+     * @param env Required environment variables (subset match: all key/value pairs must appear in container env)
+     * @param envOverride Expected environment variable overrides (subset match)
+     * @param restartPolicy Expected restart policy (exact match)
+     */
+    struct ContainerPolicy {
+        string[] args;
+        string[] cmdOverride;
+        EnvVar[] env;
+        EnvVar[] envOverride;
+        string restartPolicy;
+    }
+
     /**
      * @notice A struct containing a release and its environment
      * @param rmsRelease The release to publish
-     * @param env The environment for the release
-     * @param encryptedSecrets The encrypted secrets for the release
+     * @param publicEnv The public environment variables for the release
+     * @param encryptedEnv The encrypted secrets for the release
+     * @param containerPolicy The container execution policy for the release
      */
     struct Release {
         IReleaseManagerTypes.Release rmsRelease;
         bytes publicEnv;
         bytes encryptedEnv;
+        ContainerPolicy containerPolicy;
     }
 
     /// @notice The controller's config for an app (public-facing, ABI-stable)
