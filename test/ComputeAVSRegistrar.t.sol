@@ -157,7 +157,14 @@ contract ComputeAVSRegistrarTest is ComputeDeployer {
                     artifacts: new IReleaseManagerTypes.Artifact[](1), upgradeByTime: uint32(block.timestamp + 1 days)
                 }),
                 publicEnv: bytes(""),
-                encryptedEnv: bytes("")
+                encryptedEnv: bytes(""),
+                containerPolicy: IAppController.ContainerPolicy({
+                    args: new string[](0),
+                    cmdOverride: new string[](0),
+                    env: new IAppController.EnvVar[](0),
+                    envOverride: new IAppController.EnvVar[](0),
+                    restartPolicy: ""
+                })
             })
         );
 
