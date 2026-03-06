@@ -618,6 +618,11 @@ contract AppController is
     }
 
     /// @inheritdoc IAppController
+    function getAppGoverned(IApp app) external view returns (bool) {
+        return _appConfigs[app].governed;
+    }
+
+    /// @inheritdoc IAppController
     function getApps(uint256 offset, uint256 limit)
         external
         view

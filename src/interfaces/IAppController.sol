@@ -365,6 +365,13 @@ interface IAppController {
     function getAppLatestReleaseBlockNumber(IApp app) external view returns (uint32);
 
     /**
+     * @notice Returns whether an app is in governance mode
+     * @param app The app to check
+     * @return True if the app requires scheduleUpgrade + executeUpgrade flow
+     */
+    function getAppGoverned(IApp app) external view returns (bool);
+
+    /**
      * @notice Retrieves a paginated list of all apps and their configurations
      * @param offset The starting index for pagination (0-based)
      * @param limit The maximum number of apps to return in this page
