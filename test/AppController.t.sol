@@ -1792,7 +1792,7 @@ contract AppControllerTest is ComputeDeployer {
         appController.upgradeApp(app, _assembleRelease());
     }
 
-    function test_transferOwnership_toTimelock_setsGoverned() public {
+    function test_transferOwnership_toTimelock_doesNotSetGoverned() public {
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
 
@@ -1803,9 +1803,10 @@ contract AppControllerTest is ComputeDeployer {
         appController.transferOwnership(app, mockTimelock);
 
         assertEq(appController.getAppOwner(app), mockTimelock);
+        // Timelock enforces its own delay — governed must be false, direct upgrade allowed
+        assertFalse(appController.getAppGoverned(app), "Timelock owner should not set governed");
         vm.prank(mockTimelock);
-        vm.expectRevert(IAppController.DirectUpgradeNotAllowed.selector);
-        appController.upgradeApp(app, _assembleRelease());
+        appController.upgradeApp(app, _assembleRelease()); // must not revert
     }
 
     function test_transferOwnership_grantsAdminToNewOwner() public {

@@ -188,8 +188,8 @@ contract AppController is
         require(newOwner != address(0), InvalidPermissions());
         address previousOwner = _appConfigs[app].owner;
         _appConfigs[app].owner = newOwner;
-        _appConfigs[app].governed =
-            safeTimelockFactory.isSafe(newOwner) || safeTimelockFactory.isTimelock(newOwner);
+        // Timelocks enforce delays natively — only Safe owners need AppController-level governance
+        _appConfigs[app].governed = safeTimelockFactory.isSafe(newOwner);
         _grantRole(_teamRole(newOwner, TeamRole.ADMIN), newOwner);
         emit AppOwnershipTransferred(app, previousOwner, newOwner);
     }
