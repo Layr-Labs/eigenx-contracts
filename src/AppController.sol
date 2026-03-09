@@ -121,6 +121,16 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// @inheritdoc IAppController
+    function confirmUpgrade(IApp app) external checkCanCall(address(this)) appIsActive(app) {
+        AppConfigStorage storage config = _appConfigs[app];
+        require(config.pendingReleaseBlockNumber != 0, NoPendingUpgrade());
+
+        config.latestReleaseBlockNumber = config.pendingReleaseBlockNumber;
+        emit UpgradeConfirmed(app, config.pendingReleaseBlockNumber);
+        config.pendingReleaseBlockNumber = 0;
+    }
+
+    /// @inheritdoc IAppController
     function updateAppMetadataURI(IApp app, string calldata metadataURI)
         external
         checkCanCall(address(app))
@@ -205,7 +215,10 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
         emit AppCreated(msg.sender, app, operatorSetId);
 
+        // Upgrade the app with the initial release and auto-confirm it
         _upgradeApp(app, release);
+        _appConfigs[app].latestReleaseBlockNumber = _appConfigs[app].pendingReleaseBlockNumber;
+        _appConfigs[app].pendingReleaseBlockNumber = 0;
         _startApp(app);
     }
 
@@ -267,7 +280,8 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /**
-     * @notice Upgrades an app to a new release by publishing it through the release manager
+     * @notice Upgrades an app to a new release by publishing it through the release manager.
+     *         The release is written to the pending slot; call confirmUpgrade() to promote it.
      * @param app The app instance to upgrade
      * @param release The new release data containing artifacts and metadata
      * @return releaseId The unique identifier assigned to the published release by the release manager
@@ -278,7 +292,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         releaseId = releaseManager.publishRelease(
             OperatorSet({avs: address(computeAVSRegistrar), id: _appConfigs[app].operatorSetId}), release.rmsRelease
         );
-        _appConfigs[app].latestReleaseBlockNumber = uint32(block.number);
+        _appConfigs[app].pendingReleaseBlockNumber = uint32(block.number);
 
         emit AppUpgraded(app, releaseId, release);
     }
@@ -348,6 +362,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
             creator: s.creator,
             operatorSetId: s.operatorSetId,
             latestReleaseBlockNumber: s.latestReleaseBlockNumber,
+            pendingReleaseBlockNumber: s.pendingReleaseBlockNumber,
             status: s.status
         });
     }
@@ -480,6 +495,11 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     /// @inheritdoc IAppController
     function getAppLatestReleaseBlockNumber(IApp app) external view returns (uint32) {
         return _appConfigs[app].latestReleaseBlockNumber;
+    }
+
+    /// @inheritdoc IAppController
+    function getAppPendingReleaseBlockNumber(IApp app) external view returns (uint32) {
+        return _appConfigs[app].pendingReleaseBlockNumber;
     }
 
     /// @inheritdoc IAppController
