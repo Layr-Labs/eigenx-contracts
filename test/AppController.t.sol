@@ -244,15 +244,25 @@ contract AppControllerTest is ComputeDeployer {
         IAppController.Release memory release =
             IAppController.Release({rmsRelease: rmsRelease, publicEnv: "", encryptedEnv: ""});
 
-        // Upgrade the app (should also start it since it's in CREATED status)
+        // Record the confirmed release block number before upgrading
+        uint32 confirmedBefore = appController.getAppLatestReleaseBlockNumber(app);
+
+        // Advance to a new block so we can distinguish pending from confirmed
+        vm.roll(block.number + 1);
+
+        // Upgrade the app — release should go to pending, not confirmed
         vm.prank(developer);
         appController.upgradeApp(app, release);
 
-        // Verify app status changed to STARTED and release was published
+        // Verify status is still STARTED
         IAppController.AppStatus status = appController.getAppStatus(app);
         assertEq(uint256(status), uint256(IAppController.AppStatus.STARTED));
-        uint32 latestReleaseBlockNumber = appController.getAppLatestReleaseBlockNumber(app);
-        assertEq(latestReleaseBlockNumber, block.number);
+
+        // Confirmed release should be unchanged
+        assertEq(appController.getAppLatestReleaseBlockNumber(app), confirmedBefore);
+
+        // Pending release should be set to current block
+        assertEq(appController.getAppPendingReleaseBlockNumber(app), uint32(block.number));
     }
 
     function test_upgradeApp_notAuthorized() public {
@@ -1082,5 +1092,94 @@ contract AppControllerTest is ComputeDeployer {
         assertEq(uint256(appController.getAppStatus(app2)), uint256(IAppController.AppStatus.STARTED));
         assertEq(appController.getActiveAppCount(user), 2);
         assertEq(appController.getMaxActiveAppsPerUser(user), 2);
+    }
+
+    // ========== Two-Phase Upgrade Tests ==========
+
+    event UpgradeConfirmed(IApp indexed app, uint32 pendingReleaseBlockNumber);
+
+    function test_twoPhaseUpgrade_fullLifecycle() public {
+        // Phase 1: Create app — initial release is auto-confirmed
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("two_phase_test"), _assembleRelease());
+        _acceptAppAdmin(app);
+
+        uint32 initialBlock = uint32(block.number);
+        assertEq(appController.getAppLatestReleaseBlockNumber(app), initialBlock);
+        assertEq(appController.getAppPendingReleaseBlockNumber(app), 0);
+
+        // Phase 2: Upgrade — goes to pending, confirmed unchanged
+        vm.roll(block.number + 10);
+        uint32 upgradeBlock = uint32(block.number);
+
+        vm.prank(developer);
+        appController.upgradeApp(app, _assembleRelease());
+
+        assertEq(appController.getAppLatestReleaseBlockNumber(app), initialBlock);
+        assertEq(appController.getAppPendingReleaseBlockNumber(app), upgradeBlock);
+
+        // Phase 3: Confirm upgrade — pending promoted to confirmed
+        vm.prank(admin);
+        vm.expectEmit(true, true, true, true);
+        emit UpgradeConfirmed(app, upgradeBlock);
+        appController.confirmUpgrade(app);
+
+        assertEq(appController.getAppLatestReleaseBlockNumber(app), upgradeBlock);
+        assertEq(appController.getAppPendingReleaseBlockNumber(app), 0);
+    }
+
+    function test_confirmUpgrade_noPendingUpgrade_reverts() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("no_pending_test"), _assembleRelease());
+
+        // No pending upgrade — should revert
+        vm.prank(admin);
+        vm.expectRevert(IAppController.NoPendingUpgrade.selector);
+        appController.confirmUpgrade(app);
+    }
+
+    function test_confirmUpgrade_notAuthorized_reverts() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("confirm_auth_test"), _assembleRelease());
+        _acceptAppAdmin(app);
+
+        // Create a pending upgrade
+        vm.roll(block.number + 1);
+        vm.prank(developer);
+        appController.upgradeApp(app, _assembleRelease());
+
+        // Non-admin tries to confirm — should revert
+        vm.prank(user);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.confirmUpgrade(app);
+    }
+
+    function test_confirmUpgrade_terminatedApp_reverts() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("confirm_terminated_test"), _assembleRelease());
+        _acceptAppAdmin(app);
+
+        // Create a pending upgrade
+        vm.roll(block.number + 1);
+        vm.prank(developer);
+        appController.upgradeApp(app, _assembleRelease());
+
+        // Terminate the app
+        vm.prank(developer);
+        appController.terminateApp(app);
+
+        // Confirm should revert because app is terminated
+        vm.prank(admin);
+        vm.expectRevert(IAppController.InvalidAppStatus.selector);
+        appController.confirmUpgrade(app);
+    }
+
+    function test_createApp_autoConfirmsInitialRelease() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("auto_confirm_test"), _assembleRelease());
+
+        // Initial release should be confirmed, not pending
+        assertEq(appController.getAppLatestReleaseBlockNumber(app), uint32(block.number));
+        assertEq(appController.getAppPendingReleaseBlockNumber(app), 0);
     }
 }
