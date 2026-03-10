@@ -9,21 +9,21 @@ import {
     ITransparentUpgradeableProxy
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {EmptyContract} from "@eigenlayer-contracts/src/test/mocks/EmptyContract.sol";
-import {USDCDeposit} from "../src/USDCDeposit.sol";
-import {IUSDCDeposit} from "../src/interfaces/IUSDCDeposit.sol";
+import {USDCCredits} from "../src/USDCCredits.sol";
+import {IUSDCCredits} from "../src/interfaces/IUSDCCredits.sol";
 
-contract DeployUSDCDeposit is Script {
+contract DeployUSDCCredits is Script {
     struct DeployParams {
         ProxyAdmin proxyAdmin;
         address initialOwner;
         IERC20 usdc;
         address treasury;
-        uint256 minimumDeposit;
+        uint256 minimumPurchase;
     }
 
     struct DeployedContracts {
-        IUSDCDeposit usdcDeposit;
-        USDCDeposit usdcDepositImpl;
+        IUSDCCredits usdcCredits;
+        USDCCredits usdcCreditsImpl;
     }
 
     function run(string memory environment) public {
@@ -48,20 +48,20 @@ contract DeployUSDCDeposit is Script {
             new TransparentUpgradeableProxy(address(emptyContract), address(params.proxyAdmin), new bytes(0));
 
         // Deploy implementation
-        USDCDeposit impl = new USDCDeposit({_usdc: params.usdc, _treasury: params.treasury});
+        USDCCredits impl = new USDCCredits({_usdc: params.usdc, _treasury: params.treasury});
 
         // Upgrade and initialize
         params.proxyAdmin
             .upgradeAndCall(
                 ITransparentUpgradeableProxy(address(proxy)),
                 address(impl),
-                abi.encodeCall(USDCDeposit.initialize, (params.initialOwner, params.minimumDeposit))
+                abi.encodeCall(USDCCredits.initialize, (params.initialOwner, params.minimumPurchase))
             );
 
-        console.log("USDCDeposit proxy:", address(proxy));
-        console.log("USDCDeposit impl:", address(impl));
+        console.log("USDCCredits proxy:", address(proxy));
+        console.log("USDCCredits impl:", address(impl));
 
-        return DeployedContracts({usdcDeposit: IUSDCDeposit(address(proxy)), usdcDepositImpl: impl});
+        return DeployedContracts({usdcCredits: IUSDCCredits(address(proxy)), usdcCreditsImpl: impl});
     }
 
     function deployForTesting(DeployParams memory params) public returns (DeployedContracts memory deployment) {
@@ -71,7 +71,7 @@ contract DeployUSDCDeposit is Script {
     }
 
     function parseDeployParams(string memory environment) public view returns (DeployParams memory) {
-        string memory configPath = string.concat("script/deploys/", environment, "/usdc-deposit-config.json");
+        string memory configPath = string.concat("script/deploys/", environment, "/usdc-credits-config.json");
         string memory json = vm.readFile(configPath);
 
         return DeployParams({
@@ -79,14 +79,14 @@ contract DeployUSDCDeposit is Script {
             initialOwner: vm.parseJsonAddress(json, ".initialOwner"),
             usdc: IERC20(vm.parseJsonAddress(json, ".usdc")),
             treasury: vm.parseJsonAddress(json, ".treasury"),
-            minimumDeposit: vm.parseJsonUint(json, ".minimumDeposit")
+            minimumPurchase: vm.parseJsonUint(json, ".minimumPurchase")
         });
     }
 
     function _writeOutputToJson(string memory environment, DeployedContracts memory deployedContracts) internal {
         string memory addresses = "addresses";
-        vm.serializeAddress(addresses, "usdcDeposit", address(deployedContracts.usdcDeposit));
-        addresses = vm.serializeAddress(addresses, "usdcDepositImpl", address(deployedContracts.usdcDepositImpl));
+        vm.serializeAddress(addresses, "usdcCredits", address(deployedContracts.usdcCredits));
+        addresses = vm.serializeAddress(addresses, "usdcCreditsImpl", address(deployedContracts.usdcCreditsImpl));
 
         string memory chainInfo = "chainInfo";
         chainInfo = vm.serializeUint(chainInfo, "chainId", block.chainid);
@@ -98,7 +98,7 @@ contract DeployUSDCDeposit is Script {
         string memory outputDir = string.concat("script/deploys/", environment);
         vm.createDir(outputDir, true);
 
-        string memory outputFile = string.concat(outputDir, "/usdc-deposit-output.json");
+        string memory outputFile = string.concat(outputDir, "/usdc-credits-output.json");
         vm.writeJson(finalJson, outputFile);
     }
 }

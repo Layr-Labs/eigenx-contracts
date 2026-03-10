@@ -55,7 +55,7 @@ contracts=(
     "ImageAllowlist"
     "IReleaseManager"
     "IPermissionController"
-    "USDCDeposit"
+    "USDCCredits"
 )
 
 forge b --no-metadata
