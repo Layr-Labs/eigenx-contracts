@@ -1083,4 +1083,258 @@ contract AppControllerTest is ComputeDeployer {
         assertEq(appController.getActiveAppCount(user), 2);
         assertEq(appController.getMaxActiveAppsPerUser(user), 2);
     }
+
+    // ========== Isolated Billing App Tests ==========
+
+    function test_createAppWithIsolatedBilling() public {
+        // Pre-compute the app address
+        IApp expectedApp = appController.calculateAppId(developer, SALT);
+
+        // Set quota for the app address (not the developer)
+        _setMaxActiveAppsPerUser(address(expectedApp), 1);
+
+        vm.prank(developer);
+        IApp app = appController.createAppWithIsolatedBilling(SALT, _assembleRelease());
+
+        // Verify app was created at the expected address
+        assertEq(address(app), address(expectedApp));
+
+        // Verify billing is isolated
+        assertEq(uint256(appController.getBillingType(app)), uint256(IAppController.BillingType.ISOLATED));
+
+        // Verify app is started
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.STARTED));
+
+        // Verify the app address's quota was used (not the developer's)
+        assertEq(appController.getActiveAppCount(address(app)), 1);
+        assertEq(appController.getActiveAppCount(developer), 0);
+    }
+
+    function test_createAppWithIsolatedBilling_noQuota_reverts() public {
+        // Don't set any quota for the app address — should revert
+        vm.prank(developer);
+        vm.expectRevert(abi.encodeWithSelector(IAppController.MaxActiveAppsExceeded.selector));
+        appController.createAppWithIsolatedBilling(SALT, _assembleRelease());
+    }
+
+    function test_createAppWithIsolatedBilling_terminateDecrementsAppQuota() public {
+        IApp expectedApp = appController.calculateAppId(developer, SALT);
+        _setMaxActiveAppsPerUser(address(expectedApp), 1);
+
+        vm.prank(developer);
+        IApp app = appController.createAppWithIsolatedBilling(SALT, _assembleRelease());
+        _acceptAppAdmin(app);
+
+        // Verify app address has 1 active app
+        assertEq(appController.getActiveAppCount(address(app)), 1);
+
+        // Terminate the app
+        vm.prank(developer);
+        appController.terminateApp(app);
+
+        // Verify the app address's count decremented (not the developer's)
+        assertEq(appController.getActiveAppCount(address(app)), 0);
+        assertEq(appController.getActiveAppCount(developer), 0);
+    }
+
+    function test_createAppWithIsolatedBilling_suspendByAppAddress() public {
+        IApp expectedApp = appController.calculateAppId(developer, SALT);
+        _setMaxActiveAppsPerUser(address(expectedApp), 1);
+
+        vm.prank(developer);
+        IApp app = appController.createAppWithIsolatedBilling(SALT, _assembleRelease());
+
+        // Admin suspends the app using the app address as the account
+        IApp[] memory apps = new IApp[](1);
+        apps[0] = app;
+
+        vm.prank(admin);
+        appController.suspend(address(app), apps);
+
+        // Verify the app is suspended
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.SUSPENDED));
+        assertEq(appController.getActiveAppCount(address(app)), 0);
+        assertEq(appController.getMaxActiveAppsPerUser(address(app)), 0);
+    }
+
+    function test_createAppWithIsolatedBilling_resumeFromSuspended() public {
+        IApp expectedApp = appController.calculateAppId(developer, SALT);
+        _setMaxActiveAppsPerUser(address(expectedApp), 1);
+
+        vm.prank(developer);
+        IApp app = appController.createAppWithIsolatedBilling(SALT, _assembleRelease());
+        _acceptAppAdmin(app);
+
+        // Suspend via admin
+        IApp[] memory apps = new IApp[](1);
+        apps[0] = app;
+        vm.prank(admin);
+        appController.suspend(address(app), apps);
+
+        // Verify suspended
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.SUSPENDED));
+        assertEq(appController.getActiveAppCount(address(app)), 0);
+
+        // Restore quota for the app address
+        _setMaxActiveAppsPerUser(address(app), 1);
+
+        // Developer resumes the app
+        vm.prank(developer);
+        appController.startApp(app);
+
+        // Verify resumed and app quota re-checked
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.STARTED));
+        assertEq(appController.getActiveAppCount(address(app)), 1);
+    }
+
+    function test_createAppWithIsolatedBilling_developerStillControls() public {
+        IApp expectedApp = appController.calculateAppId(developer, SALT);
+        _setMaxActiveAppsPerUser(address(expectedApp), 1);
+
+        vm.prank(developer);
+        IApp app = appController.createAppWithIsolatedBilling(SALT, _assembleRelease());
+        _acceptAppAdmin(app);
+
+        // Developer can stop the app
+        vm.prank(developer);
+        appController.stopApp(app);
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.STOPPED));
+
+        // Developer can start the app
+        vm.prank(developer);
+        appController.startApp(app);
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.STARTED));
+
+        // Developer can upgrade the app
+        vm.prank(developer);
+        appController.upgradeApp(app, _assembleRelease());
+
+        // Developer can terminate the app
+        vm.prank(developer);
+        appController.terminateApp(app);
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.TERMINATED));
+    }
+
+    function test_createApp_defaultBilling() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        // Existing createApp should have default billing
+        assertEq(uint256(appController.getBillingType(app)), uint256(IAppController.BillingType.DEFAULT));
+
+        // Billing should go to the developer
+        assertEq(appController.getActiveAppCount(developer), 1);
+    }
+
+    // ========== getAppsByBillingAccount Tests ==========
+
+    function test_getAppsByBillingAccount_regularApps() public {
+        // Create regular apps as developer
+        vm.prank(developer);
+        IApp app1 = appController.createApp(keccak256("billing_1"), _assembleRelease());
+        vm.prank(developer);
+        IApp app2 = appController.createApp(keccak256("billing_2"), _assembleRelease());
+
+        // Query by developer address — should return both
+        (IApp[] memory apps,) = appController.getAppsByBillingAccount(developer, 0, 10);
+        assertEq(apps.length, 2);
+        assertEq(address(apps[0]), address(app1));
+        assertEq(address(apps[1]), address(app2));
+    }
+
+    function test_getAppsByBillingAccount_isolatedBillingApp() public {
+        IApp expectedApp = appController.calculateAppId(developer, SALT);
+        _setMaxActiveAppsPerUser(address(expectedApp), 1);
+
+        vm.prank(developer);
+        IApp app = appController.createAppWithIsolatedBilling(SALT, _assembleRelease());
+
+        // Query by app address — should return the isolated billing app
+        (IApp[] memory appsByApp,) = appController.getAppsByBillingAccount(address(app), 0, 10);
+        assertEq(appsByApp.length, 1);
+        assertEq(address(appsByApp[0]), address(app));
+
+        // Query by developer — should NOT return the isolated billing app
+        (IApp[] memory appsByDev,) = appController.getAppsByBillingAccount(developer, 0, 10);
+        assertEq(appsByDev.length, 0);
+    }
+
+    function test_getAppsByBillingAccount_mixed() public {
+        // Create a regular app billed to developer
+        vm.prank(developer);
+        IApp regularApp = appController.createApp(keccak256("mixed_regular"), _assembleRelease());
+
+        // Create an isolated billing app billed to itself
+        IApp expectedApp = appController.calculateAppId(developer, SALT);
+        _setMaxActiveAppsPerUser(address(expectedApp), 1);
+        vm.prank(developer);
+        IApp isolatedApp = appController.createAppWithIsolatedBilling(SALT, _assembleRelease());
+
+        // Developer billing account returns only the regular app
+        (IApp[] memory devApps,) = appController.getAppsByBillingAccount(developer, 0, 10);
+        assertEq(devApps.length, 1);
+        assertEq(address(devApps[0]), address(regularApp));
+
+        // App address billing account returns only the isolated billing app
+        (IApp[] memory isoApps,) = appController.getAppsByBillingAccount(address(isolatedApp), 0, 10);
+        assertEq(isoApps.length, 1);
+        assertEq(address(isoApps[0]), address(isolatedApp));
+    }
+
+    // ========== Isolated Billing Edge Cases ==========
+
+    function test_suspendIsolatedBillingApp_withCreatorAccount_reverts() public {
+        IApp expectedApp = appController.calculateAppId(developer, SALT);
+        _setMaxActiveAppsPerUser(address(expectedApp), 1);
+
+        vm.prank(developer);
+        IApp app = appController.createAppWithIsolatedBilling(SALT, _assembleRelease());
+
+        // Trying to suspend using the creator (developer) as account should revert
+        // because the isolated billing app's ownership check requires the app address, not the creator
+        IApp[] memory apps = new IApp[](1);
+        apps[0] = app;
+
+        vm.prank(admin);
+        vm.expectRevert(abi.encodeWithSelector(IAppController.InvalidAppStatus.selector));
+        appController.suspend(developer, apps);
+    }
+
+    function test_getAppsByCreator_returnsIsolatedBillingApps() public {
+        IApp expectedApp = appController.calculateAppId(developer, SALT);
+        _setMaxActiveAppsPerUser(address(expectedApp), 1);
+
+        vm.prank(developer);
+        IApp app = appController.createAppWithIsolatedBilling(SALT, _assembleRelease());
+
+        // getAppsByCreator should still return the isolated billing app (creator is still set)
+        (IApp[] memory apps,) = appController.getAppsByCreator(developer, 0, 10);
+        assertEq(apps.length, 1);
+        assertEq(address(apps[0]), address(app));
+
+        // But getAppsByBillingAccount with developer should NOT return it
+        (IApp[] memory billingApps,) = appController.getAppsByBillingAccount(developer, 0, 10);
+        assertEq(billingApps.length, 0);
+    }
+
+    function test_terminateAppByAdmin_isolatedBilling_decrementsAppQuota() public {
+        IApp expectedApp = appController.calculateAppId(developer, SALT);
+        _setMaxActiveAppsPerUser(address(expectedApp), 1);
+
+        vm.prank(developer);
+        IApp app = appController.createAppWithIsolatedBilling(SALT, _assembleRelease());
+
+        // Verify app address has 1 active app
+        assertEq(appController.getActiveAppCount(address(app)), 1);
+        assertEq(appController.getActiveAppCount(developer), 0);
+
+        // Admin terminates the app
+        vm.prank(admin);
+        appController.terminateAppByAdmin(app);
+
+        // Verify the app address's count decremented (not the developer's)
+        assertEq(appController.getActiveAppCount(address(app)), 0);
+        assertEq(appController.getActiveAppCount(developer), 0);
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.TERMINATED));
+    }
 }

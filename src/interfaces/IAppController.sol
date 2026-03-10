@@ -59,15 +59,19 @@ interface IAppController {
     /// @notice Emitted when an app's metadata URI is updated
     event AppMetadataURIUpdated(IApp indexed app, string metadataURI);
 
-    /**
-     * @notice Enum for app status
-     */
+    /// @notice Enum for app status
     enum AppStatus {
         NONE, // App has not been created yet
         STARTED, // App has been started
         STOPPED, // App has been stopped but can be restarted
         TERMINATED, // App is permanently terminated
         SUSPENDED // App is suspended and can be started again, but does not have reserved capacity
+    }
+
+    /// @notice Billing type for an app
+    enum BillingType {
+        DEFAULT, // Billed to the creator's account
+        ISOLATED // Billed to the app's own address
     }
 
     /**
@@ -82,12 +86,21 @@ interface IAppController {
         bytes encryptedEnv;
     }
 
-    /// @notice The controller's config for an app
+    /// @notice The controller's config for an app (public-facing, ABI-stable)
     struct AppConfig {
         address creator;
         uint32 operatorSetId;
         uint32 latestReleaseBlockNumber;
         AppStatus status;
+    }
+
+    /// @notice Internal storage config for an app, extends AppConfig with additional fields
+    struct AppConfigStorage {
+        address creator;
+        uint32 operatorSetId;
+        uint32 latestReleaseBlockNumber;
+        AppStatus status;
+        BillingType billingType;
     }
 
     /// @notice User configuration and state
@@ -124,6 +137,15 @@ interface IAppController {
      * @return app The address of the newly created app
      */
     function createApp(bytes32 salt, Release calldata release) external returns (IApp app);
+
+    /**
+     * @notice Creates a new app with isolated billing, where costs are billed to the app's own address
+     * @param salt The salt to use for the app
+     * @param release The release to upgrade to
+     * @return app The address of the newly created app
+     * @dev The app address is pre-computed and must have quota set via setMaxActiveAppsPerUser before calling
+     */
+    function createAppWithIsolatedBilling(bytes32 salt, Release calldata release) external returns (IApp app);
 
     /**
      * @notice Upgrades an app with a new release to the ReleaseManager
@@ -239,6 +261,13 @@ interface IAppController {
     function getAppCreator(IApp app) external view returns (address);
 
     /**
+     * @notice Gets the billing type for an app
+     * @param app The app to check
+     * @return The billing type (DEFAULT or ISOLATED)
+     */
+    function getBillingType(IApp app) external view returns (BillingType);
+
+    /**
      * @notice Gets the operator set ID for a given app
      * @param app The app to get the operator set ID for
      * @return The operator set ID
@@ -283,6 +312,19 @@ interface IAppController {
      * @return configs An array of corresponding app configurations
      */
     function getAppsByCreator(address creator, uint256 offset, uint256 limit)
+        external
+        view
+        returns (IApp[] memory, AppConfig[] memory);
+
+    /**
+     * @notice Retrieves a paginated list of apps billed to the specified account and their configurations
+     * @param account The billing account address (creator for regular apps, app address for isolated billing apps)
+     * @param offset The starting index for pagination (0-based)
+     * @param limit The maximum number of apps to return in this page
+     * @return apps An array of app contract instances
+     * @return configs An array of corresponding app configurations
+     */
+    function getAppsByBillingAccount(address account, uint256 offset, uint256 limit)
         external
         view
         returns (IApp[] memory, AppConfig[] memory);

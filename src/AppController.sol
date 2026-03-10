@@ -101,27 +101,13 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     /// @inheritdoc IAppController
     function createApp(bytes32 salt, Release calldata release) external returns (IApp app) {
         _checkAndIncrementActiveApps(msg.sender);
+        app = _deployApp(salt, release, BillingType.DEFAULT);
+    }
 
-        // Assign an operator set ID to the app
-        uint32 operatorSetId = computeAVSRegistrar.assignOperatorSetId();
-
-        // Publish the initial release metadata URI
-        releaseManager.publishMetadataURI(
-            OperatorSet({avs: address(computeAVSRegistrar), id: operatorSetId}), "https://eigencloud.xyz"
-        );
-
-        // Create app using BeaconProxy
-        app = IApp(Create2.deploy(0, _calculateAppMixedSalt(msg.sender, salt), _calculateAppInitCode(msg.sender)));
-        _appConfigs[app].operatorSetId = operatorSetId;
-        _appConfigs[app].latestReleaseBlockNumber = 0;
-        _appConfigs[app].creator = msg.sender;
-        _allApps.add(address(app));
-
-        emit AppCreated(msg.sender, app, operatorSetId);
-
-        // Upgrade the app with the initial release
-        _upgradeApp(app, release);
-        _startApp(app);
+    /// @inheritdoc IAppController
+    function createAppWithIsolatedBilling(bytes32 salt, Release calldata release) external returns (IApp app) {
+        _checkAndIncrementActiveApps(address(calculateAppId(msg.sender, salt)));
+        app = _deployApp(salt, release, BillingType.ISOLATED);
     }
 
     /// @inheritdoc IAppController
@@ -150,7 +136,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
     /// @inheritdoc IAppController
     function stopApp(IApp app) external checkCanCall(address(app)) {
-        AppConfig storage config = _appConfigs[app];
+        AppConfigStorage storage config = _appConfigs[app];
         require(config.status == AppStatus.STARTED, InvalidAppStatus());
         config.status = AppStatus.STOPPED;
 
@@ -176,10 +162,11 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         // Suspend all provided apps, skipping apps that are already SUSPENDED, TERMINATED, or NONE
         for (uint256 i = 0; i < apps.length; i++) {
             IApp app = apps[i];
-            AppConfig memory config = _appConfigs[app];
+            AppConfigStorage memory config = _appConfigs[app];
 
-            // Validate ownership
-            require(config.creator == account, InvalidAppStatus());
+            // Validate that the app is billed to this account
+            address billingAccount = config.billingType == BillingType.ISOLATED ? address(app) : config.creator;
+            require(billingAccount == account, InvalidAppStatus());
 
             // Only suspend if app is active (STARTED or STOPPED)
             if (_isActive(config.status)) {
@@ -195,6 +182,32 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// INTERNAL FUNCTIONS
+
+    /**
+     * @notice Deploys an app, configures it, publishes the initial release, and starts it
+     * @param salt The salt for deterministic deployment
+     * @param release The initial release to upgrade to
+     * @param _billingType The billing type for the app (DEFAULT or ISOLATED)
+     * @return app The deployed app instance
+     */
+    function _deployApp(bytes32 salt, Release calldata release, BillingType _billingType) internal returns (IApp app) {
+        uint32 operatorSetId = computeAVSRegistrar.assignOperatorSetId();
+        releaseManager.publishMetadataURI(
+            OperatorSet({avs: address(computeAVSRegistrar), id: operatorSetId}), "https://eigencloud.xyz"
+        );
+
+        app = IApp(Create2.deploy(0, _calculateAppMixedSalt(msg.sender, salt), _calculateAppInitCode(msg.sender)));
+        _appConfigs[app].operatorSetId = operatorSetId;
+        _appConfigs[app].latestReleaseBlockNumber = 0;
+        _appConfigs[app].creator = msg.sender;
+        _appConfigs[app].billingType = _billingType;
+        _allApps.add(address(app));
+
+        emit AppCreated(msg.sender, app, operatorSetId);
+
+        _upgradeApp(app, release);
+        _startApp(app);
+    }
 
     /**
      * @notice Checks if an app status is not NONE
@@ -232,16 +245,25 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /**
-     * @notice Decrements global and creator active app counters
+     * @notice Resolves the billing account for an app
+     * @param app The app instance to resolve billing for
+     * @return The billing account address (app address if ISOLATED, creator if DEFAULT)
+     */
+    function _getBillingAccount(IApp app) internal view returns (address) {
+        AppConfigStorage storage config = _appConfigs[app];
+        return config.billingType == BillingType.ISOLATED ? address(app) : config.creator;
+    }
+
+    /**
+     * @notice Decrements global and billing account active app counters
      * @param app The app instance to decrement counters for
      */
     function _decrementActiveApps(IApp app) internal {
         // Decrement active app counts to free up capacity
         globalActiveAppCount--;
 
-        // Decrement the creator's active app count
-        address appCreator = _appConfigs[app].creator;
-        _userConfigs[appCreator].activeAppCount--;
+        // Decrement the billing account's active app count
+        _userConfigs[_getBillingAccount(app)].activeAppCount--;
     }
 
     /**
@@ -276,12 +298,12 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
      * @param app The app instance to start
      */
     function _startApp(IApp app) internal {
-        AppConfig storage config = _appConfigs[app];
+        AppConfigStorage storage config = _appConfigs[app];
         require(config.status != AppStatus.TERMINATED, InvalidAppStatus());
 
         // If resuming from suspended, re-check limits and increment active app counters
         if (config.status == AppStatus.SUSPENDED) {
-            _checkAndIncrementActiveApps(config.creator);
+            _checkAndIncrementActiveApps(_getBillingAccount(app));
         }
         config.status = AppStatus.STARTED;
         emit AppStarted(app);
@@ -329,6 +351,18 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /**
+     * @notice Converts an AppConfigStorage to a public AppConfig
+     */
+    function _toAppConfig(AppConfigStorage storage s) private view returns (AppConfig memory) {
+        return AppConfig({
+            creator: s.creator,
+            operatorSetId: s.operatorSetId,
+            latestReleaseBlockNumber: s.latestReleaseBlockNumber,
+            status: s.status
+        });
+    }
+
+    /**
      * @notice Gets filtered apps based on a predicate function
      * @param predicate The predicate function to apply to each app
      * @param target The target address to filter by
@@ -359,7 +393,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
                 }
 
                 apps[found] = app;
-                appConfigsMem[found] = _appConfigs[app];
+                appConfigsMem[found] = _toAppConfig(_appConfigs[app]);
                 found++;
             }
         }
@@ -391,6 +425,16 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         return _appConfigs[app].creator == creator;
     }
 
+    /**
+     * @notice Check if an app is billed to the given account
+     * @param app The app to check
+     * @param account The billing account to match against
+     * @return True if the app is billed to the account
+     */
+    function _isBilledTo(IApp app, address account) private view returns (bool) {
+        return _getBillingAccount(app) == account;
+    }
+
     /// VIEW FUNCTIONS
 
     /// @inheritdoc IAppController
@@ -404,7 +448,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// @inheritdoc IAppController
-    function calculateAppId(address deployer, bytes32 salt) external view returns (IApp) {
+    function calculateAppId(address deployer, bytes32 salt) public view returns (IApp) {
         return IApp(
             Create2.computeAddress(
                 _calculateAppMixedSalt(deployer, salt),
@@ -421,6 +465,11 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     /// @inheritdoc IAppController
     function getAppCreator(IApp app) external view returns (address) {
         return _appConfigs[app].creator;
+    }
+
+    /// @inheritdoc IAppController
+    function getBillingType(IApp app) external view returns (BillingType) {
+        return _appConfigs[app].billingType;
     }
 
     /// @inheritdoc IAppController
@@ -449,7 +498,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         appConfigsMem = new AppConfig[](rangeSize);
         for (uint256 i = 0; i < rangeSize; i++) {
             apps[i] = IApp(_allApps.at(offset + i));
-            appConfigsMem[i] = _appConfigs[apps[i]];
+            appConfigsMem[i] = _toAppConfig(_appConfigs[apps[i]]);
         }
     }
 
@@ -469,6 +518,15 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         returns (IApp[] memory apps, AppConfig[] memory appConfigsMem)
     {
         return _getFilteredApps(_isCreator, creator, offset, limit);
+    }
+
+    /// @inheritdoc IAppController
+    function getAppsByBillingAccount(address account, uint256 offset, uint256 limit)
+        external
+        view
+        returns (IApp[] memory apps, AppConfig[] memory appConfigsMem)
+    {
+        return _getFilteredApps(_isBilledTo, account, offset, limit);
     }
 
     /// @inheritdoc IAppController
