@@ -29,6 +29,9 @@ interface IAppController {
     /// @notice Thrown when trying to suspend an account that still has active apps
     error AccountHasActiveApps();
 
+    /// @notice Thrown when trying to confirm an upgrade with no pending release
+    error NoPendingUpgrade();
+
     /// @notice Emitted when a new app is successfully created
     event AppCreated(address indexed creator, IApp indexed app, uint32 operatorSetId);
 
@@ -49,6 +52,9 @@ interface IAppController {
 
     /// @notice Emitted when an app is suspended
     event AppSuspended(IApp indexed app);
+
+    /// @notice Emitted when a pending upgrade is confirmed
+    event UpgradeConfirmed(IApp indexed app, uint32 pendingReleaseBlockNumber);
 
     /// @notice Emitted when the maximum active apps limit is set for an address
     event MaxActiveAppsSet(address indexed user, uint32 limit);
@@ -91,6 +97,7 @@ interface IAppController {
         address creator;
         uint32 operatorSetId;
         uint32 latestReleaseBlockNumber;
+        uint32 pendingReleaseBlockNumber;
         AppStatus status;
     }
 
@@ -99,6 +106,7 @@ interface IAppController {
         address creator;
         uint32 operatorSetId;
         uint32 latestReleaseBlockNumber;
+        uint32 pendingReleaseBlockNumber;
         AppStatus status;
         BillingType billingType;
     }
@@ -161,6 +169,14 @@ interface IAppController {
      * @dev The app must not be AppStatus.TERMINATED
      */
     function upgradeApp(IApp app, Release calldata release) external returns (uint256);
+
+    /**
+     * @notice Confirms a pending upgrade, promoting the pending release to the confirmed (latest) release
+     * @param app The app to confirm the upgrade for
+     * @dev Caller must be UAM permissioned for the AppController (i.e., the Coordinator)
+     * @dev Reverts with NoPendingUpgrade if there is no pending release
+     */
+    function confirmUpgrade(IApp app) external;
 
     /**
      * @notice Updates the metadata URI for an app
@@ -275,11 +291,18 @@ interface IAppController {
     function getAppOperatorSetId(IApp app) external view returns (uint32);
 
     /**
-     * @notice Gets the latest release block number for a given app
+     * @notice Gets the confirmed (latest) release block number for a given app
      * @param app The app to get the latest release block number for
-     * @return The latest release block number
+     * @return The confirmed release block number
      */
     function getAppLatestReleaseBlockNumber(IApp app) external view returns (uint32);
+
+    /**
+     * @notice Gets the pending release block number for a given app
+     * @param app The app to get the pending release block number for
+     * @return The pending release block number (0 if no pending upgrade)
+     */
+    function getAppPendingReleaseBlockNumber(IApp app) external view returns (uint32);
 
     /**
      * @notice Retrieves a paginated list of all apps and their configurations
