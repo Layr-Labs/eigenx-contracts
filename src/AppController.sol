@@ -179,7 +179,7 @@ contract AppController is
 
     /// @inheritdoc IAppController
     function upgradeApp(IApp app, Release calldata release) external appIsActive(app) onlyAdmin(app) returns (uint256) {
-        require(!_appConfigs[app].governed, DirectUpgradeNotAllowed());
+        require(!_appConfigs[app].timelocked, TimelockRequired());
         return _upgradeApp(app, release);
     }
 
@@ -188,8 +188,9 @@ contract AppController is
         require(newOwner != address(0), InvalidPermissions());
         address previousOwner = _appConfigs[app].owner;
         _appConfigs[app].owner = newOwner;
-        // Timelocks enforce delays natively — only Safe owners need AppController-level governance
-        _appConfigs[app].governed = safeTimelockFactory.isSafe(newOwner);
+        // Timelock owner → timelocked = true (must use scheduleUpgrade/executeUpgrade)
+        // Safe or EOA owner → timelocked = false (upgradeApp directly; Safe handles threshold externally)
+        _appConfigs[app].timelocked = safeTimelockFactory.isTimelock(newOwner);
         _grantRole(_teamRole(newOwner, TeamRole.ADMIN), newOwner);
         emit AppOwnershipTransferred(app, previousOwner, newOwner);
     }
@@ -200,8 +201,11 @@ contract AppController is
         appIsActive(app)
         onlyAdmin(app)
     {
-        require(_appConfigs[app].governed, GovernanceRequired());
+        require(_appConfigs[app].timelocked, NotTimelocked());
         require(release.rmsRelease.artifacts.length == 1, MoreThanOneArtifact());
+        if (_pendingUpgrades[app].readyAt != 0) {
+            emit AppUpgradeCancelled(app);
+        }
         uint256 readyAt = block.timestamp + delay;
         _pendingUpgrades[app] = PendingUpgrade({releaseHash: keccak256(abi.encode(release)), readyAt: readyAt});
         emit AppUpgradeScheduled(app, readyAt, release);
@@ -209,13 +213,21 @@ contract AppController is
 
     /// @inheritdoc IAppController
     function executeUpgrade(IApp app, Release calldata release) external appIsActive(app) onlyAdmin(app) returns (uint256) {
-        require(_appConfigs[app].governed, GovernanceRequired());
+        require(_appConfigs[app].timelocked, NotTimelocked());
         PendingUpgrade memory pending = _pendingUpgrades[app];
         require(pending.readyAt != 0, NoScheduledUpgrade());
         require(block.timestamp >= pending.readyAt, UpgradeNotReady());
         require(keccak256(abi.encode(release)) == pending.releaseHash, ReleaseMismatch());
         delete _pendingUpgrades[app];
         return _upgradeApp(app, release);
+    }
+
+    /// @inheritdoc IAppController
+    function cancelUpgrade(IApp app) external appExists(app) onlyAdmin(app) {
+        require(_appConfigs[app].timelocked, NotTimelocked());
+        require(_pendingUpgrades[app].readyAt != 0, NoScheduledUpgrade());
+        delete _pendingUpgrades[app];
+        emit AppUpgradeCancelled(app);
     }
 
     /// @inheritdoc IAppController
@@ -618,8 +630,8 @@ contract AppController is
     }
 
     /// @inheritdoc IAppController
-    function getAppGoverned(IApp app) external view returns (bool) {
-        return _appConfigs[app].governed;
+    function getAppTimelocked(IApp app) external view returns (bool) {
+        return _appConfigs[app].timelocked;
     }
 
     /// @inheritdoc IAppController

@@ -33,11 +33,11 @@ interface IAppController {
     /// @notice Thrown when trying to revoke or renounce the last admin
     error CannotRevokeLastAdmin();
 
-    /// @notice Thrown when trying to directly upgrade an app that requires governance
-    error DirectUpgradeNotAllowed();
+    /// @notice Thrown when calling upgradeApp on an app whose owner is a Timelock — use scheduleUpgrade + executeUpgrade
+    error TimelockRequired();
 
-    /// @notice Thrown when trying to schedule/execute an upgrade on a non-governed app
-    error GovernanceRequired();
+    /// @notice Thrown when calling scheduleUpgrade/executeUpgrade on an app whose owner is not a Timelock
+    error NotTimelocked();
 
     /// @notice Thrown when trying to execute an upgrade before the delay has elapsed
     error UpgradeNotReady();
@@ -78,11 +78,14 @@ interface IAppController {
     /// @notice Emitted when an app's metadata URI is updated
     event AppMetadataURIUpdated(IApp indexed app, string metadataURI);
 
-    /// @notice Emitted when app ownership is transferred and governance mode is enabled
+    /// @notice Emitted when app ownership is transferred
     event AppOwnershipTransferred(IApp indexed app, address indexed previousOwner, address indexed newOwner);
 
-    /// @notice Emitted when an upgrade is scheduled for a governed app; off-chain controller takes no action
+    /// @notice Emitted when an upgrade is scheduled for a timelocked app; off-chain controller takes no action
     event AppUpgradeScheduled(IApp indexed app, uint256 readyAt, Release release);
+
+    /// @notice Emitted when a pending upgrade is cancelled for a timelocked app
+    event AppUpgradeCancelled(IApp indexed app);
 
     /**
      * @notice Enum for app status
@@ -131,7 +134,7 @@ interface IAppController {
         uint32 operatorSetId;
         uint32 latestReleaseBlockNumber;
         AppStatus status;
-        bool governed; // true = direct upgradeApp() blocked; must use scheduleUpgrade + executeUpgrade
+        bool timelocked; // true = owner is a Timelock; upgradeApp() blocked, must use scheduleUpgrade + executeUpgrade
     }
 
     /// @notice A pending upgrade scheduled for a governed app
@@ -219,13 +222,13 @@ interface IAppController {
     function transferOwnership(IApp app, address newOwner) external;
 
     /**
-     * @notice Schedules an upgrade for a governed app
+     * @notice Schedules an upgrade for a timelocked app
      * @param app The app to schedule an upgrade for
      * @param release The release to upgrade to
      * @param delay Seconds from now until the upgrade can be executed
      * @dev Caller must be an ADMIN for the app
-     * @dev App must be in governance mode (governed == true)
-     * @dev A new schedule call overwrites any existing pending upgrade
+     * @dev App owner must be a Timelock (timelocked == true)
+     * @dev A new schedule call overwrites any existing pending upgrade; emits AppUpgradeCancelled if one existed
      */
     function scheduleUpgrade(IApp app, Release calldata release, uint256 delay) external;
 
@@ -235,13 +238,22 @@ interface IAppController {
      * @param release The release to upgrade to — must match the hash committed in scheduleUpgrade
      * @return releaseId The unique identifier for the published release
      * @dev Caller must be an ADMIN for the app
-     * @dev App must be in governance mode with a pending upgrade whose readyAt <= block.timestamp
+     * @dev App owner must be a Timelock with a pending upgrade whose readyAt <= block.timestamp
      * @dev The release is not stored on-chain; callers must retrieve it from the AppUpgradeScheduled event
      */
     function executeUpgrade(IApp app, Release calldata release) external returns (uint256);
 
     /**
-     * @notice Returns the pending upgrade for a governed app
+     * @notice Cancels a pending scheduled upgrade for a timelocked app
+     * @param app The app to cancel the pending upgrade for
+     * @dev Caller must be an ADMIN for the app
+     * @dev App owner must be a Timelock (timelocked == true)
+     * @dev Reverts with NoScheduledUpgrade if there is no pending upgrade to cancel
+     */
+    function cancelUpgrade(IApp app) external;
+
+    /**
+     * @notice Returns the pending upgrade for a timelocked app
      * @param app The app to query
      * @return The PendingUpgrade struct (readyAt == 0 means no pending upgrade)
      */
@@ -365,11 +377,11 @@ interface IAppController {
     function getAppLatestReleaseBlockNumber(IApp app) external view returns (uint32);
 
     /**
-     * @notice Returns whether an app is in governance mode
+     * @notice Returns whether an app owner is a Timelock (requires scheduleUpgrade + executeUpgrade)
      * @param app The app to check
-     * @return True if the app requires scheduleUpgrade + executeUpgrade flow
+     * @return True if the app's owner is a Timelock
      */
-    function getAppGoverned(IApp app) external view returns (bool);
+    function getAppTimelocked(IApp app) external view returns (bool);
 
     /**
      * @notice Retrieves a paginated list of all apps and their configurations
