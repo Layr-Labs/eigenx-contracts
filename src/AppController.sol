@@ -245,16 +245,6 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /**
-     * @notice Resolves the billing account for an app
-     * @param app The app instance to resolve billing for
-     * @return The billing account address (app address if ISOLATED, creator if DEFAULT)
-     */
-    function _getBillingAccount(IApp app) internal view returns (address) {
-        AppConfigStorage storage config = _appConfigs[app];
-        return config.billingType == BillingType.ISOLATED ? address(app) : config.creator;
-    }
-
-    /**
      * @notice Decrements global and billing account active app counters
      * @param app The app instance to decrement counters for
      */
@@ -263,7 +253,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         globalActiveAppCount--;
 
         // Decrement the billing account's active app count
-        _userConfigs[_getBillingAccount(app)].activeAppCount--;
+        _userConfigs[getBillingAccount(app)].activeAppCount--;
     }
 
     /**
@@ -303,7 +293,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
         // If resuming from suspended, re-check limits and increment active app counters
         if (config.status == AppStatus.SUSPENDED) {
-            _checkAndIncrementActiveApps(_getBillingAccount(app));
+            _checkAndIncrementActiveApps(getBillingAccount(app));
         }
         config.status = AppStatus.STARTED;
         emit AppStarted(app);
@@ -432,7 +422,7 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
      * @return True if the app is billed to the account
      */
     function _isBilledTo(IApp app, address account) private view returns (bool) {
-        return _getBillingAccount(app) == account;
+        return getBillingAccount(app) == account;
     }
 
     /// VIEW FUNCTIONS
@@ -465,6 +455,16 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     /// @inheritdoc IAppController
     function getAppCreator(IApp app) external view returns (address) {
         return _appConfigs[app].creator;
+    }
+
+    /**
+     * @notice Resolves the billing account for an app
+     * @param app The app instance to resolve billing for
+     * @return The billing account address (app address if ISOLATED, creator if DEFAULT)
+     */
+    function getBillingAccount(IApp app) public view returns (address) {
+        AppConfigStorage storage config = _appConfigs[app];
+        return config.billingType == BillingType.ISOLATED ? address(app) : config.creator;
     }
 
     /// @inheritdoc IAppController
