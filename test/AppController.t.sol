@@ -67,6 +67,9 @@ contract AppControllerTest is ComputeDeployer {
         // Verify the app was created at the predicted address
         assertEq(address(app), address(appController.calculateAppId(developer, SALT)));
 
+        // Default billing account should be the creator
+        assertEq(appController.getBillingAccount(app), developer);
+
         vm.stopPrank();
     }
 
@@ -1102,6 +1105,9 @@ contract AppControllerTest is ComputeDeployer {
         // Verify billing is isolated
         assertEq(uint256(appController.getBillingType(app)), uint256(IAppController.BillingType.ISOLATED));
 
+        // Verify billing account is the app address itself
+        assertEq(appController.getBillingAccount(app), address(app));
+
         // Verify app is started
         assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.STARTED));
 
@@ -1221,6 +1227,7 @@ contract AppControllerTest is ComputeDeployer {
 
         // Existing createApp should have default billing
         assertEq(uint256(appController.getBillingType(app)), uint256(IAppController.BillingType.DEFAULT));
+        assertEq(appController.getBillingAccount(app), developer);
 
         // Billing should go to the developer
         assertEq(appController.getActiveAppCount(developer), 1);
@@ -1269,6 +1276,10 @@ contract AppControllerTest is ComputeDeployer {
         _setMaxActiveAppsPerUser(address(expectedApp), 1);
         vm.prank(developer);
         IApp isolatedApp = appController.createAppWithIsolatedBilling(SALT, _assembleRelease());
+
+        // Verify billing accounts
+        assertEq(appController.getBillingAccount(regularApp), developer);
+        assertEq(appController.getBillingAccount(isolatedApp), address(isolatedApp));
 
         // Developer billing account returns only the regular app
         (IApp[] memory devApps,) = appController.getAppsByBillingAccount(developer, 0, 10);

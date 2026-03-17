@@ -261,6 +261,13 @@ interface IAppController {
     function getAppCreator(IApp app) external view returns (address);
 
     /**
+     * @notice Gets the billing account for an app
+     * @param app The app to check
+     * @return The billing account address (app address if ISOLATED, creator if DEFAULT)
+     */
+    function getBillingAccount(IApp app) external view returns (address);
+
+    /**
      * @notice Gets the billing type for an app
      * @param app The app to check
      * @return The billing type (DEFAULT or ISOLATED)
