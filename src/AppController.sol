@@ -186,12 +186,23 @@ contract AppController is
     /// @inheritdoc IAppController
     function transferOwnership(IApp app, address newOwner) external appExists(app) onlyAdmin(app) {
         require(newOwner != address(0), InvalidPermissions());
+        // When timelocked, only the Timelock (owner) can transfer ownership — any admin calling
+        // directly would bypass the required queue delay enforced by the Timelock contract.
+        if (_appConfigs[app].timelocked) {
+            require(msg.sender == _appConfigs[app].owner, InvalidPermissions());
+        }
         address previousOwner = _appConfigs[app].owner;
         _appConfigs[app].owner = newOwner;
         // Timelock owner → timelocked = true (must use scheduleUpgrade/executeUpgrade)
         // Safe or EOA owner → timelocked = false (upgradeApp directly; Safe handles threshold externally)
         _appConfigs[app].timelocked = safeTimelockFactory.isTimelock(newOwner);
         _grantRole(_teamRole(newOwner, TeamRole.ADMIN), newOwner);
+        // Transfer active app accounting from old owner to new owner so that future
+        // terminate/suspend calls don't underflow the new owner's counter.
+        if (_isActive(_appConfigs[app].status)) {
+            _userConfigs[previousOwner].activeAppCount--;
+            _userConfigs[newOwner].activeAppCount++;
+        }
         emit AppOwnershipTransferred(app, previousOwner, newOwner);
     }
 
@@ -255,6 +266,11 @@ contract AppController is
 
     /// @inheritdoc IAppController
     function terminateApp(IApp app) external appIsActive(app) onlyAdmin(app) {
+        // When timelocked, only the Timelock (owner) can terminate — any admin calling
+        // directly would bypass the required queue delay enforced by the Timelock contract.
+        if (_appConfigs[app].timelocked) {
+            require(msg.sender == _appConfigs[app].owner, InvalidPermissions());
+        }
         _terminateApp(app);
     }
 
@@ -295,6 +311,12 @@ contract AppController is
     /// @inheritdoc IAppController
     function grantTeamRole(address team, TeamRole role, address account) external {
         require(hasRole(_teamRole(team, TeamRole.ADMIN), msg.sender), InvalidPermissions());
+        // When the team is a Timelock and an ADMIN is being granted, only the Timelock itself
+        // can make that change — otherwise any existing admin could add new admins without
+        // going through the queue delay.
+        if (role == TeamRole.ADMIN && safeTimelockFactory.isTimelock(team)) {
+            require(msg.sender == team, InvalidPermissions());
+        }
         _grantRole(_teamRole(team, role), account);
     }
 

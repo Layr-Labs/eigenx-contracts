@@ -1855,6 +1855,142 @@ contract AppControllerTest is ComputeDeployer {
         appController.transferOwnership(app, address(0));
     }
 
+    function test_transferOwnership_timelocked_ownerCanTransfer() public {
+        (IApp app, address mockTimelock) = _createGovernedApp();
+
+        address newOwner = makeAddr("newOwner");
+
+        // The Timelock (owner) can transfer ownership even when timelocked
+        vm.prank(mockTimelock);
+        appController.transferOwnership(app, newOwner);
+
+        assertEq(appController.getAppOwner(app), newOwner);
+    }
+
+    function test_transferOwnership_timelocked_nonOwnerAdminReverts() public {
+        (IApp app, address mockTimelock) = _createGovernedApp();
+
+        // Grant ADMIN to a second admin under the Timelock's team namespace
+        address otherAdmin = makeAddr("otherAdmin");
+        vm.prank(mockTimelock);
+        appController.grantTeamRole(mockTimelock, IAppController.TeamRole.ADMIN, otherAdmin);
+
+        // That admin cannot transfer ownership — must go through the Timelock queue
+        address newOwner = makeAddr("newOwner");
+        vm.prank(otherAdmin);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.transferOwnership(app, newOwner);
+    }
+
+    // ========== terminateApp timelocked enforcement ==========
+
+    function test_terminateApp_timelocked_ownerCanTerminate() public {
+        (IApp app, address mockTimelock) = _createGovernedApp();
+
+        // The Timelock (owner) can terminate even when timelocked
+        vm.prank(mockTimelock);
+        appController.terminateApp(app);
+
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.TERMINATED));
+    }
+
+    function test_terminateApp_timelocked_nonOwnerAdminReverts() public {
+        (IApp app, address mockTimelock) = _createGovernedApp();
+
+        // Grant ADMIN to a second admin under the Timelock's team namespace
+        address otherAdmin = makeAddr("otherAdminTerminate");
+        vm.prank(mockTimelock);
+        appController.grantTeamRole(mockTimelock, IAppController.TeamRole.ADMIN, otherAdmin);
+
+        // That admin cannot terminate — must go through the Timelock queue
+        vm.prank(otherAdmin);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.terminateApp(app);
+    }
+
+    function test_terminateApp_nonTimelocked_anyAdminCanTerminate() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(keccak256("terminate_eoa"), _assembleRelease());
+
+        // Grant ADMIN to another user
+        address otherAdmin = makeAddr("otherAdminEOA");
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.ADMIN, otherAdmin);
+
+        // Any admin can terminate a non-timelocked app
+        vm.prank(otherAdmin);
+        appController.terminateApp(app);
+
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.TERMINATED));
+    }
+
+    // ========== grantTeamRole ADMIN with Timelock team ==========
+
+    function test_grantTeamRole_admin_timelockTeam_timelockCanGrant() public {
+        (, address mockTimelock) = _createGovernedApp();
+
+        // The Timelock itself can grant ADMIN roles on its own team
+        address newAdmin = makeAddr("newAdmin");
+        vm.prank(mockTimelock);
+        appController.grantTeamRole(mockTimelock, IAppController.TeamRole.ADMIN, newAdmin);
+
+        assertTrue(appController.hasTeamRole(mockTimelock, IAppController.TeamRole.ADMIN, newAdmin));
+    }
+
+    function test_grantTeamRole_admin_timelockTeam_nonTimelockAdminReverts() public {
+        (, address mockTimelock) = _createGovernedApp();
+
+        // Grant ADMIN to a second admin under the Timelock's team namespace
+        address otherAdmin = makeAddr("otherAdminGrant");
+        vm.prank(mockTimelock);
+        appController.grantTeamRole(mockTimelock, IAppController.TeamRole.ADMIN, otherAdmin);
+
+        // That admin cannot grant further ADMIN roles — must go through the Timelock queue
+        address newAdmin = makeAddr("newAdminAttempt");
+        vm.prank(otherAdmin);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.grantTeamRole(mockTimelock, IAppController.TeamRole.ADMIN, newAdmin);
+    }
+
+    function test_grantTeamRole_nonAdmin_timelockTeam_anyAdminCanGrant() public {
+        (, address mockTimelock) = _createGovernedApp();
+
+        // Grant ADMIN to a second admin first
+        address otherAdmin = makeAddr("otherAdminNonAdmin");
+        vm.prank(mockTimelock);
+        appController.grantTeamRole(mockTimelock, IAppController.TeamRole.ADMIN, otherAdmin);
+
+        // Any admin can grant non-ADMIN roles (PAUSER, DEVELOPER) — no Timelock restriction
+        address newPauser = makeAddr("newPauser");
+        vm.prank(otherAdmin);
+        appController.grantTeamRole(mockTimelock, IAppController.TeamRole.PAUSER, newPauser);
+
+        assertTrue(appController.hasTeamRole(mockTimelock, IAppController.TeamRole.PAUSER, newPauser));
+
+        address newDeveloper = makeAddr("newDeveloper");
+        vm.prank(otherAdmin);
+        appController.grantTeamRole(mockTimelock, IAppController.TeamRole.DEVELOPER, newDeveloper);
+
+        assertTrue(appController.hasTeamRole(mockTimelock, IAppController.TeamRole.DEVELOPER, newDeveloper));
+    }
+
+    function test_grantTeamRole_admin_nonTimelockTeam_anyAdminCanGrant() public {
+        // Developer (EOA team) creates an app — no timelock restriction on grantTeamRole ADMIN
+        vm.prank(developer);
+        appController.createApp(keccak256("eoa_grant_admin"), _assembleRelease());
+
+        address anotherAdmin = makeAddr("anotherAdmin");
+        vm.prank(developer);
+        appController.grantTeamRole(developer, IAppController.TeamRole.ADMIN, anotherAdmin);
+
+        // anotherAdmin (not the team address itself) can freely grant ADMIN since team is EOA
+        address newAdmin = makeAddr("newAdminEOA");
+        vm.prank(anotherAdmin);
+        appController.grantTeamRole(developer, IAppController.TeamRole.ADMIN, newAdmin);
+
+        assertTrue(appController.hasTeamRole(developer, IAppController.TeamRole.ADMIN, newAdmin));
+    }
+
     // ========== scheduleUpgrade Tests ==========
 
     function test_scheduleUpgrade() public {
