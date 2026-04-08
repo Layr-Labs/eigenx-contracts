@@ -75,9 +75,7 @@ contract SafeTimelockFactoryTest is Test {
         factory = SafeTimelockFactory(
             address(
                 new TransparentUpgradeableProxy(
-                    address(factoryImpl),
-                    address(proxyAdmin),
-                    abi.encodeCall(SafeTimelockFactory.initialize, ())
+                    address(factoryImpl), address(proxyAdmin), abi.encodeCall(SafeTimelockFactory.initialize, ())
                 )
             )
         );
@@ -217,8 +215,7 @@ contract SafeTimelockFactoryTest is Test {
         owners[0] = makeAddr("owner1");
         owners[1] = makeAddr("owner2");
 
-        ISafeTimelockFactory.SafeConfig memory config =
-            ISafeTimelockFactory.SafeConfig({owners: owners, threshold: 2});
+        ISafeTimelockFactory.SafeConfig memory config = ISafeTimelockFactory.SafeConfig({owners: owners, threshold: 2});
 
         vm.expectEmit(true, false, false, true);
         emit SafeDeployed(address(this), address(0), owners, 2, SALT);
@@ -233,8 +230,7 @@ contract SafeTimelockFactoryTest is Test {
         address[] memory owners = new address[](1);
         owners[0] = makeAddr("owner");
 
-        ISafeTimelockFactory.SafeConfig memory config =
-            ISafeTimelockFactory.SafeConfig({owners: owners, threshold: 1});
+        ISafeTimelockFactory.SafeConfig memory config = ISafeTimelockFactory.SafeConfig({owners: owners, threshold: 1});
 
         address predicted = factory.calculateSafeAddress(address(this), config, SALT);
         address deployed = factory.deploySafe(config, SALT);

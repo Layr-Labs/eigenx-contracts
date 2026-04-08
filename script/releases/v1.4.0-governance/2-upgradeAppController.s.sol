@@ -14,10 +14,10 @@ contract UpgradeAppController is MultisigBuilder, DeployContracts {
     using Env for *;
 
     function _runAsMultisig() internal override prank(Env.computeOpsMultisig()) {
-        Env.proxyAdmin().upgrade(
-            ITransparentUpgradeableProxy(address(Env.proxy.appController())),
-            address(Env.impl.appController())
-        );
+        Env.proxyAdmin()
+            .upgrade(
+                ITransparentUpgradeableProxy(address(Env.proxy.appController())), address(Env.impl.appController())
+            );
     }
 
     function testScript() public virtual override {

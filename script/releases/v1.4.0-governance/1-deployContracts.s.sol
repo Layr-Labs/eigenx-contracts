@@ -104,9 +104,7 @@ contract DeployContracts is EOADeployer {
         // Validate SafeTimelockFactory impl immutables
         SafeTimelockFactory safeTimelockFactoryImpl = Env.impl.safeTimelockFactory();
         assertEq(
-            safeTimelockFactoryImpl.safeSingleton(),
-            Env.safeSingleton(),
-            "SafeTimelockFactory safeSingleton mismatch"
+            safeTimelockFactoryImpl.safeSingleton(), Env.safeSingleton(), "SafeTimelockFactory safeSingleton mismatch"
         );
         assertEq(
             safeTimelockFactoryImpl.safeProxyFactory(),
@@ -143,9 +141,7 @@ contract DeployContracts is EOADeployer {
             "AppController computeOperator mismatch"
         );
         assertEq(
-            address(appController.appBeacon()),
-            address(Env.beacon.appBeacon()),
-            "AppController appBeacon mismatch"
+            address(appController.appBeacon()), address(Env.beacon.appBeacon()), "AppController appBeacon mismatch"
         );
         assertEq(
             address(appController.safeTimelockFactory()),

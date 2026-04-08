@@ -140,7 +140,7 @@ interface IAppController {
     /// @notice A pending upgrade scheduled for a governed app
     struct PendingUpgrade {
         bytes32 releaseHash; // keccak256(abi.encode(release)) — verified at execution time
-        uint256 readyAt;     // block.timestamp after which executeUpgrade() is allowed (0 = none pending)
+        uint256 readyAt; // block.timestamp after which executeUpgrade() is allowed (0 = none pending)
     }
 
     /// @notice User configuration and state

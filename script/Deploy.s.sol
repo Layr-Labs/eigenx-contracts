@@ -100,9 +100,7 @@ contract Deploy is Parser {
                 _timelockImplementation: address(timelockImpl)
             });
             TransparentUpgradeableProxy factoryProxy = new TransparentUpgradeableProxy(
-                address(factoryImpl),
-                address(params.proxyAdmin),
-                abi.encodeCall(SafeTimelockFactory.initialize, ())
+                address(factoryImpl), address(params.proxyAdmin), abi.encodeCall(SafeTimelockFactory.initialize, ())
             );
             safeTimelockFactory = ISafeTimelockFactory(address(factoryProxy));
         }

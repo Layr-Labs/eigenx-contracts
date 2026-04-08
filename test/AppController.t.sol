@@ -2378,8 +2378,7 @@ contract AppControllerTest is ComputeDeployer {
 
     function _assembleAltRelease() internal view returns (IAppController.Release memory) {
         IReleaseManagerTypes.Artifact[] memory artifacts = new IReleaseManagerTypes.Artifact[](1);
-        artifacts[0] =
-            IReleaseManagerTypes.Artifact({digest: keccak256("alt-digest"), registry: "ipfs://alt-registry"});
+        artifacts[0] = IReleaseManagerTypes.Artifact({digest: keccak256("alt-digest"), registry: "ipfs://alt-registry"});
 
         IReleaseManagerTypes.Release memory rmsRelease =
             IReleaseManagerTypes.Release({artifacts: artifacts, upgradeByTime: uint32(block.timestamp + 2 days)});

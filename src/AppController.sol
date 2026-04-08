@@ -223,7 +223,12 @@ contract AppController is
     }
 
     /// @inheritdoc IAppController
-    function executeUpgrade(IApp app, Release calldata release) external appIsActive(app) onlyAdmin(app) returns (uint256) {
+    function executeUpgrade(IApp app, Release calldata release)
+        external
+        appIsActive(app)
+        onlyAdmin(app)
+        returns (uint256)
+    {
         require(_appConfigs[app].timelocked, NotTimelocked());
         PendingUpgrade memory pending = _pendingUpgrades[app];
         require(pending.readyAt != 0, NoScheduledUpgrade());
