@@ -46,7 +46,7 @@ abstract contract AppControllerStorage is IAppController {
     EnumerableSet.AddressSet internal _allApps;
 
     /// @notice The mapping of app address to app storage
-    mapping(IApp => AppConfigStorage) internal _appConfigs;
+    mapping(IApp => AppConfig) internal _appConfigs;
 
     /// @notice User configuration and state
     mapping(address => UserConfig) internal _userConfigs;
