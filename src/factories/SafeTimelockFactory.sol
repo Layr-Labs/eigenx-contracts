@@ -36,6 +36,7 @@ contract SafeTimelockFactory is Initializable, SafeTimelockFactoryStorage {
     function deploySafe(SafeConfig calldata config, bytes32 salt) external returns (address safe) {
         safe = _deploySafe(config, salt);
         _safes.add(safe);
+        _safesByDeployer[msg.sender].add(safe);
         emit SafeDeployed(msg.sender, safe, config.owners, config.threshold, salt);
     }
 
@@ -44,6 +45,7 @@ contract SafeTimelockFactory is Initializable, SafeTimelockFactoryStorage {
         _validateTimelockConfig(config);
         timelock = _deployTimelock(config, salt);
         _timelocks.add(timelock);
+        _timelocksByDeployer[msg.sender].add(timelock);
         emit TimelockDeployed(msg.sender, timelock, config.minDelay, config.proposers, config.executors, salt);
     }
 
@@ -57,6 +59,16 @@ contract SafeTimelockFactory is Initializable, SafeTimelockFactoryStorage {
     /// @inheritdoc ISafeTimelockFactory
     function isTimelock(address timelock) external view returns (bool) {
         return _timelocks.contains(timelock);
+    }
+
+    /// @inheritdoc ISafeTimelockFactory
+    function getTimelocksByDeployer(address deployer) external view returns (address[] memory) {
+        return _timelocksByDeployer[deployer].values();
+    }
+
+    /// @inheritdoc ISafeTimelockFactory
+    function getSafesByDeployer(address deployer) external view returns (address[] memory) {
+        return _safesByDeployer[deployer].values();
     }
 
     /// @inheritdoc ISafeTimelockFactory

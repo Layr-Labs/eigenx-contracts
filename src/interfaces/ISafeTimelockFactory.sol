@@ -123,4 +123,18 @@ interface ISafeTimelockFactory {
      * @return The TimelockControllerImpl address
      */
     function timelockImplementation() external view returns (address);
+
+    /**
+     * @notice Returns all Timelocks deployed by a given deployer
+     * @param deployer The deployer address
+     * @return Array of Timelock addresses
+     */
+    function getTimelocksByDeployer(address deployer) external view returns (address[] memory);
+
+    /**
+     * @notice Returns all Safes deployed by a given deployer
+     * @param deployer The deployer address
+     * @return Array of Safe addresses
+     */
+    function getSafesByDeployer(address deployer) external view returns (address[] memory);
 }

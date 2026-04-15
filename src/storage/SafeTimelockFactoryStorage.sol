@@ -33,10 +33,16 @@ abstract contract SafeTimelockFactoryStorage is ISafeTimelockFactory {
     /// @notice Set of all Timelocks deployed by this factory
     EnumerableSet.AddressSet internal _timelocks;
 
+    /// @notice Timelocks indexed by deployer address
+    mapping(address => EnumerableSet.AddressSet) internal _timelocksByDeployer;
+
+    /// @notice Safes indexed by deployer address
+    mapping(address => EnumerableSet.AddressSet) internal _safesByDeployer;
+
     /// STORAGE GAP
 
     /// @notice Storage gap for future upgrades
-    uint256[46] private __gap;
+    uint256[44] private __gap;
 
     /// CONSTRUCTOR
 

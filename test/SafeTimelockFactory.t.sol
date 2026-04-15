@@ -247,4 +247,87 @@ contract SafeTimelockFactoryTest is Test {
     function test_isSafe_false_for_random_address() public view {
         assertFalse(factory.isSafe(address(0xBEEF)), "random address should not be a safe");
     }
+
+    // ========== Deployer index tests ==========
+
+    function test_getTimelocksByDeployer_returnsDeployedTimelocks() public {
+        address[] memory proposers = new address[](1);
+        proposers[0] = proposer;
+        address[] memory executors = new address[](1);
+        executors[0] = executor;
+        ISafeTimelockFactory.TimelockConfig memory config =
+            ISafeTimelockFactory.TimelockConfig({minDelay: 1 days, proposers: proposers, executors: executors});
+
+        address tl1 = factory.deployTimelock(config, keccak256("salt1"));
+        address tl2 = factory.deployTimelock(config, keccak256("salt2"));
+
+        address[] memory result = factory.getTimelocksByDeployer(address(this));
+        assertEq(result.length, 2, "should return 2 timelocks");
+        assertTrue(result[0] == tl1 || result[1] == tl1, "tl1 not in result");
+        assertTrue(result[0] == tl2 || result[1] == tl2, "tl2 not in result");
+    }
+
+    function test_getTimelocksByDeployer_isolatesDeployers() public {
+        address deployer2 = makeAddr("deployer2");
+        address[] memory proposers = new address[](1);
+        proposers[0] = proposer;
+        address[] memory executors = new address[](1);
+        executors[0] = executor;
+        ISafeTimelockFactory.TimelockConfig memory config =
+            ISafeTimelockFactory.TimelockConfig({minDelay: 1 days, proposers: proposers, executors: executors});
+
+        factory.deployTimelock(config, SALT);
+
+        vm.prank(deployer2);
+        factory.deployTimelock(config, SALT);
+
+        assertEq(factory.getTimelocksByDeployer(address(this)).length, 1, "deployer1 should have 1");
+        assertEq(factory.getTimelocksByDeployer(deployer2).length, 1, "deployer2 should have 1");
+    }
+
+    function test_getTimelocksByDeployer_emptyForUnknown() public view {
+        assertEq(factory.getTimelocksByDeployer(address(0xDEAD)).length, 0, "unknown deployer should return empty");
+    }
+
+    function test_getSafesByDeployer_returnsDeployedSafes() public {
+        address[] memory owners = new address[](1);
+        owners[0] = makeAddr("owner");
+        ISafeTimelockFactory.SafeConfig memory config1 = ISafeTimelockFactory.SafeConfig({owners: owners, threshold: 1});
+
+        address[] memory owners2 = new address[](1);
+        owners2[0] = makeAddr("owner2");
+        ISafeTimelockFactory.SafeConfig memory config2 =
+            ISafeTimelockFactory.SafeConfig({owners: owners2, threshold: 1});
+
+        address safe1 = factory.deploySafe(config1, SALT);
+        address safe2 = factory.deploySafe(config2, SALT);
+
+        address[] memory result = factory.getSafesByDeployer(address(this));
+        assertEq(result.length, 2, "should return 2 safes");
+        assertTrue(result[0] == safe1 || result[1] == safe1, "safe1 not in result");
+        assertTrue(result[0] == safe2 || result[1] == safe2, "safe2 not in result");
+    }
+
+    function test_getSafesByDeployer_isolatesDeployers() public {
+        address deployer2 = makeAddr("deployer2");
+        address[] memory owners = new address[](1);
+        owners[0] = makeAddr("owner");
+        ISafeTimelockFactory.SafeConfig memory config = ISafeTimelockFactory.SafeConfig({owners: owners, threshold: 1});
+
+        factory.deploySafe(config, SALT);
+
+        address[] memory owners2 = new address[](1);
+        owners2[0] = makeAddr("owner2");
+        ISafeTimelockFactory.SafeConfig memory config2 =
+            ISafeTimelockFactory.SafeConfig({owners: owners2, threshold: 1});
+        vm.prank(deployer2);
+        factory.deploySafe(config2, SALT);
+
+        assertEq(factory.getSafesByDeployer(address(this)).length, 1, "deployer1 should have 1");
+        assertEq(factory.getSafesByDeployer(deployer2).length, 1, "deployer2 should have 1");
+    }
+
+    function test_getSafesByDeployer_emptyForUnknown() public view {
+        assertEq(factory.getSafesByDeployer(address(0xDEAD)).length, 0, "unknown deployer should return empty");
+    }
 }
