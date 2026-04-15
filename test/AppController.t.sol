@@ -18,8 +18,6 @@ contract AppControllerTest is ComputeDeployer {
     event AppSuspendedByAdmin(IApp indexed app);
     event AppMetadataURIUpdated(IApp indexed app, string metadataURI);
     event AppOwnershipTransferred(IApp indexed app, address indexed previousOwner, address indexed newOwner);
-    event AppUpgradeScheduled(IApp indexed app, uint256 readyAt, IAppController.Release release);
-    event AppUpgradeCancelled(IApp indexed app);
 
     function setUp() public {
         _deployContracts();
@@ -1804,10 +1802,16 @@ contract AppControllerTest is ComputeDeployer {
         appController.transferOwnership(app, mockTimelock);
 
         assertEq(appController.getAppOwner(app), mockTimelock);
-        // Timelock owner must use scheduleUpgrade/executeUpgrade — direct upgrade blocked
         assertTrue(appController.getAppTimelocked(app), "Timelock owner should set timelocked");
+        // Non-owner admin cannot call upgradeApp when timelocked
+        address otherAdmin = makeAddr("otherAdmin");
         vm.prank(mockTimelock);
-        vm.expectRevert(IAppController.TimelockRequired.selector);
+        appController.grantTeamRole(mockTimelock, IAppController.TeamRole.ADMIN, otherAdmin);
+        vm.prank(otherAdmin);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.upgradeApp(app, _assembleRelease());
+        // The Timelock itself can call upgradeApp directly
+        vm.prank(mockTimelock);
         appController.upgradeApp(app, _assembleRelease());
     }
 
@@ -1991,360 +1995,37 @@ contract AppControllerTest is ComputeDeployer {
         assertTrue(appController.hasTeamRole(developer, IAppController.TeamRole.ADMIN, newAdmin));
     }
 
-    // ========== scheduleUpgrade Tests ==========
+    // ========== upgradeApp timelocked ==========
 
-    function test_scheduleUpgrade() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
+    function test_upgradeApp_timelocked_ownerCanUpgrade() public {
+        (IApp app, address mockTimelock) = _createGovernedApp();
 
-        IAppController.Release memory release = _assembleRelease();
-        uint256 delay = 2 hours;
-
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, release, delay);
-
-        IAppController.PendingUpgrade memory pending = appController.getPendingUpgrade(app);
-        assertEq(pending.readyAt, block.timestamp + delay);
-        assertEq(pending.releaseHash, keccak256(abi.encode(release)));
-    }
-
-    function test_scheduleUpgrade_emitsEvent() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
-
-        IAppController.Release memory release = _assembleRelease();
-        uint256 delay = 2 hours;
-
-        // Only verify the indexed app topic; Release data is too dynamic to match exactly
-        vm.expectEmit(true, false, false, false);
-        emit AppUpgradeScheduled(app, block.timestamp + delay, release);
-
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, release, delay);
-    }
-
-    function test_scheduleUpgrade_requiresGovernance() public {
-        vm.prank(developer);
-        IApp app = appController.createApp(SALT, _assembleRelease());
-
-        vm.prank(developer);
-        vm.expectRevert(IAppController.NotTimelocked.selector);
-        appController.scheduleUpgrade(app, _assembleRelease(), 1 hours);
-    }
-
-    function test_scheduleUpgrade_requiresAdmin() public {
-        (IApp app,) = _createGovernedApp();
-
-        address rando = makeAddr("rando");
-        vm.prank(rando);
-        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
-        appController.scheduleUpgrade(app, _assembleRelease(), 1 hours);
-    }
-
-    function test_scheduleUpgrade_overwriteEmitsCancelled() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
-
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, _assembleRelease(), 2 hours);
-
-        // Rescheduling with a pending upgrade should emit AppUpgradeCancelled before AppUpgradeScheduled
-        vm.expectEmit(true, false, false, false);
-        emit AppUpgradeCancelled(app);
-
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, _assembleAltRelease(), 1 hours);
-    }
-
-    function test_scheduleUpgrade_overwritesPending() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
-
-        IAppController.Release memory release1 = _assembleRelease();
-        IAppController.Release memory release2 = _assembleAltRelease();
-
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, release1, 1 hours);
-
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, release2, 3 hours);
-
-        IAppController.PendingUpgrade memory pending = appController.getPendingUpgrade(app);
-        assertEq(pending.releaseHash, keccak256(abi.encode(release2)));
-        assertEq(pending.readyAt, block.timestamp + 3 hours);
-    }
-
-    function test_scheduleUpgrade_zeroDelay() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
-
-        IAppController.Release memory release = _assembleRelease();
-
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, release, 0);
-
-        assertEq(appController.getPendingUpgrade(app).readyAt, block.timestamp);
-    }
-
-    // ========== executeUpgrade Tests ==========
-
-    function test_executeUpgrade() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
-
-        IAppController.Release memory release = _assembleRelease();
-        uint256 delay = 2 hours;
-
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, release, delay);
-
-        vm.warp(block.timestamp + delay);
-
-        vm.prank(mockSafe);
-        uint256 releaseId = appController.executeUpgrade(app, release);
+        vm.prank(mockTimelock);
+        uint256 releaseId = appController.upgradeApp(app, _assembleRelease());
 
         assertTrue(releaseId > 0);
-        assertEq(appController.getPendingUpgrade(app).readyAt, 0, "pending upgrade should be cleared");
-        assertEq(appController.getAppLatestReleaseBlockNumber(app), uint32(block.number));
     }
 
-    function test_executeUpgrade_atExactDelay() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
+    function test_upgradeApp_timelocked_nonOwnerAdminReverts() public {
+        (IApp app, address mockTimelock) = _createGovernedApp();
 
-        IAppController.Release memory release = _assembleRelease();
-        uint256 delay = 1 hours;
+        address otherAdmin = makeAddr("otherAdmin");
+        vm.prank(mockTimelock);
+        appController.grantTeamRole(mockTimelock, IAppController.TeamRole.ADMIN, otherAdmin);
 
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, release, delay);
-
-        vm.warp(block.timestamp + delay); // exactly at readyAt
-
-        vm.prank(mockSafe);
-        appController.executeUpgrade(app, release); // should not revert
-    }
-
-    function test_executeUpgrade_requiresGovernance() public {
-        vm.prank(developer);
-        IApp app = appController.createApp(SALT, _assembleRelease());
-
-        vm.prank(developer);
-        vm.expectRevert(IAppController.NotTimelocked.selector);
-        appController.executeUpgrade(app, _assembleRelease());
-    }
-
-    function test_executeUpgrade_noScheduledUpgrade() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
-
-        vm.prank(mockSafe);
-        vm.expectRevert(IAppController.NoScheduledUpgrade.selector);
-        appController.executeUpgrade(app, _assembleRelease());
-    }
-
-    function test_executeUpgrade_notReady() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
-
-        IAppController.Release memory release = _assembleRelease();
-
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, release, 2 hours);
-
-        vm.warp(block.timestamp + 2 hours - 1);
-
-        vm.prank(mockSafe);
-        vm.expectRevert(IAppController.UpgradeNotReady.selector);
-        appController.executeUpgrade(app, release);
-    }
-
-    function test_executeUpgrade_releaseMismatch() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
-
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, _assembleRelease(), 1 hours);
-
-        vm.warp(block.timestamp + 1 hours);
-
-        vm.prank(mockSafe);
-        vm.expectRevert(IAppController.ReleaseMismatch.selector);
-        appController.executeUpgrade(app, _assembleAltRelease());
-    }
-
-    function test_executeUpgrade_requiresAdmin() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
-
-        IAppController.Release memory release = _assembleRelease();
-
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, release, 1 hours);
-
-        vm.warp(block.timestamp + 1 hours);
-
-        address rando = makeAddr("rando");
-        vm.prank(rando);
+        vm.prank(otherAdmin);
         vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
-        appController.executeUpgrade(app, release);
-    }
-
-    function test_executeUpgrade_clearsPendingAfterExecution() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
-
-        IAppController.Release memory release = _assembleRelease();
-
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, release, 0);
-
-        vm.prank(mockSafe);
-        appController.executeUpgrade(app, release);
-
-        IAppController.PendingUpgrade memory pending = appController.getPendingUpgrade(app);
-        assertEq(pending.readyAt, 0);
-        assertEq(pending.releaseHash, bytes32(0));
-    }
-
-    // ========== cancelUpgrade Tests ==========
-
-    function test_cancelUpgrade() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
-
-        IAppController.Release memory release = _assembleRelease();
-
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, release, 2 hours);
-
-        vm.prank(mockSafe);
-        appController.cancelUpgrade(app);
-
-        IAppController.PendingUpgrade memory pending = appController.getPendingUpgrade(app);
-        assertEq(pending.readyAt, 0);
-        assertEq(pending.releaseHash, bytes32(0));
-    }
-
-    function test_cancelUpgrade_emitsEvent() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
-
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, _assembleRelease(), 2 hours);
-
-        vm.expectEmit(true, false, false, false);
-        emit AppUpgradeCancelled(app);
-
-        vm.prank(mockSafe);
-        appController.cancelUpgrade(app);
-    }
-
-    function test_cancelUpgrade_afterDelayElapsed() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
-
-        IAppController.Release memory release = _assembleRelease();
-        uint256 delay = 1 hours;
-
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, release, delay);
-
-        // Advance past readyAt — upgrade is executable but not yet executed
-        vm.warp(block.timestamp + delay + 1);
-
-        vm.prank(mockSafe);
-        appController.cancelUpgrade(app);
-
-        IAppController.PendingUpgrade memory pending = appController.getPendingUpgrade(app);
-        assertEq(pending.readyAt, 0);
-    }
-
-    function test_cancelUpgrade_requiresGovernance() public {
-        vm.prank(developer);
-        IApp app = appController.createApp(SALT, _assembleRelease());
-
-        vm.prank(developer);
-        vm.expectRevert(IAppController.NotTimelocked.selector);
-        appController.cancelUpgrade(app);
-    }
-
-    function test_cancelUpgrade_noPendingUpgrade() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
-
-        vm.prank(mockSafe);
-        vm.expectRevert(IAppController.NoScheduledUpgrade.selector);
-        appController.cancelUpgrade(app);
-    }
-
-    function test_cancelUpgrade_requiresAdmin() public {
-        (IApp app,) = _createGovernedApp();
-
-        address rando = makeAddr("rando");
-        vm.prank(rando);
-        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
-        appController.cancelUpgrade(app);
-    }
-
-    function test_cancelUpgrade_allowsReschedule() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
-
-        IAppController.Release memory release1 = _assembleRelease();
-
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, release1, 2 hours);
-
-        vm.prank(mockSafe);
-        appController.cancelUpgrade(app);
-
-        // Schedule again with a different release — should succeed
-        IAppController.Release memory release2 = _assembleAltRelease();
-        vm.prank(mockSafe);
-        appController.scheduleUpgrade(app, release2, 1 hours);
-
-        IAppController.PendingUpgrade memory pending = appController.getPendingUpgrade(app);
-        assertEq(pending.releaseHash, keccak256(abi.encode(release2)));
-    }
-
-    // ========== upgradeApp blocked by governance ==========
-
-    function test_upgradeApp_blockedWhenGoverned() public {
-        (IApp app, address mockSafe) = _createGovernedApp();
-
-        vm.prank(mockSafe);
-        vm.expectRevert(IAppController.TimelockRequired.selector);
         appController.upgradeApp(app, _assembleRelease());
     }
 
-    // ========== Full governance flow ==========
-
-    function test_governance_fullFlow() public {
-        // 1. EOA creates app — direct upgrade works
+    function test_upgradeApp_notTimelocked_anyAdminCanUpgrade() public {
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
 
         vm.prank(developer);
-        appController.upgradeApp(app, _assembleRelease()); // no revert
-
-        // 2. Transfer ownership to Timelock — timelocked mode enabled
-        address mockTimelock = makeAddr("mockTimelock");
-        _mockIsTimelock(mockTimelock);
-
-        vm.prank(developer);
-        appController.transferOwnership(app, mockTimelock);
-
-        assertEq(appController.getAppOwner(app), mockTimelock);
-        assertTrue(appController.getAppTimelocked(app));
-
-        // Direct upgrade now blocked
-        vm.prank(mockTimelock);
-        vm.expectRevert(IAppController.TimelockRequired.selector);
-        appController.upgradeApp(app, _assembleRelease());
-
-        // 3. Schedule upgrade
-        IAppController.Release memory release = _assembleRelease();
-        uint256 delay = 2 hours;
-
-        vm.prank(mockTimelock);
-        appController.scheduleUpgrade(app, release, delay);
-
-        // Can't execute before delay
-        vm.prank(mockTimelock);
-        vm.expectRevert(IAppController.UpgradeNotReady.selector);
-        appController.executeUpgrade(app, release);
-
-        // 4. Wait and execute
-        vm.warp(block.timestamp + delay);
-
-        vm.prank(mockTimelock);
-        uint256 releaseId = appController.executeUpgrade(app, release);
+        uint256 releaseId = appController.upgradeApp(app, _assembleRelease());
 
         assertTrue(releaseId > 0);
-        assertEq(appController.getPendingUpgrade(app).readyAt, 0, "pending upgrade should be cleared");
     }
 
     // ========== Governance helpers ==========
@@ -2376,13 +2057,5 @@ contract AppControllerTest is ComputeDeployer {
         );
     }
 
-    function _assembleAltRelease() internal view returns (IAppController.Release memory) {
-        IReleaseManagerTypes.Artifact[] memory artifacts = new IReleaseManagerTypes.Artifact[](1);
-        artifacts[0] = IReleaseManagerTypes.Artifact({digest: keccak256("alt-digest"), registry: "ipfs://alt-registry"});
-
-        IReleaseManagerTypes.Release memory rmsRelease =
-            IReleaseManagerTypes.Release({artifacts: artifacts, upgradeByTime: uint32(block.timestamp + 2 days)});
-
-        return IAppController.Release({rmsRelease: rmsRelease, publicEnv: "alt", encryptedEnv: "alt"});
-    }
 }
+

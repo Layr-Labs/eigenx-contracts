@@ -33,22 +33,7 @@ interface IAppController {
     /// @notice Thrown when trying to revoke or renounce the last admin
     error CannotRevokeLastAdmin();
 
-    /// @notice Thrown when calling upgradeApp on an app whose owner is a Timelock — use scheduleUpgrade + executeUpgrade
-    error TimelockRequired();
-
-    /// @notice Thrown when calling scheduleUpgrade/executeUpgrade on an app whose owner is not a Timelock
-    error NotTimelocked();
-
-    /// @notice Thrown when trying to execute an upgrade before the delay has elapsed
-    error UpgradeNotReady();
-
-    /// @notice Thrown when trying to execute with no pending upgrade
-    error NoScheduledUpgrade();
-
-    /// @notice Thrown when the release supplied to executeUpgrade does not match the scheduled hash
-    error ReleaseMismatch();
-
-    /// @notice Emitted when a new app is successfully created
+/// @notice Emitted when a new app is successfully created
     event AppCreated(address indexed owner, IApp indexed app, uint32 operatorSetId);
 
     /// @notice Emitted when an app is upgraded
@@ -81,13 +66,7 @@ interface IAppController {
     /// @notice Emitted when app ownership is transferred
     event AppOwnershipTransferred(IApp indexed app, address indexed previousOwner, address indexed newOwner);
 
-    /// @notice Emitted when an upgrade is scheduled for a timelocked app; off-chain controller takes no action
-    event AppUpgradeScheduled(IApp indexed app, uint256 readyAt, Release release);
-
-    /// @notice Emitted when a pending upgrade is cancelled for a timelocked app
-    event AppUpgradeCancelled(IApp indexed app);
-
-    /**
+/**
      * @notice Enum for app status
      */
     enum AppStatus {
@@ -134,13 +113,7 @@ interface IAppController {
         uint32 operatorSetId;
         uint32 latestReleaseBlockNumber;
         AppStatus status;
-        bool timelocked; // true = owner is a Timelock; upgradeApp() blocked, must use scheduleUpgrade + executeUpgrade
-    }
-
-    /// @notice A pending upgrade scheduled for a governed app
-    struct PendingUpgrade {
-        bytes32 releaseHash; // keccak256(abi.encode(release)) — verified at execution time
-        uint256 readyAt; // block.timestamp after which executeUpgrade() is allowed (0 = none pending)
+        bool timelocked; // true = owner is a factory Timelock; all sensitive ops must go through Timelock.schedule → execute
     }
 
     /// @notice User configuration and state
@@ -201,63 +174,23 @@ interface IAppController {
      * @param app The app to upgrade with the release
      * @param release The release to upgrade to
      * @return releaseId The unique identifier for the published release
-     * @dev Caller must be UAM permissioned for the app
+     * @dev Caller must be an ADMIN for the app
+     * @dev When timelocked, caller must be the Timelock (owner) itself — route through Timelock.schedule → execute
      * @dev The rms release must have exactly one artifact, with the digest being the docker
      * image digest and the registry being the docker registry it is stored at.
-     * @dev The env must be a JSON marshalled bytes representing the public environment variables for the app.
-     * @dev The encryptedSecrets must be a JSON Web Encryption objects of the encrypted secrets for the app encrypted with
-     * the kms's public key.
      * @dev The app must not be AppStatus.TERMINATED
      */
     function upgradeApp(IApp app, Release calldata release) external returns (uint256);
 
     /**
-     * @notice Transfers app ownership to a new address and enables governance mode
+     * @notice Transfers app ownership to a new address
      * @param app The app to transfer ownership of
-     * @param newOwner The new owner address (multisig or timelock)
+     * @param newOwner The new owner address
      * @dev Caller must be an ADMIN for the app
-     * @dev Once transferred, governance mode is permanent: upgradeApp() is blocked
+     * @dev When timelocked, caller must be the Timelock (owner) itself and new owner must also be a factory Timelock
      * @dev Grants ADMIN role to newOwner under the new team namespace
      */
     function transferOwnership(IApp app, address newOwner) external;
-
-    /**
-     * @notice Schedules an upgrade for a timelocked app
-     * @param app The app to schedule an upgrade for
-     * @param release The release to upgrade to
-     * @param delay Seconds from now until the upgrade can be executed
-     * @dev Caller must be an ADMIN for the app
-     * @dev App owner must be a Timelock (timelocked == true)
-     * @dev A new schedule call overwrites any existing pending upgrade; emits AppUpgradeCancelled if one existed
-     */
-    function scheduleUpgrade(IApp app, Release calldata release, uint256 delay) external;
-
-    /**
-     * @notice Executes a previously scheduled upgrade after the delay has elapsed
-     * @param app The app to execute the pending upgrade for
-     * @param release The release to upgrade to — must match the hash committed in scheduleUpgrade
-     * @return releaseId The unique identifier for the published release
-     * @dev Caller must be an ADMIN for the app
-     * @dev App owner must be a Timelock with a pending upgrade whose readyAt <= block.timestamp
-     * @dev The release is not stored on-chain; callers must retrieve it from the AppUpgradeScheduled event
-     */
-    function executeUpgrade(IApp app, Release calldata release) external returns (uint256);
-
-    /**
-     * @notice Cancels a pending scheduled upgrade for a timelocked app
-     * @param app The app to cancel the pending upgrade for
-     * @dev Caller must be an ADMIN for the app
-     * @dev App owner must be a Timelock (timelocked == true)
-     * @dev Reverts with NoScheduledUpgrade if there is no pending upgrade to cancel
-     */
-    function cancelUpgrade(IApp app) external;
-
-    /**
-     * @notice Returns the pending upgrade for a timelocked app
-     * @param app The app to query
-     * @return The PendingUpgrade struct (readyAt == 0 means no pending upgrade)
-     */
-    function getPendingUpgrade(IApp app) external view returns (PendingUpgrade memory);
 
     /**
      * @notice Updates the metadata URI for an app
