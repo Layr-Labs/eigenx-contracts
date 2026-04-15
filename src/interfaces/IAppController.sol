@@ -33,7 +33,7 @@ interface IAppController {
     /// @notice Thrown when trying to revoke or renounce the last admin
     error CannotRevokeLastAdmin();
 
-/// @notice Emitted when a new app is successfully created
+    /// @notice Emitted when a new app is successfully created
     event AppCreated(address indexed owner, IApp indexed app, uint32 operatorSetId);
 
     /// @notice Emitted when an app is upgraded
@@ -66,7 +66,7 @@ interface IAppController {
     /// @notice Emitted when app ownership is transferred
     event AppOwnershipTransferred(IApp indexed app, address indexed previousOwner, address indexed newOwner);
 
-/**
+    /**
      * @notice Enum for app status
      */
     enum AppStatus {

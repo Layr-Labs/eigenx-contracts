@@ -2056,6 +2056,5 @@ contract AppControllerTest is ComputeDeployer {
             abi.encode(true)
         );
     }
-
 }
 
