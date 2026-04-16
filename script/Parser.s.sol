@@ -36,7 +36,11 @@ contract Parser is Script {
         string avsMetadataURI;
         uint32 maxGlobalActiveApps;
         uint32 adminMaxActiveApps;
-        // Optional: if address(0), Deploy will deploy a new SafeTimelockFactory with stub Safe addresses
+        // Gnosis Safe infrastructure addresses (required for SafeTimelockFactory deployment)
+        address safeSingleton;
+        address safeProxyFactory;
+        address safeFallbackHandler;
+        // Optional: if address(0), Deploy will deploy a new SafeTimelockFactory
         ISafeTimelockFactory safeTimelockFactory;
     }
 
@@ -72,6 +76,9 @@ contract Parser is Script {
             avsMetadataURI: vm.parseJsonString(json, ".avsMetadataURI"),
             maxGlobalActiveApps: uint32(vm.parseJsonUint(json, ".maxGlobalActiveApps")),
             adminMaxActiveApps: uint32(vm.parseJsonUint(json, ".adminMaxActiveApps")),
+            safeSingleton: vm.parseJsonAddress(json, ".safeSingleton"),
+            safeProxyFactory: vm.parseJsonAddress(json, ".safeProxyFactory"),
+            safeFallbackHandler: vm.parseJsonAddress(json, ".safeFallbackHandler"),
             safeTimelockFactory: ISafeTimelockFactory(address(0)) // Deploy will create one if not in config
         });
 

@@ -62,7 +62,10 @@ contract ComputeDeployer is Test {
             avsMetadataURI: "https://example.com/avs-metadata",
             maxGlobalActiveApps: 100,
             adminMaxActiveApps: 100,
-            safeTimelockFactory: ISafeTimelockFactory(address(0)) // Deploy will create one with stub Safe addresses
+            safeSingleton: 0x41675C099F32341bf84BFc5382aF534df5C7461a,
+            safeProxyFactory: 0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67,
+            safeFallbackHandler: 0xfd0732Dc9E303f09fCEf3a7388Ad10A83459Ec99,
+            safeTimelockFactory: ISafeTimelockFactory(address(0)) // Deploy will create one
         });
 
         Parser.DeployedContracts memory deployed = deployer.deployForTesting(params);

@@ -92,11 +92,14 @@ contract Deploy is Parser {
         // Deploy SafeTimelockFactory if not provided
         ISafeTimelockFactory safeTimelockFactory = params.safeTimelockFactory;
         if (address(safeTimelockFactory) == address(0)) {
+            require(params.safeSingleton != address(0), "safeSingleton must not be zero");
+            require(params.safeProxyFactory != address(0), "safeProxyFactory must not be zero");
+            require(params.safeFallbackHandler != address(0), "safeFallbackHandler must not be zero");
             TimelockControllerImpl timelockImpl = new TimelockControllerImpl();
             SafeTimelockFactory factoryImpl = new SafeTimelockFactory({
-                _safeSingleton: address(0),
-                _safeProxyFactory: address(0),
-                _safeFallbackHandler: address(0),
+                _safeSingleton: params.safeSingleton,
+                _safeProxyFactory: params.safeProxyFactory,
+                _safeFallbackHandler: params.safeFallbackHandler,
                 _timelockImplementation: address(timelockImpl)
             });
             TransparentUpgradeableProxy factoryProxy = new TransparentUpgradeableProxy(
@@ -215,7 +218,8 @@ contract Deploy is Parser {
         vm.serializeAddress(addresses, "computeOperator", address(deployedContracts.computeOperator));
         vm.serializeAddress(addresses, "computeOperatorImpl", address(deployedContracts.computeOperatorImpl));
         vm.serializeAddress(addresses, "imageAllowlist", address(deployedContracts.imageAllowlist));
-        addresses = vm.serializeAddress(addresses, "imageAllowlistImpl", address(deployedContracts.imageAllowlistImpl));
+        vm.serializeAddress(addresses, "imageAllowlistImpl", address(deployedContracts.imageAllowlistImpl));
+        addresses = vm.serializeAddress(addresses, "safeTimelockFactory", address(deployedContracts.safeTimelockFactory));
 
         // Add the chainInfo object
         string memory chainInfo = "chainInfo";

@@ -1,19 +1,17 @@
 {
   "addresses": {
-    "appBeacon": "0xA7323106F6018baCe991946C47e5645cFB8DB7B6",
-    "appController": "0x84639cE873580a5c19DCCb78f92EFAdCC01019e0",
-    "appControllerImpl": "0xF91d27fB314F62050212A16a32FD61592bd016db",
-    "appImpl": "0xf5a395841F1D53A513dBD6191d0bcf29aAaC7Ec0",
-    "computeAVSRegistrar": "0x662DBE70456Dc43a8aF961F4187eba7B7Db9e56E",
-    "computeAVSRegistrarImpl": "0x68FBaa90f6F0CBA8f5A8C0DfDe472dcc89c2188B",
-    "computeOperator": "0x8CA8023360E1f222981f3407f6495E7b6A4B15Ae",
-    "computeOperatorImpl": "0xdD427c92ec7a593a55dB488F089e6C6BE9195264",
-    "imageAllowlist": "0xDB7A1A0925bEDdD874537Efc3Fd610644F14B847",
-    "imageAllowlistImpl": "0x9304f044c69F7D1B66F4aFE5320009fEb58482c5",
-    "proxyAdmin": "0xefE0f739ADBC93DDC777Bc2Cc5b1CFFea4A89817",
-    "safeTimelockFactory": "0xb9278168e00878a4365721b3a0250c8e339cb72c",
-    "safeTimelockFactoryImpl": "0x0876218a3f89bbcec2b22e285b85dc233a67ef84",
-    "timelockControllerImpl": "0x6d2028ec4330d826e7d990c76249e462ccb1f082"
+    "appBeacon": "0x7cFa9f4a4bEC2940B6CaEB6bE24D3Fb74Bc60DD3",
+    "appController": "0xf4D36493CE5FFBC5518DC8c0a89C4eBBD2aee009",
+    "appControllerImpl": "0xA95194BC7479089a22c2aacE24bda1ed83B71902",
+    "appImpl": "0x5DeD61384DB3b1c32b97F52A9C6e2c40CB3a41B6",
+    "computeAVSRegistrar": "0xfb8b29cBd7B1768B5F2C040EF80F16A9548c3B5b",
+    "computeAVSRegistrarImpl": "0x6940aeA1634685411e188B0A0E57681d1Bd7cf3F",
+    "computeOperator": "0x72504B24E71A3b2A47fa2b031b77843B01EB34D3",
+    "computeOperatorImpl": "0x8CCB4eBa660f4E299f6ddD7EC5cB27C70119826e",
+    "imageAllowlist": "0x134AC8409cA0d65763736301b97Eae8Fa78625c5",
+    "imageAllowlistImpl": "0x2DDb6c99cB8E3Bae98136d613E30f18Dc38CaCA3",
+    "proxyAdmin": "0xF70434e8608ab551940836A259C49A191a23CDA3",
+    "safeTimelockFactory": "0xc7577BB90D1B7D1e7eA0F5e3d2647346dabeADdD"
   },
   "chainInfo": {
     "chainId": 11155111
