@@ -8,9 +8,26 @@ import {
 /**
  * @title TimelockControllerImpl
  * @notice Implementation contract for TimelockController minimal proxies
- * @dev Wraps TimelockControllerUpgradeable to expose a public initialize function
+ * @dev Wraps TimelockControllerUpgradeable and adds on-chain pending operation enumeration.
+ *      Overrides schedule/scheduleBatch/execute/executeBatch/cancel to maintain a set of
+ *      pending operation IDs, enabling clients to enumerate queued operations without
+ *      requiring event log scanning.
  */
 contract TimelockControllerImpl is TimelockControllerUpgradeable {
+    struct PendingOp {
+        bytes32 id;
+        address target;
+        bytes data;
+        uint256 executableAt;
+    }
+
+    // Append-only array of pending operation IDs (swap-and-pop on removal).
+    bytes32[] private _pendingIds;
+    // id => 1-based index into _pendingIds (0 means not in set).
+    mapping(bytes32 => uint256) private _pendingIndex;
+    // id => stored op metadata for enumeration
+    mapping(bytes32 => PendingOp) private _pendingOps;
+
     constructor() {
         _disableInitializers();
     }
@@ -27,5 +44,108 @@ contract TimelockControllerImpl is TimelockControllerUpgradeable {
         initializer
     {
         __TimelockController_init(minDelay, proposers, executors, admin);
+    }
+
+    // ── Overrides ────────────────────────────────────────────────────────────
+
+    function schedule(
+        address target,
+        uint256 value,
+        bytes calldata data,
+        bytes32 predecessor,
+        bytes32 salt,
+        uint256 delay
+    ) public override {
+        super.schedule(target, value, data, predecessor, salt, delay);
+        bytes32 id = hashOperation(target, value, data, predecessor, salt);
+        _addPending(id, target, data, block.timestamp + delay);
+    }
+
+    function scheduleBatch(
+        address[] calldata targets,
+        uint256[] calldata values,
+        bytes[] calldata payloads,
+        bytes32 predecessor,
+        bytes32 salt,
+        uint256 delay
+    ) public override {
+        super.scheduleBatch(targets, values, payloads, predecessor, salt, delay);
+        // For batch ops store empty data — callers should use getPendingOperationIds and decode individually
+        bytes32 id = hashOperationBatch(targets, values, payloads, predecessor, salt);
+        _addPending(id, address(0), "", block.timestamp + delay);
+    }
+
+    function execute(
+        address target,
+        uint256 value,
+        bytes calldata payload,
+        bytes32 predecessor,
+        bytes32 salt
+    ) public payable override {
+        bytes32 id = hashOperation(target, value, payload, predecessor, salt);
+        super.execute(target, value, payload, predecessor, salt);
+        _removePending(id);
+    }
+
+    function executeBatch(
+        address[] calldata targets,
+        uint256[] calldata values,
+        bytes[] calldata payloads,
+        bytes32 predecessor,
+        bytes32 salt
+    ) public payable override {
+        bytes32 id = hashOperationBatch(targets, values, payloads, predecessor, salt);
+        super.executeBatch(targets, values, payloads, predecessor, salt);
+        _removePending(id);
+    }
+
+    function cancel(bytes32 id) public override {
+        super.cancel(id);
+        _removePending(id);
+    }
+
+    // ── Enumeration ──────────────────────────────────────────────────────────
+
+    /**
+     * @notice Returns all currently pending operation IDs.
+     */
+    function getPendingOperationIds() external view returns (bytes32[] memory) {
+        return _pendingIds;
+    }
+
+    /**
+     * @notice Returns all currently pending operations with metadata.
+     * @dev For single-call ops, target and data are populated.
+     *      For batch ops, target is address(0) and data is empty.
+     */
+    function getPendingOperations() external view returns (PendingOp[] memory ops) {
+        ops = new PendingOp[](_pendingIds.length);
+        for (uint256 i = 0; i < _pendingIds.length; i++) {
+            ops[i] = _pendingOps[_pendingIds[i]];
+        }
+    }
+
+    // ── Internal helpers ─────────────────────────────────────────────────────
+
+    function _addPending(bytes32 id, address target, bytes memory data, uint256 executableAt) private {
+        if (_pendingIndex[id] != 0) return; // already tracked
+        _pendingIds.push(id);
+        _pendingIndex[id] = _pendingIds.length; // 1-based
+        _pendingOps[id] = PendingOp({ id: id, target: target, data: data, executableAt: executableAt });
+    }
+
+    function _removePending(bytes32 id) private {
+        uint256 idx = _pendingIndex[id];
+        if (idx == 0) return; // not tracked (pre-upgrade op)
+        uint256 i = idx - 1;
+        uint256 last = _pendingIds.length - 1;
+        if (i != last) {
+            bytes32 lastId = _pendingIds[last];
+            _pendingIds[i] = lastId;
+            _pendingIndex[lastId] = idx; // keep 1-based
+        }
+        _pendingIds.pop();
+        delete _pendingIndex[id];
+        delete _pendingOps[id];
     }
 }

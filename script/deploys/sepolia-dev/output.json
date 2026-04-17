@@ -1,17 +1,17 @@
 {
   "addresses": {
-    "appBeacon": "0x7cFa9f4a4bEC2940B6CaEB6bE24D3Fb74Bc60DD3",
-    "appController": "0xf4D36493CE5FFBC5518DC8c0a89C4eBBD2aee009",
-    "appControllerImpl": "0xA95194BC7479089a22c2aacE24bda1ed83B71902",
-    "appImpl": "0x5DeD61384DB3b1c32b97F52A9C6e2c40CB3a41B6",
-    "computeAVSRegistrar": "0xfb8b29cBd7B1768B5F2C040EF80F16A9548c3B5b",
-    "computeAVSRegistrarImpl": "0x6940aeA1634685411e188B0A0E57681d1Bd7cf3F",
-    "computeOperator": "0x72504B24E71A3b2A47fa2b031b77843B01EB34D3",
-    "computeOperatorImpl": "0x8CCB4eBa660f4E299f6ddD7EC5cB27C70119826e",
-    "imageAllowlist": "0x134AC8409cA0d65763736301b97Eae8Fa78625c5",
-    "imageAllowlistImpl": "0x2DDb6c99cB8E3Bae98136d613E30f18Dc38CaCA3",
-    "proxyAdmin": "0xF70434e8608ab551940836A259C49A191a23CDA3",
-    "safeTimelockFactory": "0xc7577BB90D1B7D1e7eA0F5e3d2647346dabeADdD"
+    "appBeacon": "0x253fcbd8FBfaE91A6d27284D571f60a816b4152F",
+    "appController": "0x6A56214b79d24469f066AdfD1F28bB929824daCE",
+    "appControllerImpl": "0x9f795569F0216E2a769D75fc0004AaA4A89f1319",
+    "appImpl": "0xC7179bc84c44cF19C4779011B6d45Ef80F7a875f",
+    "computeAVSRegistrar": "0x29d02CF22A14f467Edaf1C874A21F7eB7c5774a8",
+    "computeAVSRegistrarImpl": "0xb5Dba04Bf4A14FC6D2556523a05e1c7D522dbf21",
+    "computeOperator": "0x68CAC9Ed5484992215C66486aEB9eb5B2982e07D",
+    "computeOperatorImpl": "0xaAe57b73382B7Df50B43042331564bF7d154775e",
+    "imageAllowlist": "0x7f3385c4061b64d8aaDe500A7D09080b81dc89C6",
+    "imageAllowlistImpl": "0xa13cf9a6D2246Cd7086D8fBB4276e0f25174b7E9",
+    "proxyAdmin": "0xd53cABe0A39d5c6D5C659852168DD9d45Eb9D326",
+    "safeTimelockFactory": "0xD2D8e5085179287365678628077f891810F17108"
   },
   "chainInfo": {
     "chainId": 11155111
