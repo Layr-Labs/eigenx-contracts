@@ -132,7 +132,7 @@ contract SafeTimelockFactory is Initializable, SafeTimelockFactoryStorage {
         TimelockControllerImpl(payable(timelock)).initialize(config.minDelay, config.proposers, config.executors, address(0));
     }
 
-    function _deriveSalt(address deployer, bytes32 salt) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(deployer, salt));
+    function _deriveSalt(address deployer, bytes32 salt) internal view returns (bytes32) {
+        return keccak256(abi.encodePacked(address(this), deployer, salt));
     }
 }
