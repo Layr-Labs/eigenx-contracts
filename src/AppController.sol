@@ -24,13 +24,15 @@ import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
 import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {IApp} from "./interfaces/IApp.sol";
 import {ISafeTimelockFactory} from "./interfaces/ISafeTimelockFactory.sol";
+import {ICallValidator} from "./interfaces/ICallValidator.sol";
 
 contract AppController is
     Initializable,
     SignatureUtilsMixin,
     PermissionControllerMixin,
     AppControllerStorage,
-    AccessControlEnumerableUpgradeable
+    AccessControlEnumerableUpgradeable,
+    ICallValidator
 {
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -570,6 +572,42 @@ contract AppController is
     }
 
     /// VIEW FUNCTIONS
+
+    /// @inheritdoc ICallValidator
+    function canCall(address caller, bytes calldata data) external view override returns (bool) {
+        if (data.length < 4) return false;
+        bytes4 selector = bytes4(data[:4]);
+
+        // App-scoped: first arg is app address, caller must be admin on the app's owner team
+        if (
+            selector == this.upgradeApp.selector || selector == this.transferOwnership.selector
+                || selector == this.terminateApp.selector || selector == this.startApp.selector
+                || selector == this.stopApp.selector || selector == this.updateAppMetadataURI.selector
+        ) {
+            if (data.length < 36) return false;
+            address app = abi.decode(data[4:36], (address));
+            AppConfig storage config = _appConfigs[IApp(app)];
+            if (!_exists(config.status)) return false;
+            return _hasTeamRole(config.owner, caller, TeamRole.ADMIN);
+        }
+
+        // Team-scoped: first arg is team address, caller must be admin on the team
+        if (
+            selector == this.createAppForTeam.selector || selector == this.grantTeamRole.selector
+                || selector == this.revokeTeamRole.selector
+        ) {
+            if (data.length < 36) return false;
+            address team = abi.decode(data[4:36], (address));
+            return team == caller || hasRole(_teamRole(team, TeamRole.ADMIN), caller);
+        }
+
+        // Self-referencing: createApp uses msg.sender as team, so the Timelock itself must have quota
+        if (selector == this.createApp.selector) {
+            return true;
+        }
+
+        return false;
+    }
 
     /// @inheritdoc IAppController
     function getMaxActiveAppsPerUser(address user) external view returns (uint32) {

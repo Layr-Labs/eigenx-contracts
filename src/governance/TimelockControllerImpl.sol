@@ -4,6 +4,7 @@ pragma solidity ^0.8.27;
 import {
     TimelockControllerUpgradeable
 } from "@openzeppelin-upgrades/contracts/governance/TimelockControllerUpgradeable.sol";
+import {ICallValidator} from "../interfaces/ICallValidator.sol";
 
 /**
  * @title TimelockControllerImpl
@@ -12,6 +13,9 @@ import {
  *      Overrides schedule/scheduleBatch/execute/executeBatch/cancel to maintain a set of
  *      pending operation IDs, enabling clients to enumerate queued operations without
  *      requiring event log scanning.
+ *
+ *      Also validates targets at schedule-time: if a target implements ICallValidator,
+ *      canCall(address(this), data) must return true or the schedule is rejected.
  */
 contract TimelockControllerImpl is TimelockControllerUpgradeable {
     struct PendingOp {
@@ -56,6 +60,7 @@ contract TimelockControllerImpl is TimelockControllerUpgradeable {
         bytes32 salt,
         uint256 delay
     ) public override {
+        _validateTarget(target, data);
         super.schedule(target, value, data, predecessor, salt, delay);
         bytes32 id = hashOperation(target, value, data, predecessor, salt);
         _addPending(id, target, data, block.timestamp + delay);
@@ -69,6 +74,9 @@ contract TimelockControllerImpl is TimelockControllerUpgradeable {
         bytes32 salt,
         uint256 delay
     ) public override {
+        for (uint256 i = 0; i < targets.length; i++) {
+            _validateTarget(targets[i], payloads[i]);
+        }
         super.scheduleBatch(targets, values, payloads, predecessor, salt, delay);
         // For batch ops store empty data — callers should use getPendingOperationIds and decode individually
         bytes32 id = hashOperationBatch(targets, values, payloads, predecessor, salt);
@@ -126,6 +134,18 @@ contract TimelockControllerImpl is TimelockControllerUpgradeable {
     }
 
     // ── Internal helpers ─────────────────────────────────────────────────────
+
+    /**
+     * @dev If `target` implements ICallValidator, ask whether this Timelock may execute `data`.
+     *      Targets that do not implement the interface are allowed through (backwards compatible).
+     */
+    function _validateTarget(address target, bytes calldata data) private view {
+        try ICallValidator(target).canCall(address(this), data) returns (bool allowed) {
+            require(allowed, "TimelockController: target rejected the call");
+        } catch {
+            // Target does not implement canCall — allow
+        }
+    }
 
     function _addPending(bytes32 id, address target, bytes memory data, uint256 executableAt) private {
         if (_pendingIndex[id] != 0) return; // already tracked
