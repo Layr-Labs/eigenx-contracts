@@ -219,7 +219,8 @@ contract Deploy is Parser {
         vm.serializeAddress(addresses, "computeOperatorImpl", address(deployedContracts.computeOperatorImpl));
         vm.serializeAddress(addresses, "imageAllowlist", address(deployedContracts.imageAllowlist));
         vm.serializeAddress(addresses, "imageAllowlistImpl", address(deployedContracts.imageAllowlistImpl));
-        addresses = vm.serializeAddress(addresses, "safeTimelockFactory", address(deployedContracts.safeTimelockFactory));
+        addresses =
+            vm.serializeAddress(addresses, "safeTimelockFactory", address(deployedContracts.safeTimelockFactory));
 
         // Add the chainInfo object
         string memory chainInfo = "chainInfo";

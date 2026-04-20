@@ -83,13 +83,11 @@ contract TimelockControllerImpl is TimelockControllerUpgradeable {
         _addPending(id, address(0), "", block.timestamp + delay);
     }
 
-    function execute(
-        address target,
-        uint256 value,
-        bytes calldata payload,
-        bytes32 predecessor,
-        bytes32 salt
-    ) public payable override {
+    function execute(address target, uint256 value, bytes calldata payload, bytes32 predecessor, bytes32 salt)
+        public
+        payable
+        override
+    {
         bytes32 id = hashOperation(target, value, payload, predecessor, salt);
         super.execute(target, value, payload, predecessor, salt);
         _removePending(id);
@@ -151,7 +149,7 @@ contract TimelockControllerImpl is TimelockControllerUpgradeable {
         if (_pendingIndex[id] != 0) return; // already tracked
         _pendingIds.push(id);
         _pendingIndex[id] = _pendingIds.length; // 1-based
-        _pendingOps[id] = PendingOp({ id: id, target: target, data: data, executableAt: executableAt });
+        _pendingOps[id] = PendingOp({id: id, target: target, data: data, executableAt: executableAt});
     }
 
     function _removePending(bytes32 id) private {
