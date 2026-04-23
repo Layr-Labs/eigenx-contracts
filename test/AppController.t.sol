@@ -7,6 +7,8 @@ import {ComputeDeployer} from "./utils/ComputeDeployer.sol";
 import {IApp} from "../src/interfaces/IApp.sol";
 import {PermissionControllerMixin} from "@eigenlayer-contracts/src/contracts/mixins/PermissionControllerMixin.sol";
 import {IReleaseManagerTypes} from "@eigenlayer-contracts/src/contracts/interfaces/IReleaseManager.sol";
+import {ICallValidator} from "../src/interfaces/ICallValidator.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 contract AppControllerTest is ComputeDeployer {
     bytes32 public constant SALT = keccak256("test_salt");
@@ -1569,5 +1571,60 @@ contract AppControllerTest is ComputeDeployer {
         assertEq(appController.getActiveAppCount(address(app)), beforeApp);
         assertEq(appController.getActiveAppCount(developer), beforeDev);
         assertEq(appController.getActiveAppCount(newOwner), 0);
+    }
+
+    // ========== ICallValidator / canCall ==========
+
+    function test_supportsInterface_advertisesCallValidator() public {
+        AppController ac = AppController(address(appController));
+        bytes4 callValidatorId = type(ICallValidator).interfaceId;
+        bytes4 erc165Id = type(IERC165).interfaceId;
+
+        assertTrue(ac.supportsInterface(callValidatorId), "AppController must advertise ICallValidator");
+        assertTrue(ac.supportsInterface(erc165Id), "AppController must advertise IERC165");
+        assertFalse(ac.supportsInterface(0xdeadbeef), "Unrelated interface must return false");
+    }
+
+    function test_canCall_returnsTrueForShortCalldata() public view {
+        // Fallback: anything under 4 bytes can't be a meaningful call; defer.
+        assertTrue(ICallValidator(address(appController)).canCall(address(this), ""));
+        assertTrue(ICallValidator(address(appController)).canCall(address(this), hex"00"));
+    }
+
+    function test_canCall_rejectsNonTimelockCallerOnTimelockedUpgradeApp() public {
+        _mockIsTimelock(developer);
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        bytes memory callData = abi.encodeWithSelector(IAppController.upgradeApp.selector, app, _assembleRelease());
+        address notOwner = makeAddr("notOwner");
+
+        assertFalse(
+            ICallValidator(address(appController)).canCall(notOwner, callData),
+            "canCall must reject non-owner schedule of timelocked upgradeApp"
+        );
+        assertTrue(
+            ICallValidator(address(appController)).canCall(developer, callData),
+            "canCall must accept owner (Timelock itself) schedule of timelocked upgradeApp"
+        );
+    }
+
+    function test_canCall_doesNotRejectNonTimelockedUpgradeApp() public {
+        // App is not timelocked: canCall defers to runtime (returns true).
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+        bytes memory callData = abi.encodeWithSelector(IAppController.upgradeApp.selector, app, _assembleRelease());
+        assertTrue(ICallValidator(address(appController)).canCall(makeAddr("anyone"), callData));
+    }
+
+    function test_canCall_rejectsTerminateAppByAdminOnTimelockedApp() public {
+        _mockIsTimelock(developer);
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        bytes memory callData = abi.encodeWithSelector(IAppController.terminateAppByAdmin.selector, app);
+        // terminateAppByAdmin against a timelocked app is unconditionally doomed
+        // regardless of caller — canCall reflects that.
+        assertFalse(ICallValidator(address(appController)).canCall(admin, callData));
     }
 }

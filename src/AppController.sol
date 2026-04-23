@@ -21,8 +21,16 @@ import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
 import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {IApp} from "./interfaces/IApp.sol";
 import {ISafeTimelockFactory} from "./interfaces/ISafeTimelockFactory.sol";
+import {ICallValidator} from "./interfaces/ICallValidator.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-contract AppController is Initializable, SignatureUtilsMixin, PermissionControllerMixin, AppControllerStorage {
+contract AppController is
+    Initializable,
+    SignatureUtilsMixin,
+    PermissionControllerMixin,
+    AppControllerStorage,
+    ICallValidator
+{
     using EnumerableSet for EnumerableSet.AddressSet;
 
     /// MODIFIERS
@@ -542,6 +550,49 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     /// @inheritdoc IAppController
     function getAppTimelocked(IApp app) external view returns (bool) {
         return _appConfigs[app].timelocked;
+    }
+
+    /// @inheritdoc IERC165
+    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
+        return interfaceId == type(ICallValidator).interfaceId || interfaceId == type(IERC165).interfaceId;
+    }
+
+    /// @inheritdoc ICallValidator
+    /// @dev Schedule-time validation hook consumed by TimelockControllerImpl.
+    ///      Rejects operations we can statically prove will revert at execute
+    ///      time given the current on-chain state. For any call we can't
+    ///      reason about here, returns true and lets PermissionController
+    ///      enforce at runtime — conservative: schedule-time rejection must
+    ///      be a superset of nothing, never of authorized paths.
+    function canCall(address caller, bytes calldata data) external view returns (bool) {
+        if (data.length < 4) return true;
+        bytes4 selector = bytes4(data[:4]);
+
+        // For the sensitive ops gated by `if (timelocked) msg.sender == creator`,
+        // a schedule proposed by a non-owner Timelock will always revert. We
+        // block it at schedule time so the delay window isn't consumed by a
+        // doomed op.
+        if (
+            selector == this.upgradeApp.selector || selector == this.terminateApp.selector
+                || selector == this.transferOwnership.selector
+        ) {
+            // Decode the first arg (IApp) and check ownership if timelocked.
+            // abi.decode skips the 4-byte selector.
+            IApp app = abi.decode(data[4:36], (IApp));
+            AppConfigStorage storage config = _appConfigs[app];
+            if (config.timelocked && caller != config.creator) {
+                return false;
+            }
+        }
+
+        // terminateAppByAdmin now refuses timelocked apps unconditionally; a
+        // scheduled terminateAppByAdmin against a timelocked app is doomed.
+        if (selector == this.terminateAppByAdmin.selector) {
+            IApp app = abi.decode(data[4:36], (IApp));
+            if (_appConfigs[app].timelocked) return false;
+        }
+
+        return true;
     }
 
     /// @inheritdoc IAppController
