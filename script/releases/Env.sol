@@ -22,6 +22,8 @@ import {ComputeAVSRegistrar} from "../../src/ComputeAVSRegistrar.sol";
 import {ComputeOperator} from "../../src/ComputeOperator.sol";
 import {ImageAllowlist} from "../../src/ImageAllowlist.sol";
 import {USDCCredits} from "../../src/USDCCredits.sol";
+import {SafeTimelockFactory} from "../../src/factories/SafeTimelockFactory.sol";
+import {TimelockControllerImpl} from "../../src/governance/TimelockControllerImpl.sol";
 
 library Env {
     using ZEnvHelpers for *;
@@ -110,6 +112,10 @@ library Env {
         return USDCCredits(_deployedProxy(type(USDCCredits).name));
     }
 
+    function safeTimelockFactory(DeployedProxy) internal view returns (SafeTimelockFactory) {
+        return SafeTimelockFactory(_deployedProxy(type(SafeTimelockFactory).name));
+    }
+
     function appBeacon(DeployedBeacon) internal view returns (UpgradeableBeacon) {
         return UpgradeableBeacon(_deployedBeacon(type(App).name));
     }
@@ -139,6 +145,16 @@ library Env {
 
     function usdcCredits(DeployedImpl) internal view returns (USDCCredits) {
         return USDCCredits(_deployedImpl(type(USDCCredits).name));
+    }
+
+    function safeTimelockFactory(DeployedImpl) internal view returns (SafeTimelockFactory) {
+        return SafeTimelockFactory(_deployedImpl(type(SafeTimelockFactory).name));
+    }
+
+    /// @notice TimelockControllerImpl — the clone-master for Timelocks created
+    ///         by SafeTimelockFactory. Not behind a proxy; deployed directly.
+    function timelockControllerImpl() internal view returns (TimelockControllerImpl) {
+        return TimelockControllerImpl(payable(_deployedContract(type(TimelockControllerImpl).name)));
     }
 
     /**
@@ -200,6 +216,22 @@ library Env {
 
     function USDC_MINIMUM_PURCHASE() internal view returns (uint256) {
         return _envU256("USDC_MINIMUM_PURCHASE");
+    }
+
+    /**
+     * Safe infrastructure — canonical Gnosis Safe singletons per chain.
+     * Consumed by the SafeTimelockFactory constructor.
+     */
+    function safeSingleton() internal view returns (address) {
+        return _envAddress("safeSingleton");
+    }
+
+    function safeProxyFactory() internal view returns (address) {
+        return _envAddress("safeProxyFactory");
+    }
+
+    function safeFallbackHandler() internal view returns (address) {
+        return _envAddress("safeFallbackHandler");
     }
 
     /**
