@@ -89,6 +89,35 @@ contract TimelockControllerImplValidationTest is Test {
         ReturndataBombValidator v = new ReturndataBombValidator();
         _schedule(address(v), hex"12345678");
     }
+
+    // ========== Pending-ops list cap (D-1) ==========
+
+    function test_schedule_capsPendingOperationsList() public {
+        // Fill the pending set to its max (128) by scheduling 128 distinct ops
+        // against an inert target that short-circuits validation. Each gets a
+        // unique salt so hashOperation produces distinct ids.
+        InertContract target = new InertContract();
+        uint256 cap = 128; // must match TimelockControllerImpl.MAX_PENDING_OPS
+
+        for (uint256 i = 0; i < cap; i++) {
+            vm.prank(proposer);
+            timelock.schedule(address(target), 0, hex"dead", bytes32(0), bytes32(i + 1), 60);
+        }
+
+        // The 129th schedule must revert with TooManyPendingOperations.
+        vm.prank(proposer);
+        vm.expectRevert(abi.encodeWithSignature("TooManyPendingOperations()"));
+        timelock.schedule(address(target), 0, hex"dead", bytes32(0), bytes32(uint256(cap + 1)), 60);
+
+        // After canceling one op, scheduling a new one must succeed again —
+        // the cap is a ceiling on concurrently-pending, not a permanent limit.
+        bytes32 firstId = timelock.hashOperation(address(target), 0, hex"dead", bytes32(0), bytes32(uint256(1)));
+        vm.prank(proposer);
+        timelock.cancel(firstId);
+
+        vm.prank(proposer);
+        timelock.schedule(address(target), 0, hex"dead", bytes32(0), bytes32(uint256(cap + 2)), 60);
+    }
 }
 
 /// --- Mock targets ---

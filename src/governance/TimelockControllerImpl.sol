@@ -199,8 +199,23 @@ contract TimelockControllerImpl is TimelockControllerUpgradeable {
         return abi.decode(ret, (bool));
     }
 
+    /// Maximum number of concurrently-pending operations tracked in the
+    /// on-chain enumeration set. Chosen so that getPendingOperations() stays
+    /// well under the block gas limit even when every entry carries a
+    /// several-hundred-byte calldata blob. A normal governance workload never
+    /// approaches this cap; the point is to make _pendingIds growth bounded
+    /// so a single misbehaving (or compromised) proposer cannot brick
+    /// off-chain tooling that reads the set. Queued ops above the cap simply
+    /// cannot be scheduled until older ones are executed or cancelled —
+    /// scheduling itself reverts, giving callers an immediate error instead
+    /// of silently committing a non-enumerable op.
+    uint256 private constant MAX_PENDING_OPS = 128;
+
+    error TooManyPendingOperations();
+
     function _addPending(bytes32 id, address target, bytes memory data, uint256 executableAt) private {
         if (_pendingIndex[id] != 0) return; // already tracked
+        if (_pendingIds.length >= MAX_PENDING_OPS) revert TooManyPendingOperations();
         _pendingIds.push(id);
         _pendingIndex[id] = _pendingIds.length; // 1-based
         _pendingOps[id] = PendingOp({id: id, target: target, data: data, executableAt: executableAt});
