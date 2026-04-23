@@ -167,6 +167,12 @@ contract AppController is
         _appConfigs[app].operatorSetId = operatorSetId;
         _appConfigs[app].latestReleaseBlockNumber = 0;
         _appConfigs[app].owner = team;
+        // If the team is a factory-deployed Timelock, mark the app timelocked at
+        // creation so sensitive ops (upgrade/terminate/transfer/grantAdmin) go
+        // through schedule→execute instead of being callable directly by any
+        // admin the Timelock later grants. Mirrors the same check performed in
+        // transferOwnership when ownership is handed to a Timelock.
+        _appConfigs[app].timelocked = safeTimelockFactory.isTimelock(team);
         _allApps.add(address(app));
 
         emit AppCreated(team, app, operatorSetId);

@@ -270,6 +270,94 @@ contract AppControllerTest is ComputeDeployer {
         appController.createAppForTeam(developer, keccak256("dev_app"), _assembleRelease());
     }
 
+    // ========== Regression: `timelocked` flag must be set at creation (V-1 / G-1 / A-1) ==========
+
+    function test_createAppForTeam_timelockedOwnerSetsTimelockedFlag() public {
+        // A factory-registered Timelock creates an app for itself. The app's
+        // `timelocked` flag MUST be set at creation so that subsequent sensitive
+        // ops (upgrade, terminate, transferOwnership, grantAdmin) require
+        // msg.sender == owner (i.e., must go through schedule→execute).
+        address mockTimelock = makeAddr("mockTimelock");
+        _mockIsTimelock(mockTimelock);
+        _setMaxActiveAppsPerUser(mockTimelock, 10);
+
+        vm.prank(mockTimelock);
+        IApp app = appController.createAppForTeam(mockTimelock, keccak256("tl_app"), _assembleRelease());
+
+        assertEq(appController.getAppOwner(app), mockTimelock);
+        assertTrue(
+            appController.getAppTimelocked(app),
+            "Timelock-owned app must be flagged timelocked at creation"
+        );
+    }
+
+    function test_createAppForTeam_timelockedBlocksNonOwnerAdminUpgrade() public {
+        // Exploit scenario before the fix:
+        // 1. Timelock creates app for itself → timelocked defaulted to false
+        // 2. Timelock grants ADMIN to another address (say, via a scheduled op)
+        // 3. That address calls upgradeApp directly — succeeds with no delay
+        //
+        // After the fix, step 3 must revert because timelocked=true forces
+        // msg.sender == owner.
+        address mockTimelock = makeAddr("mockTimelock");
+        _mockIsTimelock(mockTimelock);
+        _setMaxActiveAppsPerUser(mockTimelock, 10);
+
+        vm.prank(mockTimelock);
+        IApp app = appController.createAppForTeam(mockTimelock, keccak256("tl_app"), _assembleRelease());
+
+        // Timelock grants ADMIN to a co-admin.
+        address coAdmin = makeAddr("coAdmin");
+        vm.prank(mockTimelock);
+        appController.grantTeamRole(mockTimelock, IAppController.TeamRole.ADMIN, coAdmin);
+
+        // Co-admin attempts direct upgrade — must revert (timelocked gate).
+        vm.prank(coAdmin);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.upgradeApp(app, _assembleRelease());
+
+        // The Timelock itself can still upgrade directly (i.e., via a scheduled
+        // operation that results in msg.sender == Timelock at execute time).
+        vm.prank(mockTimelock);
+        appController.upgradeApp(app, _assembleRelease());
+    }
+
+    function test_createAppForTeam_nonTimelockOwnerDoesNotSetTimelocked() public {
+        // Sanity check: EOA/team-owned apps must NOT be flagged timelocked.
+        // Regression guard that the fix in createAppForTeam doesn't
+        // over-apply the flag.
+        vm.prank(developer);
+        IApp app = appController.createAppForTeam(developer, keccak256("eoa_app"), _assembleRelease());
+
+        assertEq(appController.getAppOwner(app), developer);
+        assertFalse(
+            appController.getAppTimelocked(app),
+            "EOA-owned app must not be flagged timelocked"
+        );
+
+        // And direct upgrade by an ADMIN continues to work (pre-fix behavior).
+        vm.prank(developer);
+        appController.upgradeApp(app, _assembleRelease());
+    }
+
+    function test_createAppForTeam_safeOwnerDoesNotSetTimelocked() public {
+        // A Safe is NOT a Timelock (even though it's deployed by the same
+        // factory). Apps owned by a Safe must not be flagged timelocked —
+        // Safe threshold is handled off-chain, not via schedule→execute.
+        address mockSafe = makeAddr("mockSafe");
+        // Do NOT call _mockIsTimelock — the factory returns false for non-Timelock addresses.
+        _setMaxActiveAppsPerUser(mockSafe, 10);
+
+        vm.prank(mockSafe);
+        IApp app = appController.createAppForTeam(mockSafe, keccak256("safe_app"), _assembleRelease());
+
+        assertEq(appController.getAppOwner(app), mockSafe);
+        assertFalse(
+            appController.getAppTimelocked(app),
+            "Safe-owned app must not be flagged timelocked"
+        );
+    }
+
     function test_createAppForTeam_quotaDeductedFromTeam() public {
         // Set up team with limited quota
         _setMaxActiveAppsPerUser(developer, 3);
