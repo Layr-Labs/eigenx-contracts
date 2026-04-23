@@ -287,6 +287,15 @@ interface IAppController {
     function getBillingType(IApp app) external view returns (BillingType);
 
     /**
+     * @notice Returns whether the app's creator is a factory Timelock.
+     * @param app The app to check
+     * @return True iff sensitive ops (upgrade/terminate) must go through
+     *         Timelock.schedule → execute — i.e. direct calls by any non-owner
+     *         are rejected regardless of PermissionController grants.
+     */
+    function getAppTimelocked(IApp app) external view returns (bool);
+
+    /**
      * @notice Gets the operator set ID for a given app
      * @param app The app to get the operator set ID for
      * @return The operator set ID

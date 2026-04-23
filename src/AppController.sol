@@ -119,6 +119,13 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         appIsActive(app)
         returns (uint256)
     {
+        // When the app's owner is a factory-deployed Timelock, the sensitive
+        // path must go through Timelock.schedule → execute so the delay window
+        // actually applies. Any other PermissionController-permitted caller
+        // (e.g. a co-admin granted via UAM) would bypass the queue otherwise.
+        if (_appConfigs[app].timelocked) {
+            require(msg.sender == _appConfigs[app].creator, InvalidPermissions());
+        }
         return _upgradeApp(app, release);
     }
 
@@ -147,11 +154,23 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
     /// @inheritdoc IAppController
     function terminateApp(IApp app) external checkCanCall(address(app)) appIsActive(app) {
+        // When timelocked, only the Timelock owner itself (acting via
+        // schedule → execute) may terminate. Termination is irreversible;
+        // bypassing the queue here defeats the entire purpose of
+        // transferring ownership to a Timelock.
+        if (_appConfigs[app].timelocked) {
+            require(msg.sender == _appConfigs[app].creator, InvalidPermissions());
+        }
         _terminateApp(app);
     }
 
     /// @inheritdoc IAppController
     function terminateAppByAdmin(IApp app) external checkCanCall(address(this)) appIsActive(app) {
+        // Protocol admin may not unilaterally terminate a Timelock-owned app;
+        // doing so would bypass the delay the user specifically opted into.
+        // If intervention is required, protocol admin should schedule the
+        // termination through the Timelock itself.
+        require(!_appConfigs[app].timelocked, InvalidPermissions());
         _terminateApp(app);
         emit AppTerminatedByAdmin(app);
     }
@@ -203,6 +222,17 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         _appConfigs[app].latestReleaseBlockNumber = 0;
         _appConfigs[app].creator = msg.sender;
         _appConfigs[app].billingType = _billingType;
+        // If the creator is a factory-deployed Timelock, mark the app
+        // timelocked at creation so sensitive-op gates fire immediately.
+        // Not doing this here leaves a window where any co-admin could run
+        // upgradeApp / terminateApp before ownership is "transferred" — and
+        // in fact createApp never involves transferOwnership at all.
+        // safeTimelockFactory may be address(0) on historical deployments
+        // (pre-v1.5.0); in that case isTimelock is guaranteed to return false
+        // via the interface contract, but we also defensively short-circuit.
+        if (address(safeTimelockFactory) != address(0)) {
+            _appConfigs[app].timelocked = safeTimelockFactory.isTimelock(msg.sender);
+        }
         _allApps.add(address(app));
 
         emit AppCreated(msg.sender, app, operatorSetId);
@@ -472,6 +502,11 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     /// @inheritdoc IAppController
     function getBillingType(IApp app) external view returns (BillingType) {
         return _appConfigs[app].billingType;
+    }
+
+    /// @inheritdoc IAppController
+    function getAppTimelocked(IApp app) external view returns (bool) {
+        return _appConfigs[app].timelocked;
     }
 
     /// @inheritdoc IAppController
