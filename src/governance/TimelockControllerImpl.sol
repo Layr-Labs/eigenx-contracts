@@ -209,7 +209,7 @@ contract TimelockControllerImpl is TimelockControllerUpgradeable {
     /// cannot be scheduled until older ones are executed or cancelled —
     /// scheduling itself reverts, giving callers an immediate error instead
     /// of silently committing a non-enumerable op.
-    uint256 private constant MAX_PENDING_OPS = 128;
+    uint256 private constant MAX_PENDING_OPS = 32;
 
     error TooManyPendingOperations();
 

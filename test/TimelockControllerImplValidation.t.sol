@@ -97,7 +97,7 @@ contract TimelockControllerImplValidationTest is Test {
         // against an inert target that short-circuits validation. Each gets a
         // unique salt so hashOperation produces distinct ids.
         InertContract target = new InertContract();
-        uint256 cap = 128; // must match TimelockControllerImpl.MAX_PENDING_OPS
+        uint256 cap = 32; // must match TimelockControllerImpl.MAX_PENDING_OPS
 
         for (uint256 i = 0; i < cap; i++) {
             vm.prank(proposer);
