@@ -57,6 +57,13 @@ abstract contract AppControllerStorage is IAppController {
     /// @inheritdoc IAppController
     uint32 public globalActiveAppCount;
 
+    /// @notice Per-app, per-role set of addresses holding the role.
+    ///         app → role → { account, account, ... }
+    /// @dev This slot was inside __gap on v1.4.0 and is guaranteed zero on
+    ///      every existing app. __gap below shrinks by 1 to compensate so
+    ///      the end of the storage footprint is stable.
+    mapping(IApp => mapping(TeamRole => EnumerableSet.AddressSet)) internal _teamRoles;
+
     constructor(
         IReleaseManager _releaseManager,
         IComputeOperator _computeOperator,
@@ -76,5 +83,5 @@ abstract contract AppControllerStorage is IAppController {
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
-    uint256[45] private __gap;
+    uint256[44] private __gap;
 }

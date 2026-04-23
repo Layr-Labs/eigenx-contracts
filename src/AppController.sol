@@ -35,6 +35,19 @@ contract AppController is
 
     /// MODIFIERS
 
+    /// @notice Modifier to require the caller hold `role` on `app` (or ADMIN,
+    ///         which is a superset). Reverts with InvalidTeamRole otherwise.
+    modifier onlyRoleOrAdmin(IApp app, TeamRole role) {
+        if (!_hasRoleOrAdmin(app, role, msg.sender)) revert InvalidTeamRole();
+        _;
+    }
+
+    /// @notice Modifier to require the caller is an ADMIN on `app`.
+    modifier onlyAdmin(IApp app) {
+        if (!_teamRoles[app][TeamRole.ADMIN].contains(msg.sender)) revert InvalidTeamRole();
+        _;
+    }
+
     /// @notice Modifier to ensure app exists
     modifier appExists(IApp app) {
         require(_exists(_appConfigs[app].status), InvalidAppStatus());
@@ -121,16 +134,11 @@ contract AppController is
     }
 
     /// @inheritdoc IAppController
-    function upgradeApp(IApp app, Release calldata release)
-        external
-        checkCanCall(address(app))
-        appIsActive(app)
-        returns (uint256)
-    {
-        // When the app's owner is a factory-deployed Timelock, the sensitive
-        // path must go through Timelock.schedule → execute so the delay window
-        // actually applies. Any other PermissionController-permitted caller
-        // (e.g. a co-admin granted via UAM) would bypass the queue otherwise.
+    function upgradeApp(IApp app, Release calldata release) external onlyAdmin(app) appIsActive(app) returns (uint256) {
+        // Critical op. ADMIN is required (modifier); when the app is
+        // timelocked, further narrow to msg.sender == creator so only the
+        // Timelock (via schedule → execute) can trigger. A co-admin cannot
+        // bypass the delay even with the ADMIN role.
         if (_appConfigs[app].timelocked) {
             require(msg.sender == _appConfigs[app].creator, InvalidPermissions());
         }
@@ -138,14 +146,14 @@ contract AppController is
     }
 
     /// @inheritdoc IAppController
-    function transferOwnership(IApp app, address newOwner) external checkCanCall(address(app)) appExists(app) {
+    function transferOwnership(IApp app, address newOwner) external onlyAdmin(app) appExists(app) {
         require(newOwner != address(0), InvalidPermissions());
 
         AppConfigStorage storage config = _appConfigs[app];
 
-        // When already timelocked, only the Timelock owner itself may move the
-        // app. Otherwise any admin the Timelock had granted via UAM could
-        // transfer out of its governance entirely, bypassing the queue delay.
+        // Critical op: timelocked apps may only be moved by the Timelock
+        // itself. Without this, any ADMIN could hand the app to a new owner
+        // instantly, dropping timelocked protection.
         if (config.timelocked) {
             require(msg.sender == config.creator, InvalidPermissions());
         }
@@ -158,6 +166,13 @@ contract AppController is
         // no schedule→execute semantics we can trust. Factory-deployed
         // Timelocks enable it.
         config.timelocked = address(safeTimelockFactory) != address(0) && safeTimelockFactory.isTimelock(newOwner);
+
+        // Grant ADMIN to the new owner so they can govern the app going
+        // forward. Without this the new owner would inherit ownership in
+        // the storage field but have no ADMIN privileges through the gates.
+        if (_teamRoles[app][TeamRole.ADMIN].add(newOwner)) {
+            emit TeamRoleGranted(app, TeamRole.ADMIN, newOwner);
+        }
 
         // ISOLATED billing apps bill the app address, not the creator, so
         // ownership transfer has no effect on billing accounting. DEFAULT
@@ -175,19 +190,19 @@ contract AppController is
     /// @inheritdoc IAppController
     function updateAppMetadataURI(IApp app, string calldata metadataURI)
         external
-        checkCanCall(address(app))
+        onlyRoleOrAdmin(app, TeamRole.DEVELOPER)
         appExists(app)
     {
         emit AppMetadataURIUpdated(app, metadataURI);
     }
 
     /// @inheritdoc IAppController
-    function startApp(IApp app) external checkCanCall(address(app)) appExists(app) {
+    function startApp(IApp app) external onlyAdmin(app) appExists(app) {
         _startApp(app);
     }
 
     /// @inheritdoc IAppController
-    function stopApp(IApp app) external checkCanCall(address(app)) {
+    function stopApp(IApp app) external onlyRoleOrAdmin(app, TeamRole.PAUSER) {
         AppConfigStorage storage config = _appConfigs[app];
         require(config.status == AppStatus.STARTED, InvalidAppStatus());
         config.status = AppStatus.STOPPED;
@@ -196,11 +211,10 @@ contract AppController is
     }
 
     /// @inheritdoc IAppController
-    function terminateApp(IApp app) external checkCanCall(address(app)) appIsActive(app) {
-        // When timelocked, only the Timelock owner itself (acting via
-        // schedule → execute) may terminate. Termination is irreversible;
-        // bypassing the queue here defeats the entire purpose of
-        // transferring ownership to a Timelock.
+    function terminateApp(IApp app) external onlyAdmin(app) appIsActive(app) {
+        // Critical op: timelocked apps can only be terminated via the
+        // Timelock. Termination is irreversible; bypassing the queue
+        // defeats the entire purpose of handing ownership to a Timelock.
         if (_appConfigs[app].timelocked) {
             require(msg.sender == _appConfigs[app].creator, InvalidPermissions());
         }
@@ -245,6 +259,79 @@ contract AppController is
         _setMaxActiveAppsPerUser(account, 0);
     }
 
+    /// TEAM ROLE MANAGEMENT
+
+    /// @inheritdoc IAppController
+    function grantTeamRole(IApp app, TeamRole role, address account) external onlyAdmin(app) {
+        // Grants of the critical ADMIN role on a timelocked app must go
+        // through the Timelock queue — admitting a new admin instantly
+        // would effectively bypass the delay on every future upgrade.
+        //
+        // Grants of operational roles (PAUSER / DEVELOPER) are NOT
+        // timelock-gated on purpose: the power granted is limited and
+        // always revocable by ADMIN (itself gated). This is what fixes
+        // audit finding A-2 — the asymmetry is intentional and bounded.
+        if (role == TeamRole.ADMIN && _appConfigs[app].timelocked) {
+            if (msg.sender != _appConfigs[app].creator) revert InvalidTeamRole();
+        }
+
+        if (_teamRoles[app][role].add(account)) {
+            emit TeamRoleGranted(app, role, account);
+        }
+    }
+
+    /// @inheritdoc IAppController
+    function revokeTeamRole(IApp app, TeamRole role, address account) external onlyAdmin(app) {
+        // Mirror of grant: revoking ADMIN on a timelocked app must go
+        // through the Timelock itself. Fixes audit finding A-3 — without
+        // this gate, any co-admin could strip the Timelock in one tx.
+        if (role == TeamRole.ADMIN && _appConfigs[app].timelocked) {
+            if (msg.sender != _appConfigs[app].creator) revert InvalidTeamRole();
+        }
+
+        if (role == TeamRole.ADMIN && _teamRoles[app][TeamRole.ADMIN].length() == 1) {
+            revert CannotRevokeLastAdmin();
+        }
+
+        if (_teamRoles[app][role].remove(account)) {
+            emit TeamRoleRevoked(app, role, account);
+        }
+    }
+
+    /// @inheritdoc IAppController
+    function renounceTeamRole(IApp app, TeamRole role) external {
+        // No timelock gate on renounce — a member giving up their own
+        // rights never grows anyone else's power. Still blocked if it
+        // would leave the team with zero admins.
+        if (role == TeamRole.ADMIN && _teamRoles[app][TeamRole.ADMIN].length() == 1) {
+            revert CannotRevokeLastAdmin();
+        }
+        if (_teamRoles[app][role].remove(msg.sender)) {
+            emit TeamRoleRevoked(app, role, msg.sender);
+        }
+    }
+
+    /// @inheritdoc IAppController
+    function hasTeamRole(IApp app, TeamRole role, address account) external view returns (bool) {
+        return _teamRoles[app][role].contains(account);
+    }
+
+    /// @inheritdoc IAppController
+    function migrateAdmins(IApp[] calldata apps) external checkCanCall(address(this)) {
+        for (uint256 i = 0; i < apps.length; i++) {
+            IApp app = apps[i];
+            // Pull the current UAM admin set and seed it into our own ADMIN
+            // role. Idempotent: EnumerableSet.add returns false for entries
+            // already in the set, so repeated calls are safe.
+            address[] memory admins = permissionController.getAdmins(address(app));
+            for (uint256 j = 0; j < admins.length; j++) {
+                if (_teamRoles[app][TeamRole.ADMIN].add(admins[j])) {
+                    emit TeamRoleGranted(app, TeamRole.ADMIN, admins[j]);
+                }
+            }
+        }
+    }
+
     /// INTERNAL FUNCTIONS
 
     /**
@@ -278,10 +365,26 @@ contract AppController is
         }
         _allApps.add(address(app));
 
+        // Seed the creator as initial ADMIN on the app's team. All subsequent
+        // ADMIN-gated calls (grant/revoke/upgrade/transfer/terminate) flow
+        // through this set. Without this bootstrap, a freshly created app
+        // would have zero admins and be unreachable.
+        _teamRoles[app][TeamRole.ADMIN].add(msg.sender);
+        emit TeamRoleGranted(app, TeamRole.ADMIN, msg.sender);
+
         emit AppCreated(msg.sender, app, operatorSetId);
 
         _upgradeApp(app, release);
         _startApp(app);
+    }
+
+    /**
+     * @notice Returns true if `account` holds `role` on `app`, OR holds
+     *         ADMIN on `app` (ADMIN is always a superset of every other
+     *         role). Used by operational-op modifiers.
+     */
+    function _hasRoleOrAdmin(IApp app, TeamRole role, address account) internal view returns (bool) {
+        return _teamRoles[app][role].contains(account) || _teamRoles[app][TeamRole.ADMIN].contains(account);
     }
 
     /**
