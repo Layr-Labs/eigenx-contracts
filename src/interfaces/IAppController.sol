@@ -96,11 +96,23 @@ interface IAppController {
 
     /// @notice Internal storage config for an app, extends AppConfig with additional fields
     struct AppConfigStorage {
+        // Slot layout (all 32 bytes packed):
+        //   bytes 0-19:  address creator            (20 bytes)
+        //   bytes 20-23: uint32  operatorSetId      ( 4 bytes)
+        //   bytes 24-27: uint32  latestReleaseBlockNumber ( 4 bytes)
+        //   byte  28:    AppStatus status           ( 1 byte)
+        //   byte  29:    BillingType billingType    ( 1 byte)   ← present on v1.4.0 chain state
+        //   byte  30:    bool timelocked            ( 1 byte)   ← new in v1.5.0; safely zero on all v1.4.0 apps
+        //   byte  31:    (unused)
         address creator;
         uint32 operatorSetId;
         uint32 latestReleaseBlockNumber;
         AppStatus status;
         BillingType billingType;
+        // true = owner is a factory Timelock; sensitive ops must go through
+        // Timelock.schedule → execute. Must NOT be placed at byte 29 — that
+        // byte already holds `billingType` on existing deployed contracts.
+        bool timelocked;
     }
 
     /// @notice User configuration and state

@@ -20,6 +20,7 @@ import {IAppController} from "./interfaces/IAppController.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {IApp} from "./interfaces/IApp.sol";
+import {ISafeTimelockFactory} from "./interfaces/ISafeTimelockFactory.sol";
 
 contract AppController is Initializable, SignatureUtilsMixin, PermissionControllerMixin, AppControllerStorage {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -51,11 +52,12 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         IReleaseManager _releaseManager,
         IComputeAVSRegistrar _computeAVSRegistrar,
         IComputeOperator _computeOperator,
-        IBeacon _appBeacon
+        IBeacon _appBeacon,
+        ISafeTimelockFactory _safeTimelockFactory
     )
         SignatureUtilsMixin(_version)
         PermissionControllerMixin(_permissionController)
-        AppControllerStorage(_releaseManager, _computeOperator, _computeAVSRegistrar, _appBeacon)
+        AppControllerStorage(_releaseManager, _computeOperator, _computeAVSRegistrar, _appBeacon, _safeTimelockFactory)
     {
         _disableInitializers();
     }

@@ -24,6 +24,7 @@ import {ComputeAVSRegistrar} from "../src/ComputeAVSRegistrar.sol";
 import {ComputeOperator} from "../src/ComputeOperator.sol";
 import {ImageAllowlist} from "../src/ImageAllowlist.sol";
 import {IImageAllowlist} from "../src/interfaces/IImageAllowlist.sol";
+import {ISafeTimelockFactory} from "../src/interfaces/ISafeTimelockFactory.sol";
 
 contract Deploy is Parser {
     struct Proxies {
@@ -114,7 +115,12 @@ contract Deploy is Parser {
                 _releaseManager: params.releaseManager,
                 _computeAVSRegistrar: IComputeAVSRegistrar(address(proxies.computeAVSRegistrar)),
                 _computeOperator: IComputeOperator(address(proxies.computeOperator)),
-                _appBeacon: appBeacon
+                _appBeacon: appBeacon,
+                // TODO(v1.5.0-governance): deploy SafeTimelockFactory before
+                // AppController and pass the factory address here. Fresh-deploy
+                // path only — production v1.5.0 upgrade uses a dedicated release
+                // script that deploys the factory in phase 1.
+                _safeTimelockFactory: ISafeTimelockFactory(address(0))
             }),
             imageAllowlist: new ImageAllowlist()
         });

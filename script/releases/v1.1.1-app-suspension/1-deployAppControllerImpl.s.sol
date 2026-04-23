@@ -7,6 +7,7 @@ import "../Env.sol";
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
 import {AppController} from "../../../src/AppController.sol";
+import {ISafeTimelockFactory} from "../../../src/interfaces/ISafeTimelockFactory.sol";
 
 /**
  * Purpose: deploy new AppController implementation with suspension functionality
@@ -26,7 +27,9 @@ contract DeployAppControllerImpl is EOADeployer {
             _releaseManager: Env.releaseManager(),
             _computeAVSRegistrar: Env.proxy.computeAVSRegistrar(),
             _computeOperator: Env.proxy.computeOperator(),
-            _appBeacon: Env.beacon.appBeacon()
+            _appBeacon: Env.beacon.appBeacon(),
+            // v1.1.1 predates SafeTimelockFactory. Historical script; never runs again.
+            _safeTimelockFactory: ISafeTimelockFactory(address(0))
         });
 
         // Register new implementation in Env system
