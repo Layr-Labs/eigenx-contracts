@@ -8,11 +8,6 @@ import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.so
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
-import {IDelegationManager} from "@eigenlayer-contracts/src/contracts/interfaces/IDelegationManager.sol";
-import {IAllocationManager} from "@eigenlayer-contracts/src/contracts/interfaces/IAllocationManager.sol";
-import {IKeyRegistrar} from "@eigenlayer-contracts/src/contracts/interfaces/IKeyRegistrar.sol";
-import {IPermissionController} from "@eigenlayer-contracts/src/contracts/interfaces/IPermissionController.sol";
-import {IReleaseManager} from "@eigenlayer-contracts/src/contracts/interfaces/IReleaseManager.sol";
 import {EmptyContract} from "@eigenlayer-contracts/src/test/mocks/EmptyContract.sol";
 
 import {App} from "../../../src/App.sol";
@@ -82,7 +77,8 @@ contract Deploy is EOADeployer {
             _releaseManager: Env.releaseManager(),
             _computeAVSRegistrar: IComputeAVSRegistrar(address(computeAVSRegistrarProxy)),
             _computeOperator: IComputeOperator(address(computeOperatorProxy)),
-            _appBeacon: appBeacon
+            _appBeacon: appBeacon,
+            _safeTimelockFactory: Env.proxy.safeTimelockFactory()
         });
 
         // Upgrade proxies using ProxyAdmin

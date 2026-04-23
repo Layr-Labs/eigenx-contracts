@@ -9,6 +9,7 @@ import {IApp} from "../interfaces/IApp.sol";
 import {IAppController} from "../interfaces/IAppController.sol";
 import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {ISafeTimelockFactory} from "../interfaces/ISafeTimelockFactory.sol";
 
 abstract contract AppControllerStorage is IAppController {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -38,11 +39,14 @@ abstract contract AppControllerStorage is IAppController {
     /// @notice The beacon used for creating App proxies
     IBeacon public immutable appBeacon;
 
+    /// @notice Factory used to verify Safe and Timelock deployments for governance detection
+    ISafeTimelockFactory public immutable safeTimelockFactory;
+
     /// @notice Set of all created apps
     EnumerableSet.AddressSet internal _allApps;
 
     /// @notice The mapping of app address to app storage
-    mapping(IApp => AppConfigStorage) internal _appConfigs;
+    mapping(IApp => AppConfig) internal _appConfigs;
 
     /// @notice User configuration and state
     mapping(address => UserConfig) internal _userConfigs;
@@ -57,12 +61,14 @@ abstract contract AppControllerStorage is IAppController {
         IReleaseManager _releaseManager,
         IComputeOperator _computeOperator,
         IComputeAVSRegistrar _computeAVSRegistrar,
-        IBeacon _appBeacon
+        IBeacon _appBeacon,
+        ISafeTimelockFactory _safeTimelockFactory
     ) {
         releaseManager = _releaseManager;
         computeOperator = _computeOperator;
         computeAVSRegistrar = _computeAVSRegistrar;
         appBeacon = _appBeacon;
+        safeTimelockFactory = _safeTimelockFactory;
     }
 
     /**

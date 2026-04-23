@@ -1,0 +1,19 @@
+{
+  "addresses": {
+    "appBeacon": "0x253fcbd8FBfaE91A6d27284D571f60a816b4152F",
+    "appController": "0x6A56214b79d24469f066AdfD1F28bB929824daCE",
+    "appControllerImpl": "0x9f795569F0216E2a769D75fc0004AaA4A89f1319",
+    "appImpl": "0xC7179bc84c44cF19C4779011B6d45Ef80F7a875f",
+    "computeAVSRegistrar": "0x29d02CF22A14f467Edaf1C874A21F7eB7c5774a8",
+    "computeAVSRegistrarImpl": "0xb5Dba04Bf4A14FC6D2556523a05e1c7D522dbf21",
+    "computeOperator": "0x68CAC9Ed5484992215C66486aEB9eb5B2982e07D",
+    "computeOperatorImpl": "0xaAe57b73382B7Df50B43042331564bF7d154775e",
+    "imageAllowlist": "0x7f3385c4061b64d8aaDe500A7D09080b81dc89C6",
+    "imageAllowlistImpl": "0xa13cf9a6D2246Cd7086D8fBB4276e0f25174b7E9",
+    "proxyAdmin": "0xd53cABe0A39d5c6D5C659852168DD9d45Eb9D326",
+    "safeTimelockFactory": "0xD2D8e5085179287365678628077f891810F17108"
+  },
+  "chainInfo": {
+    "chainId": 11155111
+  }
+}

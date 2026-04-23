@@ -26,7 +26,8 @@ contract DeployAppControllerImpl is EOADeployer {
             _releaseManager: Env.releaseManager(),
             _computeAVSRegistrar: Env.proxy.computeAVSRegistrar(),
             _computeOperator: Env.proxy.computeOperator(),
-            _appBeacon: Env.beacon.appBeacon()
+            _appBeacon: Env.beacon.appBeacon(),
+            _safeTimelockFactory: Env.proxy.safeTimelockFactory()
         });
 
         // Register new implementation in Env system

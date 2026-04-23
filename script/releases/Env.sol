@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.so
 import "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {DelegationManager} from "@eigenlayer-contracts/src/contracts/core/DelegationManager.sol";
 import {AllocationManager} from "@eigenlayer-contracts/src/contracts/core/AllocationManager.sol";
 import {PermissionController} from "@eigenlayer-contracts/src/contracts/permissions/PermissionController.sol";
@@ -22,6 +21,8 @@ import {ComputeAVSRegistrar} from "../../src/ComputeAVSRegistrar.sol";
 import {ComputeOperator} from "../../src/ComputeOperator.sol";
 import {ImageAllowlist} from "../../src/ImageAllowlist.sol";
 import {USDCCredits} from "../../src/USDCCredits.sol";
+import {SafeTimelockFactory} from "../../src/factories/SafeTimelockFactory.sol";
+import {TimelockControllerImpl} from "../../src/governance/TimelockControllerImpl.sol";
 
 library Env {
     using ZEnvHelpers for *;
@@ -110,6 +111,10 @@ library Env {
         return USDCCredits(_deployedProxy(type(USDCCredits).name));
     }
 
+    function safeTimelockFactory(DeployedProxy) internal view returns (SafeTimelockFactory) {
+        return SafeTimelockFactory(_deployedProxy(type(SafeTimelockFactory).name));
+    }
+
     function appBeacon(DeployedBeacon) internal view returns (UpgradeableBeacon) {
         return UpgradeableBeacon(_deployedBeacon(type(App).name));
     }
@@ -141,6 +146,10 @@ library Env {
         return USDCCredits(_deployedImpl(type(USDCCredits).name));
     }
 
+    function safeTimelockFactory(DeployedImpl) internal view returns (SafeTimelockFactory) {
+        return SafeTimelockFactory(_deployedImpl(type(SafeTimelockFactory).name));
+    }
+
     /**
      * governance contracts
      */
@@ -164,8 +173,27 @@ library Env {
         return _envAddress("billingAdmin");
     }
 
+    function timelockControllerImpl() internal view returns (TimelockControllerImpl) {
+        return TimelockControllerImpl(payable(_deployedContract(type(TimelockControllerImpl).name)));
+    }
+
     function proxyAdmin() internal view returns (ProxyAdmin) {
         return ProxyAdmin(_deployedContract(type(ProxyAdmin).name));
+    }
+
+    /**
+     * Safe infrastructure
+     */
+    function safeSingleton() internal view returns (address) {
+        return _envAddress("safeSingleton");
+    }
+
+    function safeProxyFactory() internal view returns (address) {
+        return _envAddress("safeProxyFactory");
+    }
+
+    function safeFallbackHandler() internal view returns (address) {
+        return _envAddress("safeFallbackHandler");
     }
 
     /**

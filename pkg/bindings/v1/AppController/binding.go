@@ -31,10 +31,18 @@ var (
 
 // IAppControllerAppConfig is an auto generated low-level Go binding around an user-defined struct.
 type IAppControllerAppConfig struct {
-	Creator                  common.Address
+	Owner                    common.Address
 	OperatorSetId            uint32
 	LatestReleaseBlockNumber uint32
 	Status                   uint8
+	Timelocked               bool
+}
+
+// IAppControllerAppRoles is an auto generated low-level Go binding around an user-defined struct.
+type IAppControllerAppRoles struct {
+	App     common.Address
+	IsOwner bool
+	Roles   []uint8
 }
 
 // IAppControllerRelease is an auto generated low-level Go binding around an user-defined struct.
@@ -58,7 +66,7 @@ type IReleaseManagerTypesRelease struct {
 
 // AppControllerMetaData contains all meta data concerning the AppController contract.
 var AppControllerMetaData = &bind.MetaData{
-	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"_permissionController\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"},{\"name\":\"_releaseManager\",\"type\":\"address\",\"internalType\":\"contractIReleaseManager\"},{\"name\":\"_computeAVSRegistrar\",\"type\":\"address\",\"internalType\":\"contractIComputeAVSRegistrar\"},{\"name\":\"_computeOperator\",\"type\":\"address\",\"internalType\":\"contractIComputeOperator\"},{\"name\":\"_appBeacon\",\"type\":\"address\",\"internalType\":\"contractIBeacon\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"API_PERMISSION_TYPEHASH\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"appBeacon\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIBeacon\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"calculateApiPermissionDigestHash\",\"inputs\":[{\"name\":\"permission\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"},{\"name\":\"expiry\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"calculateAppId\",\"inputs\":[{\"name\":\"deployer\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeAVSRegistrar\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIComputeAVSRegistrar\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeOperator\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIComputeOperator\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"createApp\",\"inputs\":[{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"createAppWithIsolatedBilling\",\"inputs\":[{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"domainSeparator\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getActiveAppCount\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppCreator\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppLatestReleaseBlockNumber\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppOperatorSetId\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppStatus\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getApps\",\"inputs\":[{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsByBillingAccount\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsByCreator\",\"inputs\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsByDeveloper\",\"inputs\":[{\"name\":\"developer\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getBillingAccount\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getBillingType\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.BillingType\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getMaxActiveAppsPerUser\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"globalActiveAppCount\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"admin\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"maxGlobalActiveApps\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"permissionController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"releaseManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIReleaseManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"setMaxActiveAppsPerUser\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"limit\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setMaxGlobalActiveApps\",\"inputs\":[{\"name\":\"limit\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"startApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"stopApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"suspend\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"terminateApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"terminateAppByAdmin\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"updateAppMetadataURI\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"},{\"name\":\"metadataURI\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"upgradeApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"AppCreated\",\"inputs\":[{\"name\":\"creator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppMetadataURIUpdated\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"metadataURI\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppStarted\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppStopped\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppSuspended\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppTerminated\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppTerminatedByAdmin\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppUpgraded\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"rmsReleaseId\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"release\",\"type\":\"tuple\",\"indexed\":false,\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"GlobalMaxActiveAppsSet\",\"inputs\":[{\"name\":\"limit\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MaxActiveAppsSet\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"limit\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"AccountHasActiveApps\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"AppAlreadyExists\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"AppDoesNotExist\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"GlobalMaxActiveAppsExceeded\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidAppStatus\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidPermissions\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidReleaseMetadataURI\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidShortString\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidSignature\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"MaxActiveAppsExceeded\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"MoreThanOneArtifact\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"SignatureExpired\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"StringTooLong\",\"inputs\":[{\"name\":\"str\",\"type\":\"string\",\"internalType\":\"string\"}]}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"_permissionController\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"},{\"name\":\"_releaseManager\",\"type\":\"address\",\"internalType\":\"contractIReleaseManager\"},{\"name\":\"_computeAVSRegistrar\",\"type\":\"address\",\"internalType\":\"contractIComputeAVSRegistrar\"},{\"name\":\"_computeOperator\",\"type\":\"address\",\"internalType\":\"contractIComputeOperator\"},{\"name\":\"_appBeacon\",\"type\":\"address\",\"internalType\":\"contractIBeacon\"},{\"name\":\"_safeTimelockFactory\",\"type\":\"address\",\"internalType\":\"contractISafeTimelockFactory\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"API_PERMISSION_TYPEHASH\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"DEFAULT_ADMIN_ROLE\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"appBeacon\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIBeacon\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"calculateApiPermissionDigestHash\",\"inputs\":[{\"name\":\"permission\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"},{\"name\":\"expiry\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"calculateAppId\",\"inputs\":[{\"name\":\"deployer\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"canCall\",\"inputs\":[{\"name\":\"caller\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"data\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeAVSRegistrar\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIComputeAVSRegistrar\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeOperator\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIComputeOperator\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"createApp\",\"inputs\":[{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"createAppForTeam\",\"inputs\":[{\"name\":\"team\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"domainSeparator\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getActiveAppCount\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppLatestReleaseBlockNumber\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppOperatorSetId\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppOwner\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppStatus\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppTimelocked\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getApps\",\"inputs\":[{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"owner\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"},{\"name\":\"timelocked\",\"type\":\"bool\",\"internalType\":\"bool\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsByCreator\",\"inputs\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"owner\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"},{\"name\":\"timelocked\",\"type\":\"bool\",\"internalType\":\"bool\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsByDeveloper\",\"inputs\":[{\"name\":\"developer\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"owner\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"},{\"name\":\"timelocked\",\"type\":\"bool\",\"internalType\":\"bool\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsForAccount\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"appRoles\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppRoles[]\",\"components\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"},{\"name\":\"isOwner\",\"type\":\"bool\",\"internalType\":\"bool\"},{\"name\":\"roles\",\"type\":\"uint8[]\",\"internalType\":\"enumIAppController.TeamRole[]\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getMaxActiveAppsPerUser\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getRoleAdmin\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getRoleMember\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"index\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getRoleMemberCount\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getTeamRoleMember\",\"inputs\":[{\"name\":\"team\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"role\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.TeamRole\"},{\"name\":\"index\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getTeamRoleMemberCount\",\"inputs\":[{\"name\":\"team\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"role\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.TeamRole\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getTeamRoleMembers\",\"inputs\":[{\"name\":\"team\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"role\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.TeamRole\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address[]\",\"internalType\":\"address[]\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"globalActiveAppCount\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"grantRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"grantTeamRole\",\"inputs\":[{\"name\":\"team\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"role\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.TeamRole\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"hasRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"hasTeamRole\",\"inputs\":[{\"name\":\"team\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"role\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.TeamRole\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"admin\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"maxGlobalActiveApps\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"migrateAdmins\",\"inputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"permissionController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"releaseManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIReleaseManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"renounceRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"renounceTeamRole\",\"inputs\":[{\"name\":\"team\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"role\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.TeamRole\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"revokeRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"revokeTeamRole\",\"inputs\":[{\"name\":\"team\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"role\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.TeamRole\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"safeTimelockFactory\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractISafeTimelockFactory\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"setMaxActiveAppsPerUser\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"limit\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setMaxGlobalActiveApps\",\"inputs\":[{\"name\":\"limit\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"startApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"stopApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"supportsInterface\",\"inputs\":[{\"name\":\"interfaceId\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"suspend\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"terminateApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"terminateAppByAdmin\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"transferOwnership\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"},{\"name\":\"newOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"updateAppMetadataURI\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"},{\"name\":\"metadataURI\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"upgradeApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"AppCreated\",\"inputs\":[{\"name\":\"owner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppMetadataURIUpdated\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"metadataURI\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppOwnershipTransferred\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"previousOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"newOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppStarted\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppStopped\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppSuspended\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppTerminated\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppTerminatedByAdmin\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppUpgraded\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"rmsReleaseId\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"release\",\"type\":\"tuple\",\"indexed\":false,\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"GlobalMaxActiveAppsSet\",\"inputs\":[{\"name\":\"limit\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MaxActiveAppsSet\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"limit\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleAdminChanged\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"previousAdminRole\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"newAdminRole\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleGranted\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleRevoked\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"AccountHasActiveApps\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"AppAlreadyExists\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"AppDoesNotExist\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"CannotRevokeLastAdmin\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"GlobalMaxActiveAppsExceeded\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidAppStatus\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidPermissions\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidReleaseMetadataURI\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidShortString\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidSignature\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"MaxActiveAppsExceeded\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"MoreThanOneArtifact\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"SignatureExpired\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"StringTooLong\",\"inputs\":[{\"name\":\"str\",\"type\":\"string\",\"internalType\":\"string\"}]}]",
 }
 
 // AppControllerABI is the input ABI used to generate the binding from.
@@ -238,6 +246,37 @@ func (_AppController *AppControllerCallerSession) APIPERMISSIONTYPEHASH() ([32]b
 	return _AppController.Contract.APIPERMISSIONTYPEHASH(&_AppController.CallOpts)
 }
 
+// DEFAULTADMINROLE is a free data retrieval call binding the contract method 0xa217fddf.
+//
+// Solidity: function DEFAULT_ADMIN_ROLE() view returns(bytes32)
+func (_AppController *AppControllerCaller) DEFAULTADMINROLE(opts *bind.CallOpts) ([32]byte, error) {
+	var out []interface{}
+	err := _AppController.contract.Call(opts, &out, "DEFAULT_ADMIN_ROLE")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
+}
+
+// DEFAULTADMINROLE is a free data retrieval call binding the contract method 0xa217fddf.
+//
+// Solidity: function DEFAULT_ADMIN_ROLE() view returns(bytes32)
+func (_AppController *AppControllerSession) DEFAULTADMINROLE() ([32]byte, error) {
+	return _AppController.Contract.DEFAULTADMINROLE(&_AppController.CallOpts)
+}
+
+// DEFAULTADMINROLE is a free data retrieval call binding the contract method 0xa217fddf.
+//
+// Solidity: function DEFAULT_ADMIN_ROLE() view returns(bytes32)
+func (_AppController *AppControllerCallerSession) DEFAULTADMINROLE() ([32]byte, error) {
+	return _AppController.Contract.DEFAULTADMINROLE(&_AppController.CallOpts)
+}
+
 // AppBeacon is a free data retrieval call binding the contract method 0x8a52d0b5.
 //
 // Solidity: function appBeacon() view returns(address)
@@ -329,6 +368,37 @@ func (_AppController *AppControllerSession) CalculateAppId(deployer common.Addre
 // Solidity: function calculateAppId(address deployer, bytes32 salt) view returns(address)
 func (_AppController *AppControllerCallerSession) CalculateAppId(deployer common.Address, salt [32]byte) (common.Address, error) {
 	return _AppController.Contract.CalculateAppId(&_AppController.CallOpts, deployer, salt)
+}
+
+// CanCall is a free data retrieval call binding the contract method 0x9614801b.
+//
+// Solidity: function canCall(address caller, bytes data) view returns(bool)
+func (_AppController *AppControllerCaller) CanCall(opts *bind.CallOpts, caller common.Address, data []byte) (bool, error) {
+	var out []interface{}
+	err := _AppController.contract.Call(opts, &out, "canCall", caller, data)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// CanCall is a free data retrieval call binding the contract method 0x9614801b.
+//
+// Solidity: function canCall(address caller, bytes data) view returns(bool)
+func (_AppController *AppControllerSession) CanCall(caller common.Address, data []byte) (bool, error) {
+	return _AppController.Contract.CanCall(&_AppController.CallOpts, caller, data)
+}
+
+// CanCall is a free data retrieval call binding the contract method 0x9614801b.
+//
+// Solidity: function canCall(address caller, bytes data) view returns(bool)
+func (_AppController *AppControllerCallerSession) CanCall(caller common.Address, data []byte) (bool, error) {
+	return _AppController.Contract.CanCall(&_AppController.CallOpts, caller, data)
 }
 
 // ComputeAVSRegistrar is a free data retrieval call binding the contract method 0xef6d92c6.
@@ -455,37 +525,6 @@ func (_AppController *AppControllerCallerSession) GetActiveAppCount(user common.
 	return _AppController.Contract.GetActiveAppCount(&_AppController.CallOpts, user)
 }
 
-// GetAppCreator is a free data retrieval call binding the contract method 0x67962d48.
-//
-// Solidity: function getAppCreator(address app) view returns(address)
-func (_AppController *AppControllerCaller) GetAppCreator(opts *bind.CallOpts, app common.Address) (common.Address, error) {
-	var out []interface{}
-	err := _AppController.contract.Call(opts, &out, "getAppCreator", app)
-
-	if err != nil {
-		return *new(common.Address), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
-
-	return out0, err
-
-}
-
-// GetAppCreator is a free data retrieval call binding the contract method 0x67962d48.
-//
-// Solidity: function getAppCreator(address app) view returns(address)
-func (_AppController *AppControllerSession) GetAppCreator(app common.Address) (common.Address, error) {
-	return _AppController.Contract.GetAppCreator(&_AppController.CallOpts, app)
-}
-
-// GetAppCreator is a free data retrieval call binding the contract method 0x67962d48.
-//
-// Solidity: function getAppCreator(address app) view returns(address)
-func (_AppController *AppControllerCallerSession) GetAppCreator(app common.Address) (common.Address, error) {
-	return _AppController.Contract.GetAppCreator(&_AppController.CallOpts, app)
-}
-
 // GetAppLatestReleaseBlockNumber is a free data retrieval call binding the contract method 0x9ffbdce6.
 //
 // Solidity: function getAppLatestReleaseBlockNumber(address app) view returns(uint32)
@@ -548,6 +587,37 @@ func (_AppController *AppControllerCallerSession) GetAppOperatorSetId(app common
 	return _AppController.Contract.GetAppOperatorSetId(&_AppController.CallOpts, app)
 }
 
+// GetAppOwner is a free data retrieval call binding the contract method 0xffb42b51.
+//
+// Solidity: function getAppOwner(address app) view returns(address)
+func (_AppController *AppControllerCaller) GetAppOwner(opts *bind.CallOpts, app common.Address) (common.Address, error) {
+	var out []interface{}
+	err := _AppController.contract.Call(opts, &out, "getAppOwner", app)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// GetAppOwner is a free data retrieval call binding the contract method 0xffb42b51.
+//
+// Solidity: function getAppOwner(address app) view returns(address)
+func (_AppController *AppControllerSession) GetAppOwner(app common.Address) (common.Address, error) {
+	return _AppController.Contract.GetAppOwner(&_AppController.CallOpts, app)
+}
+
+// GetAppOwner is a free data retrieval call binding the contract method 0xffb42b51.
+//
+// Solidity: function getAppOwner(address app) view returns(address)
+func (_AppController *AppControllerCallerSession) GetAppOwner(app common.Address) (common.Address, error) {
+	return _AppController.Contract.GetAppOwner(&_AppController.CallOpts, app)
+}
+
 // GetAppStatus is a free data retrieval call binding the contract method 0xd5aae178.
 //
 // Solidity: function getAppStatus(address app) view returns(uint8)
@@ -579,9 +649,40 @@ func (_AppController *AppControllerCallerSession) GetAppStatus(app common.Addres
 	return _AppController.Contract.GetAppStatus(&_AppController.CallOpts, app)
 }
 
+// GetAppTimelocked is a free data retrieval call binding the contract method 0x508ac1d6.
+//
+// Solidity: function getAppTimelocked(address app) view returns(bool)
+func (_AppController *AppControllerCaller) GetAppTimelocked(opts *bind.CallOpts, app common.Address) (bool, error) {
+	var out []interface{}
+	err := _AppController.contract.Call(opts, &out, "getAppTimelocked", app)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// GetAppTimelocked is a free data retrieval call binding the contract method 0x508ac1d6.
+//
+// Solidity: function getAppTimelocked(address app) view returns(bool)
+func (_AppController *AppControllerSession) GetAppTimelocked(app common.Address) (bool, error) {
+	return _AppController.Contract.GetAppTimelocked(&_AppController.CallOpts, app)
+}
+
+// GetAppTimelocked is a free data retrieval call binding the contract method 0x508ac1d6.
+//
+// Solidity: function getAppTimelocked(address app) view returns(bool)
+func (_AppController *AppControllerCallerSession) GetAppTimelocked(app common.Address) (bool, error) {
+	return _AppController.Contract.GetAppTimelocked(&_AppController.CallOpts, app)
+}
+
 // GetApps is a free data retrieval call binding the contract method 0xa37e7e44.
 //
-// Solidity: function getApps(uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getApps(uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (_AppController *AppControllerCaller) GetApps(opts *bind.CallOpts, offset *big.Int, limit *big.Int) (struct {
 	Apps          []common.Address
 	AppConfigsMem []IAppControllerAppConfig
@@ -606,7 +707,7 @@ func (_AppController *AppControllerCaller) GetApps(opts *bind.CallOpts, offset *
 
 // GetApps is a free data retrieval call binding the contract method 0xa37e7e44.
 //
-// Solidity: function getApps(uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getApps(uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (_AppController *AppControllerSession) GetApps(offset *big.Int, limit *big.Int) (struct {
 	Apps          []common.Address
 	AppConfigsMem []IAppControllerAppConfig
@@ -616,7 +717,7 @@ func (_AppController *AppControllerSession) GetApps(offset *big.Int, limit *big.
 
 // GetApps is a free data retrieval call binding the contract method 0xa37e7e44.
 //
-// Solidity: function getApps(uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getApps(uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (_AppController *AppControllerCallerSession) GetApps(offset *big.Int, limit *big.Int) (struct {
 	Apps          []common.Address
 	AppConfigsMem []IAppControllerAppConfig
@@ -624,54 +725,9 @@ func (_AppController *AppControllerCallerSession) GetApps(offset *big.Int, limit
 	return _AppController.Contract.GetApps(&_AppController.CallOpts, offset, limit)
 }
 
-// GetAppsByBillingAccount is a free data retrieval call binding the contract method 0xdbb1c4e1.
-//
-// Solidity: function getAppsByBillingAccount(address account, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
-func (_AppController *AppControllerCaller) GetAppsByBillingAccount(opts *bind.CallOpts, account common.Address, offset *big.Int, limit *big.Int) (struct {
-	Apps          []common.Address
-	AppConfigsMem []IAppControllerAppConfig
-}, error) {
-	var out []interface{}
-	err := _AppController.contract.Call(opts, &out, "getAppsByBillingAccount", account, offset, limit)
-
-	outstruct := new(struct {
-		Apps          []common.Address
-		AppConfigsMem []IAppControllerAppConfig
-	})
-	if err != nil {
-		return *outstruct, err
-	}
-
-	outstruct.Apps = *abi.ConvertType(out[0], new([]common.Address)).(*[]common.Address)
-	outstruct.AppConfigsMem = *abi.ConvertType(out[1], new([]IAppControllerAppConfig)).(*[]IAppControllerAppConfig)
-
-	return *outstruct, err
-
-}
-
-// GetAppsByBillingAccount is a free data retrieval call binding the contract method 0xdbb1c4e1.
-//
-// Solidity: function getAppsByBillingAccount(address account, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
-func (_AppController *AppControllerSession) GetAppsByBillingAccount(account common.Address, offset *big.Int, limit *big.Int) (struct {
-	Apps          []common.Address
-	AppConfigsMem []IAppControllerAppConfig
-}, error) {
-	return _AppController.Contract.GetAppsByBillingAccount(&_AppController.CallOpts, account, offset, limit)
-}
-
-// GetAppsByBillingAccount is a free data retrieval call binding the contract method 0xdbb1c4e1.
-//
-// Solidity: function getAppsByBillingAccount(address account, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
-func (_AppController *AppControllerCallerSession) GetAppsByBillingAccount(account common.Address, offset *big.Int, limit *big.Int) (struct {
-	Apps          []common.Address
-	AppConfigsMem []IAppControllerAppConfig
-}, error) {
-	return _AppController.Contract.GetAppsByBillingAccount(&_AppController.CallOpts, account, offset, limit)
-}
-
 // GetAppsByCreator is a free data retrieval call binding the contract method 0x8099ef2e.
 //
-// Solidity: function getAppsByCreator(address creator, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getAppsByCreator(address creator, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (_AppController *AppControllerCaller) GetAppsByCreator(opts *bind.CallOpts, creator common.Address, offset *big.Int, limit *big.Int) (struct {
 	Apps          []common.Address
 	AppConfigsMem []IAppControllerAppConfig
@@ -696,7 +752,7 @@ func (_AppController *AppControllerCaller) GetAppsByCreator(opts *bind.CallOpts,
 
 // GetAppsByCreator is a free data retrieval call binding the contract method 0x8099ef2e.
 //
-// Solidity: function getAppsByCreator(address creator, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getAppsByCreator(address creator, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (_AppController *AppControllerSession) GetAppsByCreator(creator common.Address, offset *big.Int, limit *big.Int) (struct {
 	Apps          []common.Address
 	AppConfigsMem []IAppControllerAppConfig
@@ -706,7 +762,7 @@ func (_AppController *AppControllerSession) GetAppsByCreator(creator common.Addr
 
 // GetAppsByCreator is a free data retrieval call binding the contract method 0x8099ef2e.
 //
-// Solidity: function getAppsByCreator(address creator, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getAppsByCreator(address creator, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (_AppController *AppControllerCallerSession) GetAppsByCreator(creator common.Address, offset *big.Int, limit *big.Int) (struct {
 	Apps          []common.Address
 	AppConfigsMem []IAppControllerAppConfig
@@ -716,7 +772,7 @@ func (_AppController *AppControllerCallerSession) GetAppsByCreator(creator commo
 
 // GetAppsByDeveloper is a free data retrieval call binding the contract method 0xf36618ac.
 //
-// Solidity: function getAppsByDeveloper(address developer, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getAppsByDeveloper(address developer, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (_AppController *AppControllerCaller) GetAppsByDeveloper(opts *bind.CallOpts, developer common.Address, offset *big.Int, limit *big.Int) (struct {
 	Apps          []common.Address
 	AppConfigsMem []IAppControllerAppConfig
@@ -741,7 +797,7 @@ func (_AppController *AppControllerCaller) GetAppsByDeveloper(opts *bind.CallOpt
 
 // GetAppsByDeveloper is a free data retrieval call binding the contract method 0xf36618ac.
 //
-// Solidity: function getAppsByDeveloper(address developer, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getAppsByDeveloper(address developer, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (_AppController *AppControllerSession) GetAppsByDeveloper(developer common.Address, offset *big.Int, limit *big.Int) (struct {
 	Apps          []common.Address
 	AppConfigsMem []IAppControllerAppConfig
@@ -751,7 +807,7 @@ func (_AppController *AppControllerSession) GetAppsByDeveloper(developer common.
 
 // GetAppsByDeveloper is a free data retrieval call binding the contract method 0xf36618ac.
 //
-// Solidity: function getAppsByDeveloper(address developer, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getAppsByDeveloper(address developer, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (_AppController *AppControllerCallerSession) GetAppsByDeveloper(developer common.Address, offset *big.Int, limit *big.Int) (struct {
 	Apps          []common.Address
 	AppConfigsMem []IAppControllerAppConfig
@@ -759,66 +815,35 @@ func (_AppController *AppControllerCallerSession) GetAppsByDeveloper(developer c
 	return _AppController.Contract.GetAppsByDeveloper(&_AppController.CallOpts, developer, offset, limit)
 }
 
-// GetBillingAccount is a free data retrieval call binding the contract method 0x3e032115.
+// GetAppsForAccount is a free data retrieval call binding the contract method 0xf61b3a25.
 //
-// Solidity: function getBillingAccount(address app) view returns(address)
-func (_AppController *AppControllerCaller) GetBillingAccount(opts *bind.CallOpts, app common.Address) (common.Address, error) {
+// Solidity: function getAppsForAccount(address account, uint256 offset, uint256 limit) view returns((address,bool,uint8[])[] appRoles)
+func (_AppController *AppControllerCaller) GetAppsForAccount(opts *bind.CallOpts, account common.Address, offset *big.Int, limit *big.Int) ([]IAppControllerAppRoles, error) {
 	var out []interface{}
-	err := _AppController.contract.Call(opts, &out, "getBillingAccount", app)
+	err := _AppController.contract.Call(opts, &out, "getAppsForAccount", account, offset, limit)
 
 	if err != nil {
-		return *new(common.Address), err
+		return *new([]IAppControllerAppRoles), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+	out0 := *abi.ConvertType(out[0], new([]IAppControllerAppRoles)).(*[]IAppControllerAppRoles)
 
 	return out0, err
 
 }
 
-// GetBillingAccount is a free data retrieval call binding the contract method 0x3e032115.
+// GetAppsForAccount is a free data retrieval call binding the contract method 0xf61b3a25.
 //
-// Solidity: function getBillingAccount(address app) view returns(address)
-func (_AppController *AppControllerSession) GetBillingAccount(app common.Address) (common.Address, error) {
-	return _AppController.Contract.GetBillingAccount(&_AppController.CallOpts, app)
+// Solidity: function getAppsForAccount(address account, uint256 offset, uint256 limit) view returns((address,bool,uint8[])[] appRoles)
+func (_AppController *AppControllerSession) GetAppsForAccount(account common.Address, offset *big.Int, limit *big.Int) ([]IAppControllerAppRoles, error) {
+	return _AppController.Contract.GetAppsForAccount(&_AppController.CallOpts, account, offset, limit)
 }
 
-// GetBillingAccount is a free data retrieval call binding the contract method 0x3e032115.
+// GetAppsForAccount is a free data retrieval call binding the contract method 0xf61b3a25.
 //
-// Solidity: function getBillingAccount(address app) view returns(address)
-func (_AppController *AppControllerCallerSession) GetBillingAccount(app common.Address) (common.Address, error) {
-	return _AppController.Contract.GetBillingAccount(&_AppController.CallOpts, app)
-}
-
-// GetBillingType is a free data retrieval call binding the contract method 0x85e9babb.
-//
-// Solidity: function getBillingType(address app) view returns(uint8)
-func (_AppController *AppControllerCaller) GetBillingType(opts *bind.CallOpts, app common.Address) (uint8, error) {
-	var out []interface{}
-	err := _AppController.contract.Call(opts, &out, "getBillingType", app)
-
-	if err != nil {
-		return *new(uint8), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
-
-	return out0, err
-
-}
-
-// GetBillingType is a free data retrieval call binding the contract method 0x85e9babb.
-//
-// Solidity: function getBillingType(address app) view returns(uint8)
-func (_AppController *AppControllerSession) GetBillingType(app common.Address) (uint8, error) {
-	return _AppController.Contract.GetBillingType(&_AppController.CallOpts, app)
-}
-
-// GetBillingType is a free data retrieval call binding the contract method 0x85e9babb.
-//
-// Solidity: function getBillingType(address app) view returns(uint8)
-func (_AppController *AppControllerCallerSession) GetBillingType(app common.Address) (uint8, error) {
-	return _AppController.Contract.GetBillingType(&_AppController.CallOpts, app)
+// Solidity: function getAppsForAccount(address account, uint256 offset, uint256 limit) view returns((address,bool,uint8[])[] appRoles)
+func (_AppController *AppControllerCallerSession) GetAppsForAccount(account common.Address, offset *big.Int, limit *big.Int) ([]IAppControllerAppRoles, error) {
+	return _AppController.Contract.GetAppsForAccount(&_AppController.CallOpts, account, offset, limit)
 }
 
 // GetMaxActiveAppsPerUser is a free data retrieval call binding the contract method 0x40f70a9e.
@@ -852,6 +877,192 @@ func (_AppController *AppControllerCallerSession) GetMaxActiveAppsPerUser(user c
 	return _AppController.Contract.GetMaxActiveAppsPerUser(&_AppController.CallOpts, user)
 }
 
+// GetRoleAdmin is a free data retrieval call binding the contract method 0x248a9ca3.
+//
+// Solidity: function getRoleAdmin(bytes32 role) view returns(bytes32)
+func (_AppController *AppControllerCaller) GetRoleAdmin(opts *bind.CallOpts, role [32]byte) ([32]byte, error) {
+	var out []interface{}
+	err := _AppController.contract.Call(opts, &out, "getRoleAdmin", role)
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
+}
+
+// GetRoleAdmin is a free data retrieval call binding the contract method 0x248a9ca3.
+//
+// Solidity: function getRoleAdmin(bytes32 role) view returns(bytes32)
+func (_AppController *AppControllerSession) GetRoleAdmin(role [32]byte) ([32]byte, error) {
+	return _AppController.Contract.GetRoleAdmin(&_AppController.CallOpts, role)
+}
+
+// GetRoleAdmin is a free data retrieval call binding the contract method 0x248a9ca3.
+//
+// Solidity: function getRoleAdmin(bytes32 role) view returns(bytes32)
+func (_AppController *AppControllerCallerSession) GetRoleAdmin(role [32]byte) ([32]byte, error) {
+	return _AppController.Contract.GetRoleAdmin(&_AppController.CallOpts, role)
+}
+
+// GetRoleMember is a free data retrieval call binding the contract method 0x9010d07c.
+//
+// Solidity: function getRoleMember(bytes32 role, uint256 index) view returns(address)
+func (_AppController *AppControllerCaller) GetRoleMember(opts *bind.CallOpts, role [32]byte, index *big.Int) (common.Address, error) {
+	var out []interface{}
+	err := _AppController.contract.Call(opts, &out, "getRoleMember", role, index)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// GetRoleMember is a free data retrieval call binding the contract method 0x9010d07c.
+//
+// Solidity: function getRoleMember(bytes32 role, uint256 index) view returns(address)
+func (_AppController *AppControllerSession) GetRoleMember(role [32]byte, index *big.Int) (common.Address, error) {
+	return _AppController.Contract.GetRoleMember(&_AppController.CallOpts, role, index)
+}
+
+// GetRoleMember is a free data retrieval call binding the contract method 0x9010d07c.
+//
+// Solidity: function getRoleMember(bytes32 role, uint256 index) view returns(address)
+func (_AppController *AppControllerCallerSession) GetRoleMember(role [32]byte, index *big.Int) (common.Address, error) {
+	return _AppController.Contract.GetRoleMember(&_AppController.CallOpts, role, index)
+}
+
+// GetRoleMemberCount is a free data retrieval call binding the contract method 0xca15c873.
+//
+// Solidity: function getRoleMemberCount(bytes32 role) view returns(uint256)
+func (_AppController *AppControllerCaller) GetRoleMemberCount(opts *bind.CallOpts, role [32]byte) (*big.Int, error) {
+	var out []interface{}
+	err := _AppController.contract.Call(opts, &out, "getRoleMemberCount", role)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GetRoleMemberCount is a free data retrieval call binding the contract method 0xca15c873.
+//
+// Solidity: function getRoleMemberCount(bytes32 role) view returns(uint256)
+func (_AppController *AppControllerSession) GetRoleMemberCount(role [32]byte) (*big.Int, error) {
+	return _AppController.Contract.GetRoleMemberCount(&_AppController.CallOpts, role)
+}
+
+// GetRoleMemberCount is a free data retrieval call binding the contract method 0xca15c873.
+//
+// Solidity: function getRoleMemberCount(bytes32 role) view returns(uint256)
+func (_AppController *AppControllerCallerSession) GetRoleMemberCount(role [32]byte) (*big.Int, error) {
+	return _AppController.Contract.GetRoleMemberCount(&_AppController.CallOpts, role)
+}
+
+// GetTeamRoleMember is a free data retrieval call binding the contract method 0x1d349e61.
+//
+// Solidity: function getTeamRoleMember(address team, uint8 role, uint256 index) view returns(address)
+func (_AppController *AppControllerCaller) GetTeamRoleMember(opts *bind.CallOpts, team common.Address, role uint8, index *big.Int) (common.Address, error) {
+	var out []interface{}
+	err := _AppController.contract.Call(opts, &out, "getTeamRoleMember", team, role, index)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// GetTeamRoleMember is a free data retrieval call binding the contract method 0x1d349e61.
+//
+// Solidity: function getTeamRoleMember(address team, uint8 role, uint256 index) view returns(address)
+func (_AppController *AppControllerSession) GetTeamRoleMember(team common.Address, role uint8, index *big.Int) (common.Address, error) {
+	return _AppController.Contract.GetTeamRoleMember(&_AppController.CallOpts, team, role, index)
+}
+
+// GetTeamRoleMember is a free data retrieval call binding the contract method 0x1d349e61.
+//
+// Solidity: function getTeamRoleMember(address team, uint8 role, uint256 index) view returns(address)
+func (_AppController *AppControllerCallerSession) GetTeamRoleMember(team common.Address, role uint8, index *big.Int) (common.Address, error) {
+	return _AppController.Contract.GetTeamRoleMember(&_AppController.CallOpts, team, role, index)
+}
+
+// GetTeamRoleMemberCount is a free data retrieval call binding the contract method 0x3c98ff65.
+//
+// Solidity: function getTeamRoleMemberCount(address team, uint8 role) view returns(uint256)
+func (_AppController *AppControllerCaller) GetTeamRoleMemberCount(opts *bind.CallOpts, team common.Address, role uint8) (*big.Int, error) {
+	var out []interface{}
+	err := _AppController.contract.Call(opts, &out, "getTeamRoleMemberCount", team, role)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// GetTeamRoleMemberCount is a free data retrieval call binding the contract method 0x3c98ff65.
+//
+// Solidity: function getTeamRoleMemberCount(address team, uint8 role) view returns(uint256)
+func (_AppController *AppControllerSession) GetTeamRoleMemberCount(team common.Address, role uint8) (*big.Int, error) {
+	return _AppController.Contract.GetTeamRoleMemberCount(&_AppController.CallOpts, team, role)
+}
+
+// GetTeamRoleMemberCount is a free data retrieval call binding the contract method 0x3c98ff65.
+//
+// Solidity: function getTeamRoleMemberCount(address team, uint8 role) view returns(uint256)
+func (_AppController *AppControllerCallerSession) GetTeamRoleMemberCount(team common.Address, role uint8) (*big.Int, error) {
+	return _AppController.Contract.GetTeamRoleMemberCount(&_AppController.CallOpts, team, role)
+}
+
+// GetTeamRoleMembers is a free data retrieval call binding the contract method 0x60257ae6.
+//
+// Solidity: function getTeamRoleMembers(address team, uint8 role) view returns(address[])
+func (_AppController *AppControllerCaller) GetTeamRoleMembers(opts *bind.CallOpts, team common.Address, role uint8) ([]common.Address, error) {
+	var out []interface{}
+	err := _AppController.contract.Call(opts, &out, "getTeamRoleMembers", team, role)
+
+	if err != nil {
+		return *new([]common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]common.Address)).(*[]common.Address)
+
+	return out0, err
+
+}
+
+// GetTeamRoleMembers is a free data retrieval call binding the contract method 0x60257ae6.
+//
+// Solidity: function getTeamRoleMembers(address team, uint8 role) view returns(address[])
+func (_AppController *AppControllerSession) GetTeamRoleMembers(team common.Address, role uint8) ([]common.Address, error) {
+	return _AppController.Contract.GetTeamRoleMembers(&_AppController.CallOpts, team, role)
+}
+
+// GetTeamRoleMembers is a free data retrieval call binding the contract method 0x60257ae6.
+//
+// Solidity: function getTeamRoleMembers(address team, uint8 role) view returns(address[])
+func (_AppController *AppControllerCallerSession) GetTeamRoleMembers(team common.Address, role uint8) ([]common.Address, error) {
+	return _AppController.Contract.GetTeamRoleMembers(&_AppController.CallOpts, team, role)
+}
+
 // GlobalActiveAppCount is a free data retrieval call binding the contract method 0xa8aa2bd3.
 //
 // Solidity: function globalActiveAppCount() view returns(uint32)
@@ -881,6 +1092,68 @@ func (_AppController *AppControllerSession) GlobalActiveAppCount() (uint32, erro
 // Solidity: function globalActiveAppCount() view returns(uint32)
 func (_AppController *AppControllerCallerSession) GlobalActiveAppCount() (uint32, error) {
 	return _AppController.Contract.GlobalActiveAppCount(&_AppController.CallOpts)
+}
+
+// HasRole is a free data retrieval call binding the contract method 0x91d14854.
+//
+// Solidity: function hasRole(bytes32 role, address account) view returns(bool)
+func (_AppController *AppControllerCaller) HasRole(opts *bind.CallOpts, role [32]byte, account common.Address) (bool, error) {
+	var out []interface{}
+	err := _AppController.contract.Call(opts, &out, "hasRole", role, account)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// HasRole is a free data retrieval call binding the contract method 0x91d14854.
+//
+// Solidity: function hasRole(bytes32 role, address account) view returns(bool)
+func (_AppController *AppControllerSession) HasRole(role [32]byte, account common.Address) (bool, error) {
+	return _AppController.Contract.HasRole(&_AppController.CallOpts, role, account)
+}
+
+// HasRole is a free data retrieval call binding the contract method 0x91d14854.
+//
+// Solidity: function hasRole(bytes32 role, address account) view returns(bool)
+func (_AppController *AppControllerCallerSession) HasRole(role [32]byte, account common.Address) (bool, error) {
+	return _AppController.Contract.HasRole(&_AppController.CallOpts, role, account)
+}
+
+// HasTeamRole is a free data retrieval call binding the contract method 0x54bfb170.
+//
+// Solidity: function hasTeamRole(address team, uint8 role, address account) view returns(bool)
+func (_AppController *AppControllerCaller) HasTeamRole(opts *bind.CallOpts, team common.Address, role uint8, account common.Address) (bool, error) {
+	var out []interface{}
+	err := _AppController.contract.Call(opts, &out, "hasTeamRole", team, role, account)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// HasTeamRole is a free data retrieval call binding the contract method 0x54bfb170.
+//
+// Solidity: function hasTeamRole(address team, uint8 role, address account) view returns(bool)
+func (_AppController *AppControllerSession) HasTeamRole(team common.Address, role uint8, account common.Address) (bool, error) {
+	return _AppController.Contract.HasTeamRole(&_AppController.CallOpts, team, role, account)
+}
+
+// HasTeamRole is a free data retrieval call binding the contract method 0x54bfb170.
+//
+// Solidity: function hasTeamRole(address team, uint8 role, address account) view returns(bool)
+func (_AppController *AppControllerCallerSession) HasTeamRole(team common.Address, role uint8, account common.Address) (bool, error) {
+	return _AppController.Contract.HasTeamRole(&_AppController.CallOpts, team, role, account)
 }
 
 // MaxGlobalActiveApps is a free data retrieval call binding the contract method 0xa46530a2.
@@ -976,6 +1249,68 @@ func (_AppController *AppControllerCallerSession) ReleaseManager() (common.Addre
 	return _AppController.Contract.ReleaseManager(&_AppController.CallOpts)
 }
 
+// SafeTimelockFactory is a free data retrieval call binding the contract method 0xa03d2a81.
+//
+// Solidity: function safeTimelockFactory() view returns(address)
+func (_AppController *AppControllerCaller) SafeTimelockFactory(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _AppController.contract.Call(opts, &out, "safeTimelockFactory")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// SafeTimelockFactory is a free data retrieval call binding the contract method 0xa03d2a81.
+//
+// Solidity: function safeTimelockFactory() view returns(address)
+func (_AppController *AppControllerSession) SafeTimelockFactory() (common.Address, error) {
+	return _AppController.Contract.SafeTimelockFactory(&_AppController.CallOpts)
+}
+
+// SafeTimelockFactory is a free data retrieval call binding the contract method 0xa03d2a81.
+//
+// Solidity: function safeTimelockFactory() view returns(address)
+func (_AppController *AppControllerCallerSession) SafeTimelockFactory() (common.Address, error) {
+	return _AppController.Contract.SafeTimelockFactory(&_AppController.CallOpts)
+}
+
+// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
+//
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
+func (_AppController *AppControllerCaller) SupportsInterface(opts *bind.CallOpts, interfaceId [4]byte) (bool, error) {
+	var out []interface{}
+	err := _AppController.contract.Call(opts, &out, "supportsInterface", interfaceId)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
+//
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
+func (_AppController *AppControllerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
+	return _AppController.Contract.SupportsInterface(&_AppController.CallOpts, interfaceId)
+}
+
+// SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
+//
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
+func (_AppController *AppControllerCallerSession) SupportsInterface(interfaceId [4]byte) (bool, error) {
+	return _AppController.Contract.SupportsInterface(&_AppController.CallOpts, interfaceId)
+}
+
 // Version is a free data retrieval call binding the contract method 0x54fd4d50.
 //
 // Solidity: function version() view returns(string)
@@ -1028,25 +1363,67 @@ func (_AppController *AppControllerTransactorSession) CreateApp(salt [32]byte, r
 	return _AppController.Contract.CreateApp(&_AppController.TransactOpts, salt, release)
 }
 
-// CreateAppWithIsolatedBilling is a paid mutator transaction binding the contract method 0x559cf359.
+// CreateAppForTeam is a paid mutator transaction binding the contract method 0x688c3ec3.
 //
-// Solidity: function createAppWithIsolatedBilling(bytes32 salt, (((bytes32,string)[],uint32),bytes,bytes) release) returns(address app)
-func (_AppController *AppControllerTransactor) CreateAppWithIsolatedBilling(opts *bind.TransactOpts, salt [32]byte, release IAppControllerRelease) (*types.Transaction, error) {
-	return _AppController.contract.Transact(opts, "createAppWithIsolatedBilling", salt, release)
+// Solidity: function createAppForTeam(address team, bytes32 salt, (((bytes32,string)[],uint32),bytes,bytes) release) returns(address app)
+func (_AppController *AppControllerTransactor) CreateAppForTeam(opts *bind.TransactOpts, team common.Address, salt [32]byte, release IAppControllerRelease) (*types.Transaction, error) {
+	return _AppController.contract.Transact(opts, "createAppForTeam", team, salt, release)
 }
 
-// CreateAppWithIsolatedBilling is a paid mutator transaction binding the contract method 0x559cf359.
+// CreateAppForTeam is a paid mutator transaction binding the contract method 0x688c3ec3.
 //
-// Solidity: function createAppWithIsolatedBilling(bytes32 salt, (((bytes32,string)[],uint32),bytes,bytes) release) returns(address app)
-func (_AppController *AppControllerSession) CreateAppWithIsolatedBilling(salt [32]byte, release IAppControllerRelease) (*types.Transaction, error) {
-	return _AppController.Contract.CreateAppWithIsolatedBilling(&_AppController.TransactOpts, salt, release)
+// Solidity: function createAppForTeam(address team, bytes32 salt, (((bytes32,string)[],uint32),bytes,bytes) release) returns(address app)
+func (_AppController *AppControllerSession) CreateAppForTeam(team common.Address, salt [32]byte, release IAppControllerRelease) (*types.Transaction, error) {
+	return _AppController.Contract.CreateAppForTeam(&_AppController.TransactOpts, team, salt, release)
 }
 
-// CreateAppWithIsolatedBilling is a paid mutator transaction binding the contract method 0x559cf359.
+// CreateAppForTeam is a paid mutator transaction binding the contract method 0x688c3ec3.
 //
-// Solidity: function createAppWithIsolatedBilling(bytes32 salt, (((bytes32,string)[],uint32),bytes,bytes) release) returns(address app)
-func (_AppController *AppControllerTransactorSession) CreateAppWithIsolatedBilling(salt [32]byte, release IAppControllerRelease) (*types.Transaction, error) {
-	return _AppController.Contract.CreateAppWithIsolatedBilling(&_AppController.TransactOpts, salt, release)
+// Solidity: function createAppForTeam(address team, bytes32 salt, (((bytes32,string)[],uint32),bytes,bytes) release) returns(address app)
+func (_AppController *AppControllerTransactorSession) CreateAppForTeam(team common.Address, salt [32]byte, release IAppControllerRelease) (*types.Transaction, error) {
+	return _AppController.Contract.CreateAppForTeam(&_AppController.TransactOpts, team, salt, release)
+}
+
+// GrantRole is a paid mutator transaction binding the contract method 0x2f2ff15d.
+//
+// Solidity: function grantRole(bytes32 role, address account) returns()
+func (_AppController *AppControllerTransactor) GrantRole(opts *bind.TransactOpts, role [32]byte, account common.Address) (*types.Transaction, error) {
+	return _AppController.contract.Transact(opts, "grantRole", role, account)
+}
+
+// GrantRole is a paid mutator transaction binding the contract method 0x2f2ff15d.
+//
+// Solidity: function grantRole(bytes32 role, address account) returns()
+func (_AppController *AppControllerSession) GrantRole(role [32]byte, account common.Address) (*types.Transaction, error) {
+	return _AppController.Contract.GrantRole(&_AppController.TransactOpts, role, account)
+}
+
+// GrantRole is a paid mutator transaction binding the contract method 0x2f2ff15d.
+//
+// Solidity: function grantRole(bytes32 role, address account) returns()
+func (_AppController *AppControllerTransactorSession) GrantRole(role [32]byte, account common.Address) (*types.Transaction, error) {
+	return _AppController.Contract.GrantRole(&_AppController.TransactOpts, role, account)
+}
+
+// GrantTeamRole is a paid mutator transaction binding the contract method 0x58f2c536.
+//
+// Solidity: function grantTeamRole(address team, uint8 role, address account) returns()
+func (_AppController *AppControllerTransactor) GrantTeamRole(opts *bind.TransactOpts, team common.Address, role uint8, account common.Address) (*types.Transaction, error) {
+	return _AppController.contract.Transact(opts, "grantTeamRole", team, role, account)
+}
+
+// GrantTeamRole is a paid mutator transaction binding the contract method 0x58f2c536.
+//
+// Solidity: function grantTeamRole(address team, uint8 role, address account) returns()
+func (_AppController *AppControllerSession) GrantTeamRole(team common.Address, role uint8, account common.Address) (*types.Transaction, error) {
+	return _AppController.Contract.GrantTeamRole(&_AppController.TransactOpts, team, role, account)
+}
+
+// GrantTeamRole is a paid mutator transaction binding the contract method 0x58f2c536.
+//
+// Solidity: function grantTeamRole(address team, uint8 role, address account) returns()
+func (_AppController *AppControllerTransactorSession) GrantTeamRole(team common.Address, role uint8, account common.Address) (*types.Transaction, error) {
+	return _AppController.Contract.GrantTeamRole(&_AppController.TransactOpts, team, role, account)
 }
 
 // Initialize is a paid mutator transaction binding the contract method 0xc4d66de8.
@@ -1068,6 +1445,111 @@ func (_AppController *AppControllerSession) Initialize(admin common.Address) (*t
 // Solidity: function initialize(address admin) returns()
 func (_AppController *AppControllerTransactorSession) Initialize(admin common.Address) (*types.Transaction, error) {
 	return _AppController.Contract.Initialize(&_AppController.TransactOpts, admin)
+}
+
+// MigrateAdmins is a paid mutator transaction binding the contract method 0x00b73d4c.
+//
+// Solidity: function migrateAdmins(address[] apps) returns()
+func (_AppController *AppControllerTransactor) MigrateAdmins(opts *bind.TransactOpts, apps []common.Address) (*types.Transaction, error) {
+	return _AppController.contract.Transact(opts, "migrateAdmins", apps)
+}
+
+// MigrateAdmins is a paid mutator transaction binding the contract method 0x00b73d4c.
+//
+// Solidity: function migrateAdmins(address[] apps) returns()
+func (_AppController *AppControllerSession) MigrateAdmins(apps []common.Address) (*types.Transaction, error) {
+	return _AppController.Contract.MigrateAdmins(&_AppController.TransactOpts, apps)
+}
+
+// MigrateAdmins is a paid mutator transaction binding the contract method 0x00b73d4c.
+//
+// Solidity: function migrateAdmins(address[] apps) returns()
+func (_AppController *AppControllerTransactorSession) MigrateAdmins(apps []common.Address) (*types.Transaction, error) {
+	return _AppController.Contract.MigrateAdmins(&_AppController.TransactOpts, apps)
+}
+
+// RenounceRole is a paid mutator transaction binding the contract method 0x36568abe.
+//
+// Solidity: function renounceRole(bytes32 role, address account) returns()
+func (_AppController *AppControllerTransactor) RenounceRole(opts *bind.TransactOpts, role [32]byte, account common.Address) (*types.Transaction, error) {
+	return _AppController.contract.Transact(opts, "renounceRole", role, account)
+}
+
+// RenounceRole is a paid mutator transaction binding the contract method 0x36568abe.
+//
+// Solidity: function renounceRole(bytes32 role, address account) returns()
+func (_AppController *AppControllerSession) RenounceRole(role [32]byte, account common.Address) (*types.Transaction, error) {
+	return _AppController.Contract.RenounceRole(&_AppController.TransactOpts, role, account)
+}
+
+// RenounceRole is a paid mutator transaction binding the contract method 0x36568abe.
+//
+// Solidity: function renounceRole(bytes32 role, address account) returns()
+func (_AppController *AppControllerTransactorSession) RenounceRole(role [32]byte, account common.Address) (*types.Transaction, error) {
+	return _AppController.Contract.RenounceRole(&_AppController.TransactOpts, role, account)
+}
+
+// RenounceTeamRole is a paid mutator transaction binding the contract method 0x17f4c90b.
+//
+// Solidity: function renounceTeamRole(address team, uint8 role) returns()
+func (_AppController *AppControllerTransactor) RenounceTeamRole(opts *bind.TransactOpts, team common.Address, role uint8) (*types.Transaction, error) {
+	return _AppController.contract.Transact(opts, "renounceTeamRole", team, role)
+}
+
+// RenounceTeamRole is a paid mutator transaction binding the contract method 0x17f4c90b.
+//
+// Solidity: function renounceTeamRole(address team, uint8 role) returns()
+func (_AppController *AppControllerSession) RenounceTeamRole(team common.Address, role uint8) (*types.Transaction, error) {
+	return _AppController.Contract.RenounceTeamRole(&_AppController.TransactOpts, team, role)
+}
+
+// RenounceTeamRole is a paid mutator transaction binding the contract method 0x17f4c90b.
+//
+// Solidity: function renounceTeamRole(address team, uint8 role) returns()
+func (_AppController *AppControllerTransactorSession) RenounceTeamRole(team common.Address, role uint8) (*types.Transaction, error) {
+	return _AppController.Contract.RenounceTeamRole(&_AppController.TransactOpts, team, role)
+}
+
+// RevokeRole is a paid mutator transaction binding the contract method 0xd547741f.
+//
+// Solidity: function revokeRole(bytes32 role, address account) returns()
+func (_AppController *AppControllerTransactor) RevokeRole(opts *bind.TransactOpts, role [32]byte, account common.Address) (*types.Transaction, error) {
+	return _AppController.contract.Transact(opts, "revokeRole", role, account)
+}
+
+// RevokeRole is a paid mutator transaction binding the contract method 0xd547741f.
+//
+// Solidity: function revokeRole(bytes32 role, address account) returns()
+func (_AppController *AppControllerSession) RevokeRole(role [32]byte, account common.Address) (*types.Transaction, error) {
+	return _AppController.Contract.RevokeRole(&_AppController.TransactOpts, role, account)
+}
+
+// RevokeRole is a paid mutator transaction binding the contract method 0xd547741f.
+//
+// Solidity: function revokeRole(bytes32 role, address account) returns()
+func (_AppController *AppControllerTransactorSession) RevokeRole(role [32]byte, account common.Address) (*types.Transaction, error) {
+	return _AppController.Contract.RevokeRole(&_AppController.TransactOpts, role, account)
+}
+
+// RevokeTeamRole is a paid mutator transaction binding the contract method 0x11b652e2.
+//
+// Solidity: function revokeTeamRole(address team, uint8 role, address account) returns()
+func (_AppController *AppControllerTransactor) RevokeTeamRole(opts *bind.TransactOpts, team common.Address, role uint8, account common.Address) (*types.Transaction, error) {
+	return _AppController.contract.Transact(opts, "revokeTeamRole", team, role, account)
+}
+
+// RevokeTeamRole is a paid mutator transaction binding the contract method 0x11b652e2.
+//
+// Solidity: function revokeTeamRole(address team, uint8 role, address account) returns()
+func (_AppController *AppControllerSession) RevokeTeamRole(team common.Address, role uint8, account common.Address) (*types.Transaction, error) {
+	return _AppController.Contract.RevokeTeamRole(&_AppController.TransactOpts, team, role, account)
+}
+
+// RevokeTeamRole is a paid mutator transaction binding the contract method 0x11b652e2.
+//
+// Solidity: function revokeTeamRole(address team, uint8 role, address account) returns()
+func (_AppController *AppControllerTransactorSession) RevokeTeamRole(team common.Address, role uint8, account common.Address) (*types.Transaction, error) {
+	return _AppController.Contract.RevokeTeamRole(&_AppController.TransactOpts, team, role, account)
 }
 
 // SetMaxActiveAppsPerUser is a paid mutator transaction binding the contract method 0xd49fec2b.
@@ -1217,6 +1699,27 @@ func (_AppController *AppControllerTransactorSession) TerminateAppByAdmin(app co
 	return _AppController.Contract.TerminateAppByAdmin(&_AppController.TransactOpts, app)
 }
 
+// TransferOwnership is a paid mutator transaction binding the contract method 0x6d435421.
+//
+// Solidity: function transferOwnership(address app, address newOwner) returns()
+func (_AppController *AppControllerTransactor) TransferOwnership(opts *bind.TransactOpts, app common.Address, newOwner common.Address) (*types.Transaction, error) {
+	return _AppController.contract.Transact(opts, "transferOwnership", app, newOwner)
+}
+
+// TransferOwnership is a paid mutator transaction binding the contract method 0x6d435421.
+//
+// Solidity: function transferOwnership(address app, address newOwner) returns()
+func (_AppController *AppControllerSession) TransferOwnership(app common.Address, newOwner common.Address) (*types.Transaction, error) {
+	return _AppController.Contract.TransferOwnership(&_AppController.TransactOpts, app, newOwner)
+}
+
+// TransferOwnership is a paid mutator transaction binding the contract method 0x6d435421.
+//
+// Solidity: function transferOwnership(address app, address newOwner) returns()
+func (_AppController *AppControllerTransactorSession) TransferOwnership(app common.Address, newOwner common.Address) (*types.Transaction, error) {
+	return _AppController.Contract.TransferOwnership(&_AppController.TransactOpts, app, newOwner)
+}
+
 // UpdateAppMetadataURI is a paid mutator transaction binding the contract method 0x65aa9a65.
 //
 // Solidity: function updateAppMetadataURI(address app, string metadataURI) returns()
@@ -1328,7 +1831,7 @@ func (it *AppControllerAppCreatedIterator) Close() error {
 
 // AppControllerAppCreated represents a AppCreated event raised by the AppController contract.
 type AppControllerAppCreated struct {
-	Creator       common.Address
+	Owner         common.Address
 	App           common.Address
 	OperatorSetId uint32
 	Raw           types.Log // Blockchain specific contextual infos
@@ -1336,19 +1839,19 @@ type AppControllerAppCreated struct {
 
 // FilterAppCreated is a free log retrieval operation binding the contract event 0xe9e6e5409b80e2dab7d38194fb370b2e8045a1af28177b94ddcf19d2495d7589.
 //
-// Solidity: event AppCreated(address indexed creator, address indexed app, uint32 operatorSetId)
-func (_AppController *AppControllerFilterer) FilterAppCreated(opts *bind.FilterOpts, creator []common.Address, app []common.Address) (*AppControllerAppCreatedIterator, error) {
+// Solidity: event AppCreated(address indexed owner, address indexed app, uint32 operatorSetId)
+func (_AppController *AppControllerFilterer) FilterAppCreated(opts *bind.FilterOpts, owner []common.Address, app []common.Address) (*AppControllerAppCreatedIterator, error) {
 
-	var creatorRule []interface{}
-	for _, creatorItem := range creator {
-		creatorRule = append(creatorRule, creatorItem)
+	var ownerRule []interface{}
+	for _, ownerItem := range owner {
+		ownerRule = append(ownerRule, ownerItem)
 	}
 	var appRule []interface{}
 	for _, appItem := range app {
 		appRule = append(appRule, appItem)
 	}
 
-	logs, sub, err := _AppController.contract.FilterLogs(opts, "AppCreated", creatorRule, appRule)
+	logs, sub, err := _AppController.contract.FilterLogs(opts, "AppCreated", ownerRule, appRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1357,19 +1860,19 @@ func (_AppController *AppControllerFilterer) FilterAppCreated(opts *bind.FilterO
 
 // WatchAppCreated is a free log subscription operation binding the contract event 0xe9e6e5409b80e2dab7d38194fb370b2e8045a1af28177b94ddcf19d2495d7589.
 //
-// Solidity: event AppCreated(address indexed creator, address indexed app, uint32 operatorSetId)
-func (_AppController *AppControllerFilterer) WatchAppCreated(opts *bind.WatchOpts, sink chan<- *AppControllerAppCreated, creator []common.Address, app []common.Address) (event.Subscription, error) {
+// Solidity: event AppCreated(address indexed owner, address indexed app, uint32 operatorSetId)
+func (_AppController *AppControllerFilterer) WatchAppCreated(opts *bind.WatchOpts, sink chan<- *AppControllerAppCreated, owner []common.Address, app []common.Address) (event.Subscription, error) {
 
-	var creatorRule []interface{}
-	for _, creatorItem := range creator {
-		creatorRule = append(creatorRule, creatorItem)
+	var ownerRule []interface{}
+	for _, ownerItem := range owner {
+		ownerRule = append(ownerRule, ownerItem)
 	}
 	var appRule []interface{}
 	for _, appItem := range app {
 		appRule = append(appRule, appItem)
 	}
 
-	logs, sub, err := _AppController.contract.WatchLogs(opts, "AppCreated", creatorRule, appRule)
+	logs, sub, err := _AppController.contract.WatchLogs(opts, "AppCreated", ownerRule, appRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1403,7 +1906,7 @@ func (_AppController *AppControllerFilterer) WatchAppCreated(opts *bind.WatchOpt
 
 // ParseAppCreated is a log parse operation binding the contract event 0xe9e6e5409b80e2dab7d38194fb370b2e8045a1af28177b94ddcf19d2495d7589.
 //
-// Solidity: event AppCreated(address indexed creator, address indexed app, uint32 operatorSetId)
+// Solidity: event AppCreated(address indexed owner, address indexed app, uint32 operatorSetId)
 func (_AppController *AppControllerFilterer) ParseAppCreated(log types.Log) (*AppControllerAppCreated, error) {
 	event := new(AppControllerAppCreated)
 	if err := _AppController.contract.UnpackLog(event, "AppCreated", log); err != nil {
@@ -1552,6 +2055,168 @@ func (_AppController *AppControllerFilterer) WatchAppMetadataURIUpdated(opts *bi
 func (_AppController *AppControllerFilterer) ParseAppMetadataURIUpdated(log types.Log) (*AppControllerAppMetadataURIUpdated, error) {
 	event := new(AppControllerAppMetadataURIUpdated)
 	if err := _AppController.contract.UnpackLog(event, "AppMetadataURIUpdated", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// AppControllerAppOwnershipTransferredIterator is returned from FilterAppOwnershipTransferred and is used to iterate over the raw logs and unpacked data for AppOwnershipTransferred events raised by the AppController contract.
+type AppControllerAppOwnershipTransferredIterator struct {
+	Event *AppControllerAppOwnershipTransferred // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *AppControllerAppOwnershipTransferredIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(AppControllerAppOwnershipTransferred)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(AppControllerAppOwnershipTransferred)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *AppControllerAppOwnershipTransferredIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *AppControllerAppOwnershipTransferredIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// AppControllerAppOwnershipTransferred represents a AppOwnershipTransferred event raised by the AppController contract.
+type AppControllerAppOwnershipTransferred struct {
+	App           common.Address
+	PreviousOwner common.Address
+	NewOwner      common.Address
+	Raw           types.Log // Blockchain specific contextual infos
+}
+
+// FilterAppOwnershipTransferred is a free log retrieval operation binding the contract event 0x3fa03516e5ee455b2d2779f21b254735e2c1f82cf338619c1b96816df2a467a4.
+//
+// Solidity: event AppOwnershipTransferred(address indexed app, address indexed previousOwner, address indexed newOwner)
+func (_AppController *AppControllerFilterer) FilterAppOwnershipTransferred(opts *bind.FilterOpts, app []common.Address, previousOwner []common.Address, newOwner []common.Address) (*AppControllerAppOwnershipTransferredIterator, error) {
+
+	var appRule []interface{}
+	for _, appItem := range app {
+		appRule = append(appRule, appItem)
+	}
+	var previousOwnerRule []interface{}
+	for _, previousOwnerItem := range previousOwner {
+		previousOwnerRule = append(previousOwnerRule, previousOwnerItem)
+	}
+	var newOwnerRule []interface{}
+	for _, newOwnerItem := range newOwner {
+		newOwnerRule = append(newOwnerRule, newOwnerItem)
+	}
+
+	logs, sub, err := _AppController.contract.FilterLogs(opts, "AppOwnershipTransferred", appRule, previousOwnerRule, newOwnerRule)
+	if err != nil {
+		return nil, err
+	}
+	return &AppControllerAppOwnershipTransferredIterator{contract: _AppController.contract, event: "AppOwnershipTransferred", logs: logs, sub: sub}, nil
+}
+
+// WatchAppOwnershipTransferred is a free log subscription operation binding the contract event 0x3fa03516e5ee455b2d2779f21b254735e2c1f82cf338619c1b96816df2a467a4.
+//
+// Solidity: event AppOwnershipTransferred(address indexed app, address indexed previousOwner, address indexed newOwner)
+func (_AppController *AppControllerFilterer) WatchAppOwnershipTransferred(opts *bind.WatchOpts, sink chan<- *AppControllerAppOwnershipTransferred, app []common.Address, previousOwner []common.Address, newOwner []common.Address) (event.Subscription, error) {
+
+	var appRule []interface{}
+	for _, appItem := range app {
+		appRule = append(appRule, appItem)
+	}
+	var previousOwnerRule []interface{}
+	for _, previousOwnerItem := range previousOwner {
+		previousOwnerRule = append(previousOwnerRule, previousOwnerItem)
+	}
+	var newOwnerRule []interface{}
+	for _, newOwnerItem := range newOwner {
+		newOwnerRule = append(newOwnerRule, newOwnerItem)
+	}
+
+	logs, sub, err := _AppController.contract.WatchLogs(opts, "AppOwnershipTransferred", appRule, previousOwnerRule, newOwnerRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(AppControllerAppOwnershipTransferred)
+				if err := _AppController.contract.UnpackLog(event, "AppOwnershipTransferred", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseAppOwnershipTransferred is a log parse operation binding the contract event 0x3fa03516e5ee455b2d2779f21b254735e2c1f82cf338619c1b96816df2a467a4.
+//
+// Solidity: event AppOwnershipTransferred(address indexed app, address indexed previousOwner, address indexed newOwner)
+func (_AppController *AppControllerFilterer) ParseAppOwnershipTransferred(log types.Log) (*AppControllerAppOwnershipTransferred, error) {
+	event := new(AppControllerAppOwnershipTransferred)
+	if err := _AppController.contract.UnpackLog(event, "AppOwnershipTransferred", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
@@ -2831,6 +3496,492 @@ func (_AppController *AppControllerFilterer) WatchMaxActiveAppsSet(opts *bind.Wa
 func (_AppController *AppControllerFilterer) ParseMaxActiveAppsSet(log types.Log) (*AppControllerMaxActiveAppsSet, error) {
 	event := new(AppControllerMaxActiveAppsSet)
 	if err := _AppController.contract.UnpackLog(event, "MaxActiveAppsSet", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// AppControllerRoleAdminChangedIterator is returned from FilterRoleAdminChanged and is used to iterate over the raw logs and unpacked data for RoleAdminChanged events raised by the AppController contract.
+type AppControllerRoleAdminChangedIterator struct {
+	Event *AppControllerRoleAdminChanged // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *AppControllerRoleAdminChangedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(AppControllerRoleAdminChanged)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(AppControllerRoleAdminChanged)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *AppControllerRoleAdminChangedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *AppControllerRoleAdminChangedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// AppControllerRoleAdminChanged represents a RoleAdminChanged event raised by the AppController contract.
+type AppControllerRoleAdminChanged struct {
+	Role              [32]byte
+	PreviousAdminRole [32]byte
+	NewAdminRole      [32]byte
+	Raw               types.Log // Blockchain specific contextual infos
+}
+
+// FilterRoleAdminChanged is a free log retrieval operation binding the contract event 0xbd79b86ffe0ab8e8776151514217cd7cacd52c909f66475c3af44e129f0b00ff.
+//
+// Solidity: event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)
+func (_AppController *AppControllerFilterer) FilterRoleAdminChanged(opts *bind.FilterOpts, role [][32]byte, previousAdminRole [][32]byte, newAdminRole [][32]byte) (*AppControllerRoleAdminChangedIterator, error) {
+
+	var roleRule []interface{}
+	for _, roleItem := range role {
+		roleRule = append(roleRule, roleItem)
+	}
+	var previousAdminRoleRule []interface{}
+	for _, previousAdminRoleItem := range previousAdminRole {
+		previousAdminRoleRule = append(previousAdminRoleRule, previousAdminRoleItem)
+	}
+	var newAdminRoleRule []interface{}
+	for _, newAdminRoleItem := range newAdminRole {
+		newAdminRoleRule = append(newAdminRoleRule, newAdminRoleItem)
+	}
+
+	logs, sub, err := _AppController.contract.FilterLogs(opts, "RoleAdminChanged", roleRule, previousAdminRoleRule, newAdminRoleRule)
+	if err != nil {
+		return nil, err
+	}
+	return &AppControllerRoleAdminChangedIterator{contract: _AppController.contract, event: "RoleAdminChanged", logs: logs, sub: sub}, nil
+}
+
+// WatchRoleAdminChanged is a free log subscription operation binding the contract event 0xbd79b86ffe0ab8e8776151514217cd7cacd52c909f66475c3af44e129f0b00ff.
+//
+// Solidity: event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)
+func (_AppController *AppControllerFilterer) WatchRoleAdminChanged(opts *bind.WatchOpts, sink chan<- *AppControllerRoleAdminChanged, role [][32]byte, previousAdminRole [][32]byte, newAdminRole [][32]byte) (event.Subscription, error) {
+
+	var roleRule []interface{}
+	for _, roleItem := range role {
+		roleRule = append(roleRule, roleItem)
+	}
+	var previousAdminRoleRule []interface{}
+	for _, previousAdminRoleItem := range previousAdminRole {
+		previousAdminRoleRule = append(previousAdminRoleRule, previousAdminRoleItem)
+	}
+	var newAdminRoleRule []interface{}
+	for _, newAdminRoleItem := range newAdminRole {
+		newAdminRoleRule = append(newAdminRoleRule, newAdminRoleItem)
+	}
+
+	logs, sub, err := _AppController.contract.WatchLogs(opts, "RoleAdminChanged", roleRule, previousAdminRoleRule, newAdminRoleRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(AppControllerRoleAdminChanged)
+				if err := _AppController.contract.UnpackLog(event, "RoleAdminChanged", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseRoleAdminChanged is a log parse operation binding the contract event 0xbd79b86ffe0ab8e8776151514217cd7cacd52c909f66475c3af44e129f0b00ff.
+//
+// Solidity: event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)
+func (_AppController *AppControllerFilterer) ParseRoleAdminChanged(log types.Log) (*AppControllerRoleAdminChanged, error) {
+	event := new(AppControllerRoleAdminChanged)
+	if err := _AppController.contract.UnpackLog(event, "RoleAdminChanged", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// AppControllerRoleGrantedIterator is returned from FilterRoleGranted and is used to iterate over the raw logs and unpacked data for RoleGranted events raised by the AppController contract.
+type AppControllerRoleGrantedIterator struct {
+	Event *AppControllerRoleGranted // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *AppControllerRoleGrantedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(AppControllerRoleGranted)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(AppControllerRoleGranted)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *AppControllerRoleGrantedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *AppControllerRoleGrantedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// AppControllerRoleGranted represents a RoleGranted event raised by the AppController contract.
+type AppControllerRoleGranted struct {
+	Role    [32]byte
+	Account common.Address
+	Sender  common.Address
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// FilterRoleGranted is a free log retrieval operation binding the contract event 0x2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d.
+//
+// Solidity: event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)
+func (_AppController *AppControllerFilterer) FilterRoleGranted(opts *bind.FilterOpts, role [][32]byte, account []common.Address, sender []common.Address) (*AppControllerRoleGrantedIterator, error) {
+
+	var roleRule []interface{}
+	for _, roleItem := range role {
+		roleRule = append(roleRule, roleItem)
+	}
+	var accountRule []interface{}
+	for _, accountItem := range account {
+		accountRule = append(accountRule, accountItem)
+	}
+	var senderRule []interface{}
+	for _, senderItem := range sender {
+		senderRule = append(senderRule, senderItem)
+	}
+
+	logs, sub, err := _AppController.contract.FilterLogs(opts, "RoleGranted", roleRule, accountRule, senderRule)
+	if err != nil {
+		return nil, err
+	}
+	return &AppControllerRoleGrantedIterator{contract: _AppController.contract, event: "RoleGranted", logs: logs, sub: sub}, nil
+}
+
+// WatchRoleGranted is a free log subscription operation binding the contract event 0x2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d.
+//
+// Solidity: event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)
+func (_AppController *AppControllerFilterer) WatchRoleGranted(opts *bind.WatchOpts, sink chan<- *AppControllerRoleGranted, role [][32]byte, account []common.Address, sender []common.Address) (event.Subscription, error) {
+
+	var roleRule []interface{}
+	for _, roleItem := range role {
+		roleRule = append(roleRule, roleItem)
+	}
+	var accountRule []interface{}
+	for _, accountItem := range account {
+		accountRule = append(accountRule, accountItem)
+	}
+	var senderRule []interface{}
+	for _, senderItem := range sender {
+		senderRule = append(senderRule, senderItem)
+	}
+
+	logs, sub, err := _AppController.contract.WatchLogs(opts, "RoleGranted", roleRule, accountRule, senderRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(AppControllerRoleGranted)
+				if err := _AppController.contract.UnpackLog(event, "RoleGranted", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseRoleGranted is a log parse operation binding the contract event 0x2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d.
+//
+// Solidity: event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)
+func (_AppController *AppControllerFilterer) ParseRoleGranted(log types.Log) (*AppControllerRoleGranted, error) {
+	event := new(AppControllerRoleGranted)
+	if err := _AppController.contract.UnpackLog(event, "RoleGranted", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// AppControllerRoleRevokedIterator is returned from FilterRoleRevoked and is used to iterate over the raw logs and unpacked data for RoleRevoked events raised by the AppController contract.
+type AppControllerRoleRevokedIterator struct {
+	Event *AppControllerRoleRevoked // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *AppControllerRoleRevokedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(AppControllerRoleRevoked)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(AppControllerRoleRevoked)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *AppControllerRoleRevokedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *AppControllerRoleRevokedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// AppControllerRoleRevoked represents a RoleRevoked event raised by the AppController contract.
+type AppControllerRoleRevoked struct {
+	Role    [32]byte
+	Account common.Address
+	Sender  common.Address
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// FilterRoleRevoked is a free log retrieval operation binding the contract event 0xf6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b.
+//
+// Solidity: event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)
+func (_AppController *AppControllerFilterer) FilterRoleRevoked(opts *bind.FilterOpts, role [][32]byte, account []common.Address, sender []common.Address) (*AppControllerRoleRevokedIterator, error) {
+
+	var roleRule []interface{}
+	for _, roleItem := range role {
+		roleRule = append(roleRule, roleItem)
+	}
+	var accountRule []interface{}
+	for _, accountItem := range account {
+		accountRule = append(accountRule, accountItem)
+	}
+	var senderRule []interface{}
+	for _, senderItem := range sender {
+		senderRule = append(senderRule, senderItem)
+	}
+
+	logs, sub, err := _AppController.contract.FilterLogs(opts, "RoleRevoked", roleRule, accountRule, senderRule)
+	if err != nil {
+		return nil, err
+	}
+	return &AppControllerRoleRevokedIterator{contract: _AppController.contract, event: "RoleRevoked", logs: logs, sub: sub}, nil
+}
+
+// WatchRoleRevoked is a free log subscription operation binding the contract event 0xf6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b.
+//
+// Solidity: event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)
+func (_AppController *AppControllerFilterer) WatchRoleRevoked(opts *bind.WatchOpts, sink chan<- *AppControllerRoleRevoked, role [][32]byte, account []common.Address, sender []common.Address) (event.Subscription, error) {
+
+	var roleRule []interface{}
+	for _, roleItem := range role {
+		roleRule = append(roleRule, roleItem)
+	}
+	var accountRule []interface{}
+	for _, accountItem := range account {
+		accountRule = append(accountRule, accountItem)
+	}
+	var senderRule []interface{}
+	for _, senderItem := range sender {
+		senderRule = append(senderRule, senderItem)
+	}
+
+	logs, sub, err := _AppController.contract.WatchLogs(opts, "RoleRevoked", roleRule, accountRule, senderRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(AppControllerRoleRevoked)
+				if err := _AppController.contract.UnpackLog(event, "RoleRevoked", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseRoleRevoked is a log parse operation binding the contract event 0xf6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b.
+//
+// Solidity: event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)
+func (_AppController *AppControllerFilterer) ParseRoleRevoked(log types.Log) (*AppControllerRoleRevoked, error) {
+	event := new(AppControllerRoleRevoked)
+	if err := _AppController.contract.UnpackLog(event, "RoleRevoked", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log

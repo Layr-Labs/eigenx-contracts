@@ -20,6 +20,7 @@ import {IStrategy} from "@eigenlayer-contracts/src/contracts/interfaces/IStrateg
 import {IETHPOSDeposit} from "@eigenlayer-contracts/src/contracts/interfaces/IETHPOSDeposit.sol";
 import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import {ISafeTimelockFactory} from "../../src/interfaces/ISafeTimelockFactory.sol";
 
 contract ComputeDeployer is Test {
     address public developer = address(0x2);
@@ -60,7 +61,11 @@ contract ComputeDeployer is Test {
             operatorMetadataURI: "https://example.com/operator-metadata",
             avsMetadataURI: "https://example.com/avs-metadata",
             maxGlobalActiveApps: 100,
-            adminMaxActiveApps: 100
+            adminMaxActiveApps: 100,
+            safeSingleton: 0x41675C099F32341bf84BFc5382aF534df5C7461a,
+            safeProxyFactory: 0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67,
+            safeFallbackHandler: 0xfd0732Dc9E303f09fCEf3a7388Ad10A83459Ec99,
+            safeTimelockFactory: ISafeTimelockFactory(address(0)) // Deploy will create one
         });
 
         Parser.DeployedContracts memory deployed = deployer.deployForTesting(params);

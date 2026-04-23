@@ -1,0 +1,17 @@
+{
+    "version": "1.5.0",
+    "delegationManager": "0xD4A7E1Bd8015057293f0D0A557088c286942e84b",
+    "allocationManager": "0x42583067658071247ec8CE0A516A58f682002d07",
+    "permissionController": "0x44632dfBdCb6D3E21EF613B0ca8A6A0c618F5a37",
+    "keyRegistrar": "0xA4dB30D08d8bbcA00D40600bee9F029984dB162a",
+    "releaseManager": "0x59c8D715DCa616e032B744a753C017c9f3E16bf4",
+    "proxyAdmin": "0x0000000000000000000000000000000000000000",
+    "initialOwner": "0x08FEeaEcFeA1Ea0ecd5ee13f7487e0A53aa2f693",
+    "operatorMetadataURI": "https://eigencloud.xyz",
+    "avsMetadataURI": "https://eigencloud.xyz",
+    "maxGlobalActiveApps": 1000,
+    "adminMaxActiveApps": 100,
+    "safeSingleton": "0x41675C099F32341bf84BFc5382aF534df5C7461a",
+    "safeProxyFactory": "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67",
+    "safeFallbackHandler": "0xfd0732Dc9E303f09fCEf3a7388Ad10A83459Ec99"
+}

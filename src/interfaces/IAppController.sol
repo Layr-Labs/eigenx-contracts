@@ -3,6 +3,7 @@ pragma solidity ^0.8.27;
 
 import {IReleaseManagerTypes} from "@eigenlayer-contracts/src/contracts/interfaces/IReleaseManager.sol";
 import {IApp} from "./IApp.sol";
+import {ISafeTimelockFactory} from "./ISafeTimelockFactory.sol";
 
 interface IAppController {
     /// @notice Thrown when trying to create an app that already exists
@@ -29,8 +30,11 @@ interface IAppController {
     /// @notice Thrown when trying to suspend an account that still has active apps
     error AccountHasActiveApps();
 
+    /// @notice Thrown when trying to revoke or renounce the last admin
+    error CannotRevokeLastAdmin();
+
     /// @notice Emitted when a new app is successfully created
-    event AppCreated(address indexed creator, IApp indexed app, uint32 operatorSetId);
+    event AppCreated(address indexed owner, IApp indexed app, uint32 operatorSetId);
 
     /// @notice Emitted when an app is upgraded
     event AppUpgraded(IApp indexed app, uint256 rmsReleaseId, Release release);
@@ -59,7 +63,12 @@ interface IAppController {
     /// @notice Emitted when an app's metadata URI is updated
     event AppMetadataURIUpdated(IApp indexed app, string metadataURI);
 
-    /// @notice Enum for app status
+    /// @notice Emitted when app ownership is transferred
+    event AppOwnershipTransferred(IApp indexed app, address indexed previousOwner, address indexed newOwner);
+
+    /**
+     * @notice Enum for app status
+     */
     enum AppStatus {
         NONE, // App has not been created yet
         STARTED, // App has been started
@@ -68,10 +77,22 @@ interface IAppController {
         SUSPENDED // App is suspended and can be started again, but does not have reserved capacity
     }
 
-    /// @notice Billing type for an app
-    enum BillingType {
-        DEFAULT, // Billed to the creator's account
-        ISOLATED // Billed to the app's own address
+    /**
+     * @notice Enum for team roles
+     */
+    enum TeamRole {
+        ADMIN, // Full access: upgrade, start, stop, terminate, manage roles
+        PAUSER, // Stop apps (emergency response)
+        DEVELOPER // Update metadata, view logs, submit builds
+    }
+
+    /**
+     * @notice App with associated roles for an account
+     */
+    struct AppRoles {
+        IApp app;
+        bool isOwner;
+        TeamRole[] roles;
     }
 
     /**
@@ -86,21 +107,13 @@ interface IAppController {
         bytes encryptedEnv;
     }
 
-    /// @notice The controller's config for an app (public-facing, ABI-stable)
+    /// @notice The controller's config for an app
     struct AppConfig {
-        address creator;
+        address owner;
         uint32 operatorSetId;
         uint32 latestReleaseBlockNumber;
         AppStatus status;
-    }
-
-    /// @notice Internal storage config for an app, extends AppConfig with additional fields
-    struct AppConfigStorage {
-        address creator;
-        uint32 operatorSetId;
-        uint32 latestReleaseBlockNumber;
-        AppStatus status;
-        BillingType billingType;
+        bool timelocked; // true = owner is a factory Timelock; all sensitive ops must go through Timelock.schedule → execute
     }
 
     /// @notice User configuration and state
@@ -131,6 +144,14 @@ interface IAppController {
     function setMaxGlobalActiveApps(uint32 limit) external;
 
     /**
+     * @notice Migrates admins from PermissionController to AccessControl for specified apps
+     * @param apps The apps to migrate admins for
+     * @dev Caller must be UAM permissioned for the AppController
+     * @dev For each app, grants ADMIN_ROLE to all addresses that are admins via PermissionController
+     */
+    function migrateAdmins(IApp[] calldata apps) external;
+
+    /**
      * @notice Creates a new app instance
      * @param salt The salt to use for the app
      * @param release The release to upgrade to
@@ -139,28 +160,37 @@ interface IAppController {
     function createApp(bytes32 salt, Release calldata release) external returns (IApp app);
 
     /**
-     * @notice Creates a new app with isolated billing, where costs are billed to the app's own address
+     * @notice Creates a new app instance for a team
+     * @param team The team address (owner) to create the app for
      * @param salt The salt to use for the app
      * @param release The release to upgrade to
      * @return app The address of the newly created app
-     * @dev The app address is pre-computed and must have quota set via setMaxActiveAppsPerUser before calling
+     * @dev Caller must be the team address itself or have ADMIN role on the team
      */
-    function createAppWithIsolatedBilling(bytes32 salt, Release calldata release) external returns (IApp app);
+    function createAppForTeam(address team, bytes32 salt, Release calldata release) external returns (IApp app);
 
     /**
      * @notice Upgrades an app with a new release to the ReleaseManager
      * @param app The app to upgrade with the release
      * @param release The release to upgrade to
      * @return releaseId The unique identifier for the published release
-     * @dev Caller must be UAM permissioned for the app
+     * @dev Caller must be an ADMIN for the app
+     * @dev When timelocked, caller must be the Timelock (owner) itself — route through Timelock.schedule → execute
      * @dev The rms release must have exactly one artifact, with the digest being the docker
      * image digest and the registry being the docker registry it is stored at.
-     * @dev The env must be a JSON marshalled bytes representing the public environment variables for the app.
-     * @dev The encryptedSecrets must be a JSON Web Encryption objects of the encrypted secrets for the app encrypted with
-     * the kms's public key.
      * @dev The app must not be AppStatus.TERMINATED
      */
     function upgradeApp(IApp app, Release calldata release) external returns (uint256);
+
+    /**
+     * @notice Transfers app ownership to a new address
+     * @param app The app to transfer ownership of
+     * @param newOwner The new owner address
+     * @dev Caller must be an ADMIN for the app
+     * @dev When timelocked, caller must be the Timelock (owner) itself and new owner must also be a factory Timelock
+     * @dev Grants ADMIN role to newOwner under the new team namespace
+     */
+    function transferOwnership(IApp app, address newOwner) external;
 
     /**
      * @notice Updates the metadata URI for an app
@@ -213,6 +243,11 @@ interface IAppController {
     function suspend(address account, IApp[] calldata apps) external;
 
     /**
+     * @notice Returns the SafeTimelockFactory used to detect governed ownership
+     */
+    function safeTimelockFactory() external view returns (ISafeTimelockFactory);
+
+    /**
      * @notice Gets the maximum global active apps limit
      * @return The maximum number of active apps globally
      */
@@ -254,25 +289,11 @@ interface IAppController {
     function getAppStatus(IApp app) external view returns (AppStatus);
 
     /**
-     * @notice Gets the creator of an app
+     * @notice Gets the owner of an app
      * @param app The app to check
-     * @return The address of the app creator
+     * @return The address of the owner
      */
-    function getAppCreator(IApp app) external view returns (address);
-
-    /**
-     * @notice Gets the billing account for an app
-     * @param app The app to check
-     * @return The billing account address (app address if ISOLATED, creator if DEFAULT)
-     */
-    function getBillingAccount(IApp app) external view returns (address);
-
-    /**
-     * @notice Gets the billing type for an app
-     * @param app The app to check
-     * @return The billing type (DEFAULT or ISOLATED)
-     */
-    function getBillingType(IApp app) external view returns (BillingType);
+    function getAppOwner(IApp app) external view returns (address);
 
     /**
      * @notice Gets the operator set ID for a given app
@@ -287,6 +308,13 @@ interface IAppController {
      * @return The latest release block number
      */
     function getAppLatestReleaseBlockNumber(IApp app) external view returns (uint32);
+
+    /**
+     * @notice Returns whether an app owner is a Timelock (requires scheduleUpgrade + executeUpgrade)
+     * @param app The app to check
+     * @return True if the app's owner is a Timelock
+     */
+    function getAppTimelocked(IApp app) external view returns (bool);
 
     /**
      * @notice Retrieves a paginated list of all apps and their configurations
@@ -304,6 +332,7 @@ interface IAppController {
      * @param limit The maximum number of apps to return in this page
      * @return apps An array of app contract instances
      * @return configs An array of corresponding app configurations
+     * @dev Deprecated: Use getAppsForAccount for comprehensive role information
      */
     function getAppsByDeveloper(address developer, uint256 offset, uint256 limit)
         external
@@ -311,27 +340,15 @@ interface IAppController {
         returns (IApp[] memory, AppConfig[] memory);
 
     /**
-     * @notice Retrieves a paginated list of apps created by the specified address and their configurations
+     * @notice Retrieves a paginated list of apps created by the specified creator and their configurations
      * @param creator The address of the creator
      * @param offset The starting index for pagination (0-based)
      * @param limit The maximum number of apps to return in this page
      * @return apps An array of app contract instances
      * @return configs An array of corresponding app configurations
+     * @dev Deprecated: Use getAppsForAccount for comprehensive role information
      */
     function getAppsByCreator(address creator, uint256 offset, uint256 limit)
-        external
-        view
-        returns (IApp[] memory, AppConfig[] memory);
-
-    /**
-     * @notice Retrieves a paginated list of apps billed to the specified account and their configurations
-     * @param account The billing account address (creator for regular apps, app address for isolated billing apps)
-     * @param offset The starting index for pagination (0-based)
-     * @param limit The maximum number of apps to return in this page
-     * @return apps An array of app contract instances
-     * @return configs An array of corresponding app configurations
-     */
-    function getAppsByBillingAccount(address account, uint256 offset, uint256 limit)
         external
         view
         returns (IApp[] memory, AppConfig[] memory);
@@ -343,4 +360,77 @@ interface IAppController {
      * @return The digest hash
      */
     function calculateApiPermissionDigestHash(bytes4 permission, uint256 expiry) external view returns (bytes32);
+
+    /// ROLE-BASED ACCESS CONTROL
+
+    /**
+     * @notice Grants a role to an account on a team
+     * @param team The team address
+     * @param role The role to grant (ADMIN, PAUSER, or DEVELOPER)
+     * @param account The account to grant the role to
+     * @dev Only team admins can grant roles
+     */
+    function grantTeamRole(address team, TeamRole role, address account) external;
+
+    /**
+     * @notice Revokes a role from an account on a team
+     * @param team The team address
+     * @param role The role to revoke
+     * @param account The account to revoke the role from
+     * @dev Only team admins can revoke roles
+     */
+    function revokeTeamRole(address team, TeamRole role, address account) external;
+
+    /**
+     * @notice Allows an account to renounce their own role on a team
+     * @param team The team address
+     * @param role The role to renounce
+     */
+    function renounceTeamRole(address team, TeamRole role) external;
+
+    /**
+     * @notice Checks if an account has a specific role on a team (admins always return true)
+     * @param team The team address
+     * @param role The role to check
+     * @param account The account to check
+     * @return True if the account has the role or is an admin
+     */
+    function hasTeamRole(address team, TeamRole role, address account) external view returns (bool);
+
+    /**
+     * @notice Gets the number of accounts with a specific role on a team
+     * @param team The team address
+     * @param role The role to check
+     * @return The number of accounts with the role
+     */
+    function getTeamRoleMemberCount(address team, TeamRole role) external view returns (uint256);
+
+    /**
+     * @notice Gets the account at index for a specific role on a team
+     * @param team The team address
+     * @param role The role to check
+     * @param index The index of the account
+     * @return The account address
+     */
+    function getTeamRoleMember(address team, TeamRole role, uint256 index) external view returns (address);
+
+    /**
+     * @notice Gets all accounts with a specific role on a team
+     * @param team The team address
+     * @param role The role to check
+     * @return Array of account addresses with the role
+     */
+    function getTeamRoleMembers(address team, TeamRole role) external view returns (address[] memory);
+
+    /**
+     * @notice Retrieves apps and the account's roles for each app
+     * @param account The account to check
+     * @param offset The starting index for pagination (0-based)
+     * @param limit The maximum number of apps to return in this page
+     * @return appRoles An array of AppRoles structs containing app and role information
+     */
+    function getAppsForAccount(address account, uint256 offset, uint256 limit)
+        external
+        view
+        returns (AppRoles[] memory appRoles);
 }

@@ -3,16 +3,12 @@ pragma solidity ^0.8.27;
 
 import {Script, console} from "forge-std/Script.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-import {
-    TransparentUpgradeableProxy,
-    ITransparentUpgradeableProxy
-} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {IDelegationManager} from "@eigenlayer-contracts/src/contracts/interfaces/IDelegationManager.sol";
 import {IAllocationManager} from "@eigenlayer-contracts/src/contracts/interfaces/IAllocationManager.sol";
 import {IKeyRegistrar} from "@eigenlayer-contracts/src/contracts/interfaces/IKeyRegistrar.sol";
 import {IPermissionController} from "@eigenlayer-contracts/src/contracts/interfaces/IPermissionController.sol";
 import {IReleaseManager} from "@eigenlayer-contracts/src/contracts/interfaces/IReleaseManager.sol";
-import {EmptyContract} from "@eigenlayer-contracts/src/test/mocks/EmptyContract.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {App} from "../src/App.sol";
 import {IAppController} from "../src/interfaces/IAppController.sol";
@@ -23,6 +19,8 @@ import {ComputeAVSRegistrar} from "../src/ComputeAVSRegistrar.sol";
 import {ComputeOperator} from "../src/ComputeOperator.sol";
 import {ImageAllowlist} from "../src/ImageAllowlist.sol";
 import {IImageAllowlist} from "../src/interfaces/IImageAllowlist.sol";
+import {ISafeTimelockFactory} from "../src/interfaces/ISafeTimelockFactory.sol";
+import {SafeTimelockFactory} from "../src/factories/SafeTimelockFactory.sol";
 
 contract Parser is Script {
     struct DeployParams {
@@ -38,6 +36,12 @@ contract Parser is Script {
         string avsMetadataURI;
         uint32 maxGlobalActiveApps;
         uint32 adminMaxActiveApps;
+        // Gnosis Safe infrastructure addresses (required for SafeTimelockFactory deployment)
+        address safeSingleton;
+        address safeProxyFactory;
+        address safeFallbackHandler;
+        // Optional: if address(0), Deploy will deploy a new SafeTimelockFactory
+        ISafeTimelockFactory safeTimelockFactory;
     }
 
     struct DeployedContracts {
@@ -52,6 +56,7 @@ contract Parser is Script {
         ComputeOperator computeOperatorImpl;
         IImageAllowlist imageAllowlist;
         ImageAllowlist imageAllowlistImpl;
+        ISafeTimelockFactory safeTimelockFactory;
     }
 
     function parseDeployParams(string memory environment) public view returns (DeployParams memory) {
@@ -70,7 +75,11 @@ contract Parser is Script {
             operatorMetadataURI: vm.parseJsonString(json, ".operatorMetadataURI"),
             avsMetadataURI: vm.parseJsonString(json, ".avsMetadataURI"),
             maxGlobalActiveApps: uint32(vm.parseJsonUint(json, ".maxGlobalActiveApps")),
-            adminMaxActiveApps: uint32(vm.parseJsonUint(json, ".adminMaxActiveApps"))
+            adminMaxActiveApps: uint32(vm.parseJsonUint(json, ".adminMaxActiveApps")),
+            safeSingleton: vm.parseJsonAddress(json, ".safeSingleton"),
+            safeProxyFactory: vm.parseJsonAddress(json, ".safeProxyFactory"),
+            safeFallbackHandler: vm.parseJsonAddress(json, ".safeFallbackHandler"),
+            safeTimelockFactory: ISafeTimelockFactory(address(0)) // Deploy will create one if not in config
         });
 
         return params;
@@ -93,7 +102,8 @@ contract Parser is Script {
             computeOperator: IComputeOperator(vm.parseJsonAddress(json, ".addresses.computeOperator")),
             computeOperatorImpl: ComputeOperator(vm.parseJsonAddress(json, ".addresses.computeOperatorImpl")),
             imageAllowlist: IImageAllowlist(vm.parseJsonAddress(json, ".addresses.imageAllowlist")),
-            imageAllowlistImpl: ImageAllowlist(vm.parseJsonAddress(json, ".addresses.imageAllowlistImpl"))
+            imageAllowlistImpl: ImageAllowlist(vm.parseJsonAddress(json, ".addresses.imageAllowlistImpl")),
+            safeTimelockFactory: ISafeTimelockFactory(vm.parseJsonAddress(json, ".addresses.safeTimelockFactory"))
         });
 
         return deployedContracts;

@@ -26,10 +26,18 @@ var (
 
 // IAppControllerAppConfig is an auto generated low-level Go binding around an user-defined struct.
 type IAppControllerAppConfig struct {
-	Creator                  common.Address
+	Owner                    common.Address
 	OperatorSetId            uint32
 	LatestReleaseBlockNumber uint32
 	Status                   uint8
+	Timelocked               bool
+}
+
+// IAppControllerAppRoles is an auto generated low-level Go binding around an user-defined struct.
+type IAppControllerAppRoles struct {
+	App     common.Address
+	IsOwner bool
+	Roles   []uint8
 }
 
 // IAppControllerRelease is an auto generated low-level Go binding around an user-defined struct.
@@ -53,7 +61,7 @@ type IReleaseManagerTypesRelease struct {
 
 // AppControllerMetaData contains all meta data concerning the AppController contract.
 var AppControllerMetaData = bind.MetaData{
-	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"_permissionController\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"},{\"name\":\"_releaseManager\",\"type\":\"address\",\"internalType\":\"contractIReleaseManager\"},{\"name\":\"_computeAVSRegistrar\",\"type\":\"address\",\"internalType\":\"contractIComputeAVSRegistrar\"},{\"name\":\"_computeOperator\",\"type\":\"address\",\"internalType\":\"contractIComputeOperator\"},{\"name\":\"_appBeacon\",\"type\":\"address\",\"internalType\":\"contractIBeacon\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"API_PERMISSION_TYPEHASH\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"appBeacon\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIBeacon\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"calculateApiPermissionDigestHash\",\"inputs\":[{\"name\":\"permission\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"},{\"name\":\"expiry\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"calculateAppId\",\"inputs\":[{\"name\":\"deployer\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeAVSRegistrar\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIComputeAVSRegistrar\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeOperator\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIComputeOperator\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"createApp\",\"inputs\":[{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"createAppWithIsolatedBilling\",\"inputs\":[{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"domainSeparator\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getActiveAppCount\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppCreator\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppLatestReleaseBlockNumber\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppOperatorSetId\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppStatus\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getApps\",\"inputs\":[{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsByBillingAccount\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsByCreator\",\"inputs\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsByDeveloper\",\"inputs\":[{\"name\":\"developer\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getBillingAccount\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getBillingType\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.BillingType\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getMaxActiveAppsPerUser\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"globalActiveAppCount\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"admin\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"maxGlobalActiveApps\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"permissionController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"releaseManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIReleaseManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"setMaxActiveAppsPerUser\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"limit\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setMaxGlobalActiveApps\",\"inputs\":[{\"name\":\"limit\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"startApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"stopApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"suspend\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"terminateApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"terminateAppByAdmin\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"updateAppMetadataURI\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"},{\"name\":\"metadataURI\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"upgradeApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"AppCreated\",\"inputs\":[{\"name\":\"creator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppMetadataURIUpdated\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"metadataURI\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppStarted\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppStopped\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppSuspended\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppTerminated\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppTerminatedByAdmin\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppUpgraded\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"rmsReleaseId\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"release\",\"type\":\"tuple\",\"indexed\":false,\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"GlobalMaxActiveAppsSet\",\"inputs\":[{\"name\":\"limit\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MaxActiveAppsSet\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"limit\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"AccountHasActiveApps\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"AppAlreadyExists\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"AppDoesNotExist\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"GlobalMaxActiveAppsExceeded\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidAppStatus\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidPermissions\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidReleaseMetadataURI\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidShortString\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidSignature\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"MaxActiveAppsExceeded\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"MoreThanOneArtifact\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"SignatureExpired\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"StringTooLong\",\"inputs\":[{\"name\":\"str\",\"type\":\"string\",\"internalType\":\"string\"}]}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"_permissionController\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"},{\"name\":\"_releaseManager\",\"type\":\"address\",\"internalType\":\"contractIReleaseManager\"},{\"name\":\"_computeAVSRegistrar\",\"type\":\"address\",\"internalType\":\"contractIComputeAVSRegistrar\"},{\"name\":\"_computeOperator\",\"type\":\"address\",\"internalType\":\"contractIComputeOperator\"},{\"name\":\"_appBeacon\",\"type\":\"address\",\"internalType\":\"contractIBeacon\"},{\"name\":\"_safeTimelockFactory\",\"type\":\"address\",\"internalType\":\"contractISafeTimelockFactory\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"API_PERMISSION_TYPEHASH\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"DEFAULT_ADMIN_ROLE\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"appBeacon\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIBeacon\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"calculateApiPermissionDigestHash\",\"inputs\":[{\"name\":\"permission\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"},{\"name\":\"expiry\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"calculateAppId\",\"inputs\":[{\"name\":\"deployer\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"canCall\",\"inputs\":[{\"name\":\"caller\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"data\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeAVSRegistrar\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIComputeAVSRegistrar\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeOperator\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIComputeOperator\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"createApp\",\"inputs\":[{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"createAppForTeam\",\"inputs\":[{\"name\":\"team\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"domainSeparator\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getActiveAppCount\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppLatestReleaseBlockNumber\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppOperatorSetId\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppOwner\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppStatus\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppTimelocked\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getApps\",\"inputs\":[{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"owner\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"},{\"name\":\"timelocked\",\"type\":\"bool\",\"internalType\":\"bool\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsByCreator\",\"inputs\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"owner\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"},{\"name\":\"timelocked\",\"type\":\"bool\",\"internalType\":\"bool\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsByDeveloper\",\"inputs\":[{\"name\":\"developer\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"owner\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"},{\"name\":\"timelocked\",\"type\":\"bool\",\"internalType\":\"bool\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsForAccount\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"appRoles\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppRoles[]\",\"components\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"},{\"name\":\"isOwner\",\"type\":\"bool\",\"internalType\":\"bool\"},{\"name\":\"roles\",\"type\":\"uint8[]\",\"internalType\":\"enumIAppController.TeamRole[]\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getMaxActiveAppsPerUser\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getRoleAdmin\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getRoleMember\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"index\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getRoleMemberCount\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getTeamRoleMember\",\"inputs\":[{\"name\":\"team\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"role\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.TeamRole\"},{\"name\":\"index\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getTeamRoleMemberCount\",\"inputs\":[{\"name\":\"team\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"role\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.TeamRole\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getTeamRoleMembers\",\"inputs\":[{\"name\":\"team\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"role\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.TeamRole\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address[]\",\"internalType\":\"address[]\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"globalActiveAppCount\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"grantRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"grantTeamRole\",\"inputs\":[{\"name\":\"team\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"role\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.TeamRole\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"hasRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"hasTeamRole\",\"inputs\":[{\"name\":\"team\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"role\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.TeamRole\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"admin\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"maxGlobalActiveApps\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"migrateAdmins\",\"inputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"permissionController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"releaseManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIReleaseManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"renounceRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"renounceTeamRole\",\"inputs\":[{\"name\":\"team\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"role\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.TeamRole\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"revokeRole\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"revokeTeamRole\",\"inputs\":[{\"name\":\"team\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"role\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.TeamRole\"},{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"safeTimelockFactory\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractISafeTimelockFactory\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"setMaxActiveAppsPerUser\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"limit\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setMaxGlobalActiveApps\",\"inputs\":[{\"name\":\"limit\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"startApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"stopApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"supportsInterface\",\"inputs\":[{\"name\":\"interfaceId\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"suspend\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"terminateApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"terminateAppByAdmin\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"transferOwnership\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"},{\"name\":\"newOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"updateAppMetadataURI\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"},{\"name\":\"metadataURI\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"upgradeApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"AppCreated\",\"inputs\":[{\"name\":\"owner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppMetadataURIUpdated\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"metadataURI\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppOwnershipTransferred\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"previousOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"newOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppStarted\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppStopped\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppSuspended\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppTerminated\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppTerminatedByAdmin\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppUpgraded\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"rmsReleaseId\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"release\",\"type\":\"tuple\",\"indexed\":false,\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"GlobalMaxActiveAppsSet\",\"inputs\":[{\"name\":\"limit\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MaxActiveAppsSet\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"limit\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleAdminChanged\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"previousAdminRole\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"newAdminRole\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleGranted\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RoleRevoked\",\"inputs\":[{\"name\":\"role\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"AccountHasActiveApps\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"AppAlreadyExists\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"AppDoesNotExist\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"CannotRevokeLastAdmin\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"GlobalMaxActiveAppsExceeded\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidAppStatus\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidPermissions\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidReleaseMetadataURI\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidShortString\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidSignature\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"MaxActiveAppsExceeded\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"MoreThanOneArtifact\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"SignatureExpired\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"StringTooLong\",\"inputs\":[{\"name\":\"str\",\"type\":\"string\",\"internalType\":\"string\"}]}]",
 	ID:  "AppController",
 }
 
@@ -80,9 +88,9 @@ func (c *AppController) Instance(backend bind.ContractBackend, addr common.Addre
 // PackConstructor is the Go binding used to pack the parameters required for
 // contract deployment.
 //
-// Solidity: constructor(string _version, address _permissionController, address _releaseManager, address _computeAVSRegistrar, address _computeOperator, address _appBeacon) returns()
-func (appController *AppController) PackConstructor(_version string, _permissionController common.Address, _releaseManager common.Address, _computeAVSRegistrar common.Address, _computeOperator common.Address, _appBeacon common.Address) []byte {
-	enc, err := appController.abi.Pack("", _version, _permissionController, _releaseManager, _computeAVSRegistrar, _computeOperator, _appBeacon)
+// Solidity: constructor(string _version, address _permissionController, address _releaseManager, address _computeAVSRegistrar, address _computeOperator, address _appBeacon, address _safeTimelockFactory) returns()
+func (appController *AppController) PackConstructor(_version string, _permissionController common.Address, _releaseManager common.Address, _computeAVSRegistrar common.Address, _computeOperator common.Address, _appBeacon common.Address, _safeTimelockFactory common.Address) []byte {
+	enc, err := appController.abi.Pack("", _version, _permissionController, _releaseManager, _computeAVSRegistrar, _computeOperator, _appBeacon, _safeTimelockFactory)
 	if err != nil {
 		panic(err)
 	}
@@ -117,6 +125,41 @@ func (appController *AppController) TryPackAPIPERMISSIONTYPEHASH() ([]byte, erro
 // Solidity: function API_PERMISSION_TYPEHASH() view returns(bytes32)
 func (appController *AppController) UnpackAPIPERMISSIONTYPEHASH(data []byte) ([32]byte, error) {
 	out, err := appController.abi.Unpack("API_PERMISSION_TYPEHASH", data)
+	if err != nil {
+		return *new([32]byte), err
+	}
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+	return out0, nil
+}
+
+// PackDEFAULTADMINROLE is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xa217fddf.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function DEFAULT_ADMIN_ROLE() view returns(bytes32)
+func (appController *AppController) PackDEFAULTADMINROLE() []byte {
+	enc, err := appController.abi.Pack("DEFAULT_ADMIN_ROLE")
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackDEFAULTADMINROLE is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xa217fddf.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function DEFAULT_ADMIN_ROLE() view returns(bytes32)
+func (appController *AppController) TryPackDEFAULTADMINROLE() ([]byte, error) {
+	return appController.abi.Pack("DEFAULT_ADMIN_ROLE")
+}
+
+// UnpackDEFAULTADMINROLE is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0xa217fddf.
+//
+// Solidity: function DEFAULT_ADMIN_ROLE() view returns(bytes32)
+func (appController *AppController) UnpackDEFAULTADMINROLE(data []byte) ([32]byte, error) {
+	out, err := appController.abi.Unpack("DEFAULT_ADMIN_ROLE", data)
 	if err != nil {
 		return *new([32]byte), err
 	}
@@ -229,6 +272,41 @@ func (appController *AppController) UnpackCalculateAppId(data []byte) (common.Ad
 	return out0, nil
 }
 
+// PackCanCall is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x9614801b.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function canCall(address caller, bytes data) view returns(bool)
+func (appController *AppController) PackCanCall(caller common.Address, data []byte) []byte {
+	enc, err := appController.abi.Pack("canCall", caller, data)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackCanCall is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x9614801b.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function canCall(address caller, bytes data) view returns(bool)
+func (appController *AppController) TryPackCanCall(caller common.Address, data []byte) ([]byte, error) {
+	return appController.abi.Pack("canCall", caller, data)
+}
+
+// UnpackCanCall is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x9614801b.
+//
+// Solidity: function canCall(address caller, bytes data) view returns(bool)
+func (appController *AppController) UnpackCanCall(data []byte) (bool, error) {
+	out, err := appController.abi.Unpack("canCall", data)
+	if err != nil {
+		return *new(bool), err
+	}
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+	return out0, nil
+}
+
 // PackComputeAVSRegistrar is the Go binding used to pack the parameters required for calling
 // the contract method with ID 0xef6d92c6.  This method will panic if any
 // invalid/nil inputs are passed.
@@ -334,34 +412,34 @@ func (appController *AppController) UnpackCreateApp(data []byte) (common.Address
 	return out0, nil
 }
 
-// PackCreateAppWithIsolatedBilling is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x559cf359.  This method will panic if any
+// PackCreateAppForTeam is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x688c3ec3.  This method will panic if any
 // invalid/nil inputs are passed.
 //
-// Solidity: function createAppWithIsolatedBilling(bytes32 salt, (((bytes32,string)[],uint32),bytes,bytes) release) returns(address app)
-func (appController *AppController) PackCreateAppWithIsolatedBilling(salt [32]byte, release IAppControllerRelease) []byte {
-	enc, err := appController.abi.Pack("createAppWithIsolatedBilling", salt, release)
+// Solidity: function createAppForTeam(address team, bytes32 salt, (((bytes32,string)[],uint32),bytes,bytes) release) returns(address app)
+func (appController *AppController) PackCreateAppForTeam(team common.Address, salt [32]byte, release IAppControllerRelease) []byte {
+	enc, err := appController.abi.Pack("createAppForTeam", team, salt, release)
 	if err != nil {
 		panic(err)
 	}
 	return enc
 }
 
-// TryPackCreateAppWithIsolatedBilling is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x559cf359.  This method will return an error
+// TryPackCreateAppForTeam is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x688c3ec3.  This method will return an error
 // if any inputs are invalid/nil.
 //
-// Solidity: function createAppWithIsolatedBilling(bytes32 salt, (((bytes32,string)[],uint32),bytes,bytes) release) returns(address app)
-func (appController *AppController) TryPackCreateAppWithIsolatedBilling(salt [32]byte, release IAppControllerRelease) ([]byte, error) {
-	return appController.abi.Pack("createAppWithIsolatedBilling", salt, release)
+// Solidity: function createAppForTeam(address team, bytes32 salt, (((bytes32,string)[],uint32),bytes,bytes) release) returns(address app)
+func (appController *AppController) TryPackCreateAppForTeam(team common.Address, salt [32]byte, release IAppControllerRelease) ([]byte, error) {
+	return appController.abi.Pack("createAppForTeam", team, salt, release)
 }
 
-// UnpackCreateAppWithIsolatedBilling is the Go binding that unpacks the parameters returned
-// from invoking the contract method with ID 0x559cf359.
+// UnpackCreateAppForTeam is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x688c3ec3.
 //
-// Solidity: function createAppWithIsolatedBilling(bytes32 salt, (((bytes32,string)[],uint32),bytes,bytes) release) returns(address app)
-func (appController *AppController) UnpackCreateAppWithIsolatedBilling(data []byte) (common.Address, error) {
-	out, err := appController.abi.Unpack("createAppWithIsolatedBilling", data)
+// Solidity: function createAppForTeam(address team, bytes32 salt, (((bytes32,string)[],uint32),bytes,bytes) release) returns(address app)
+func (appController *AppController) UnpackCreateAppForTeam(data []byte) (common.Address, error) {
+	out, err := appController.abi.Unpack("createAppForTeam", data)
 	if err != nil {
 		return *new(common.Address), err
 	}
@@ -439,41 +517,6 @@ func (appController *AppController) UnpackGetActiveAppCount(data []byte) (uint32
 	return out0, nil
 }
 
-// PackGetAppCreator is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x67962d48.  This method will panic if any
-// invalid/nil inputs are passed.
-//
-// Solidity: function getAppCreator(address app) view returns(address)
-func (appController *AppController) PackGetAppCreator(app common.Address) []byte {
-	enc, err := appController.abi.Pack("getAppCreator", app)
-	if err != nil {
-		panic(err)
-	}
-	return enc
-}
-
-// TryPackGetAppCreator is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x67962d48.  This method will return an error
-// if any inputs are invalid/nil.
-//
-// Solidity: function getAppCreator(address app) view returns(address)
-func (appController *AppController) TryPackGetAppCreator(app common.Address) ([]byte, error) {
-	return appController.abi.Pack("getAppCreator", app)
-}
-
-// UnpackGetAppCreator is the Go binding that unpacks the parameters returned
-// from invoking the contract method with ID 0x67962d48.
-//
-// Solidity: function getAppCreator(address app) view returns(address)
-func (appController *AppController) UnpackGetAppCreator(data []byte) (common.Address, error) {
-	out, err := appController.abi.Unpack("getAppCreator", data)
-	if err != nil {
-		return *new(common.Address), err
-	}
-	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
-	return out0, nil
-}
-
 // PackGetAppLatestReleaseBlockNumber is the Go binding used to pack the parameters required for calling
 // the contract method with ID 0x9ffbdce6.  This method will panic if any
 // invalid/nil inputs are passed.
@@ -544,6 +587,41 @@ func (appController *AppController) UnpackGetAppOperatorSetId(data []byte) (uint
 	return out0, nil
 }
 
+// PackGetAppOwner is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xffb42b51.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function getAppOwner(address app) view returns(address)
+func (appController *AppController) PackGetAppOwner(app common.Address) []byte {
+	enc, err := appController.abi.Pack("getAppOwner", app)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackGetAppOwner is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xffb42b51.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function getAppOwner(address app) view returns(address)
+func (appController *AppController) TryPackGetAppOwner(app common.Address) ([]byte, error) {
+	return appController.abi.Pack("getAppOwner", app)
+}
+
+// UnpackGetAppOwner is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0xffb42b51.
+//
+// Solidity: function getAppOwner(address app) view returns(address)
+func (appController *AppController) UnpackGetAppOwner(data []byte) (common.Address, error) {
+	out, err := appController.abi.Unpack("getAppOwner", data)
+	if err != nil {
+		return *new(common.Address), err
+	}
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+	return out0, nil
+}
+
 // PackGetAppStatus is the Go binding used to pack the parameters required for calling
 // the contract method with ID 0xd5aae178.  This method will panic if any
 // invalid/nil inputs are passed.
@@ -579,11 +657,46 @@ func (appController *AppController) UnpackGetAppStatus(data []byte) (uint8, erro
 	return out0, nil
 }
 
+// PackGetAppTimelocked is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x508ac1d6.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function getAppTimelocked(address app) view returns(bool)
+func (appController *AppController) PackGetAppTimelocked(app common.Address) []byte {
+	enc, err := appController.abi.Pack("getAppTimelocked", app)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackGetAppTimelocked is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x508ac1d6.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function getAppTimelocked(address app) view returns(bool)
+func (appController *AppController) TryPackGetAppTimelocked(app common.Address) ([]byte, error) {
+	return appController.abi.Pack("getAppTimelocked", app)
+}
+
+// UnpackGetAppTimelocked is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x508ac1d6.
+//
+// Solidity: function getAppTimelocked(address app) view returns(bool)
+func (appController *AppController) UnpackGetAppTimelocked(data []byte) (bool, error) {
+	out, err := appController.abi.Unpack("getAppTimelocked", data)
+	if err != nil {
+		return *new(bool), err
+	}
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+	return out0, nil
+}
+
 // PackGetApps is the Go binding used to pack the parameters required for calling
 // the contract method with ID 0xa37e7e44.  This method will panic if any
 // invalid/nil inputs are passed.
 //
-// Solidity: function getApps(uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getApps(uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (appController *AppController) PackGetApps(offset *big.Int, limit *big.Int) []byte {
 	enc, err := appController.abi.Pack("getApps", offset, limit)
 	if err != nil {
@@ -596,7 +709,7 @@ func (appController *AppController) PackGetApps(offset *big.Int, limit *big.Int)
 // the contract method with ID 0xa37e7e44.  This method will return an error
 // if any inputs are invalid/nil.
 //
-// Solidity: function getApps(uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getApps(uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (appController *AppController) TryPackGetApps(offset *big.Int, limit *big.Int) ([]byte, error) {
 	return appController.abi.Pack("getApps", offset, limit)
 }
@@ -611,54 +724,10 @@ type GetAppsOutput struct {
 // UnpackGetApps is the Go binding that unpacks the parameters returned
 // from invoking the contract method with ID 0xa37e7e44.
 //
-// Solidity: function getApps(uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getApps(uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (appController *AppController) UnpackGetApps(data []byte) (GetAppsOutput, error) {
 	out, err := appController.abi.Unpack("getApps", data)
 	outstruct := new(GetAppsOutput)
-	if err != nil {
-		return *outstruct, err
-	}
-	outstruct.Apps = *abi.ConvertType(out[0], new([]common.Address)).(*[]common.Address)
-	outstruct.AppConfigsMem = *abi.ConvertType(out[1], new([]IAppControllerAppConfig)).(*[]IAppControllerAppConfig)
-	return *outstruct, nil
-}
-
-// PackGetAppsByBillingAccount is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xdbb1c4e1.  This method will panic if any
-// invalid/nil inputs are passed.
-//
-// Solidity: function getAppsByBillingAccount(address account, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
-func (appController *AppController) PackGetAppsByBillingAccount(account common.Address, offset *big.Int, limit *big.Int) []byte {
-	enc, err := appController.abi.Pack("getAppsByBillingAccount", account, offset, limit)
-	if err != nil {
-		panic(err)
-	}
-	return enc
-}
-
-// TryPackGetAppsByBillingAccount is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0xdbb1c4e1.  This method will return an error
-// if any inputs are invalid/nil.
-//
-// Solidity: function getAppsByBillingAccount(address account, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
-func (appController *AppController) TryPackGetAppsByBillingAccount(account common.Address, offset *big.Int, limit *big.Int) ([]byte, error) {
-	return appController.abi.Pack("getAppsByBillingAccount", account, offset, limit)
-}
-
-// GetAppsByBillingAccountOutput serves as a container for the return parameters of contract
-// method GetAppsByBillingAccount.
-type GetAppsByBillingAccountOutput struct {
-	Apps          []common.Address
-	AppConfigsMem []IAppControllerAppConfig
-}
-
-// UnpackGetAppsByBillingAccount is the Go binding that unpacks the parameters returned
-// from invoking the contract method with ID 0xdbb1c4e1.
-//
-// Solidity: function getAppsByBillingAccount(address account, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
-func (appController *AppController) UnpackGetAppsByBillingAccount(data []byte) (GetAppsByBillingAccountOutput, error) {
-	out, err := appController.abi.Unpack("getAppsByBillingAccount", data)
-	outstruct := new(GetAppsByBillingAccountOutput)
 	if err != nil {
 		return *outstruct, err
 	}
@@ -671,7 +740,7 @@ func (appController *AppController) UnpackGetAppsByBillingAccount(data []byte) (
 // the contract method with ID 0x8099ef2e.  This method will panic if any
 // invalid/nil inputs are passed.
 //
-// Solidity: function getAppsByCreator(address creator, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getAppsByCreator(address creator, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (appController *AppController) PackGetAppsByCreator(creator common.Address, offset *big.Int, limit *big.Int) []byte {
 	enc, err := appController.abi.Pack("getAppsByCreator", creator, offset, limit)
 	if err != nil {
@@ -684,7 +753,7 @@ func (appController *AppController) PackGetAppsByCreator(creator common.Address,
 // the contract method with ID 0x8099ef2e.  This method will return an error
 // if any inputs are invalid/nil.
 //
-// Solidity: function getAppsByCreator(address creator, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getAppsByCreator(address creator, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (appController *AppController) TryPackGetAppsByCreator(creator common.Address, offset *big.Int, limit *big.Int) ([]byte, error) {
 	return appController.abi.Pack("getAppsByCreator", creator, offset, limit)
 }
@@ -699,7 +768,7 @@ type GetAppsByCreatorOutput struct {
 // UnpackGetAppsByCreator is the Go binding that unpacks the parameters returned
 // from invoking the contract method with ID 0x8099ef2e.
 //
-// Solidity: function getAppsByCreator(address creator, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getAppsByCreator(address creator, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (appController *AppController) UnpackGetAppsByCreator(data []byte) (GetAppsByCreatorOutput, error) {
 	out, err := appController.abi.Unpack("getAppsByCreator", data)
 	outstruct := new(GetAppsByCreatorOutput)
@@ -715,7 +784,7 @@ func (appController *AppController) UnpackGetAppsByCreator(data []byte) (GetApps
 // the contract method with ID 0xf36618ac.  This method will panic if any
 // invalid/nil inputs are passed.
 //
-// Solidity: function getAppsByDeveloper(address developer, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getAppsByDeveloper(address developer, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (appController *AppController) PackGetAppsByDeveloper(developer common.Address, offset *big.Int, limit *big.Int) []byte {
 	enc, err := appController.abi.Pack("getAppsByDeveloper", developer, offset, limit)
 	if err != nil {
@@ -728,7 +797,7 @@ func (appController *AppController) PackGetAppsByDeveloper(developer common.Addr
 // the contract method with ID 0xf36618ac.  This method will return an error
 // if any inputs are invalid/nil.
 //
-// Solidity: function getAppsByDeveloper(address developer, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getAppsByDeveloper(address developer, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (appController *AppController) TryPackGetAppsByDeveloper(developer common.Address, offset *big.Int, limit *big.Int) ([]byte, error) {
 	return appController.abi.Pack("getAppsByDeveloper", developer, offset, limit)
 }
@@ -743,7 +812,7 @@ type GetAppsByDeveloperOutput struct {
 // UnpackGetAppsByDeveloper is the Go binding that unpacks the parameters returned
 // from invoking the contract method with ID 0xf36618ac.
 //
-// Solidity: function getAppsByDeveloper(address developer, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8)[] appConfigsMem)
+// Solidity: function getAppsByDeveloper(address developer, uint256 offset, uint256 limit) view returns(address[] apps, (address,uint32,uint32,uint8,bool)[] appConfigsMem)
 func (appController *AppController) UnpackGetAppsByDeveloper(data []byte) (GetAppsByDeveloperOutput, error) {
 	out, err := appController.abi.Unpack("getAppsByDeveloper", data)
 	outstruct := new(GetAppsByDeveloperOutput)
@@ -755,73 +824,38 @@ func (appController *AppController) UnpackGetAppsByDeveloper(data []byte) (GetAp
 	return *outstruct, nil
 }
 
-// PackGetBillingAccount is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x3e032115.  This method will panic if any
+// PackGetAppsForAccount is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xf61b3a25.  This method will panic if any
 // invalid/nil inputs are passed.
 //
-// Solidity: function getBillingAccount(address app) view returns(address)
-func (appController *AppController) PackGetBillingAccount(app common.Address) []byte {
-	enc, err := appController.abi.Pack("getBillingAccount", app)
+// Solidity: function getAppsForAccount(address account, uint256 offset, uint256 limit) view returns((address,bool,uint8[])[] appRoles)
+func (appController *AppController) PackGetAppsForAccount(account common.Address, offset *big.Int, limit *big.Int) []byte {
+	enc, err := appController.abi.Pack("getAppsForAccount", account, offset, limit)
 	if err != nil {
 		panic(err)
 	}
 	return enc
 }
 
-// TryPackGetBillingAccount is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x3e032115.  This method will return an error
+// TryPackGetAppsForAccount is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xf61b3a25.  This method will return an error
 // if any inputs are invalid/nil.
 //
-// Solidity: function getBillingAccount(address app) view returns(address)
-func (appController *AppController) TryPackGetBillingAccount(app common.Address) ([]byte, error) {
-	return appController.abi.Pack("getBillingAccount", app)
+// Solidity: function getAppsForAccount(address account, uint256 offset, uint256 limit) view returns((address,bool,uint8[])[] appRoles)
+func (appController *AppController) TryPackGetAppsForAccount(account common.Address, offset *big.Int, limit *big.Int) ([]byte, error) {
+	return appController.abi.Pack("getAppsForAccount", account, offset, limit)
 }
 
-// UnpackGetBillingAccount is the Go binding that unpacks the parameters returned
-// from invoking the contract method with ID 0x3e032115.
+// UnpackGetAppsForAccount is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0xf61b3a25.
 //
-// Solidity: function getBillingAccount(address app) view returns(address)
-func (appController *AppController) UnpackGetBillingAccount(data []byte) (common.Address, error) {
-	out, err := appController.abi.Unpack("getBillingAccount", data)
+// Solidity: function getAppsForAccount(address account, uint256 offset, uint256 limit) view returns((address,bool,uint8[])[] appRoles)
+func (appController *AppController) UnpackGetAppsForAccount(data []byte) ([]IAppControllerAppRoles, error) {
+	out, err := appController.abi.Unpack("getAppsForAccount", data)
 	if err != nil {
-		return *new(common.Address), err
+		return *new([]IAppControllerAppRoles), err
 	}
-	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
-	return out0, nil
-}
-
-// PackGetBillingType is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x85e9babb.  This method will panic if any
-// invalid/nil inputs are passed.
-//
-// Solidity: function getBillingType(address app) view returns(uint8)
-func (appController *AppController) PackGetBillingType(app common.Address) []byte {
-	enc, err := appController.abi.Pack("getBillingType", app)
-	if err != nil {
-		panic(err)
-	}
-	return enc
-}
-
-// TryPackGetBillingType is the Go binding used to pack the parameters required for calling
-// the contract method with ID 0x85e9babb.  This method will return an error
-// if any inputs are invalid/nil.
-//
-// Solidity: function getBillingType(address app) view returns(uint8)
-func (appController *AppController) TryPackGetBillingType(app common.Address) ([]byte, error) {
-	return appController.abi.Pack("getBillingType", app)
-}
-
-// UnpackGetBillingType is the Go binding that unpacks the parameters returned
-// from invoking the contract method with ID 0x85e9babb.
-//
-// Solidity: function getBillingType(address app) view returns(uint8)
-func (appController *AppController) UnpackGetBillingType(data []byte) (uint8, error) {
-	out, err := appController.abi.Unpack("getBillingType", data)
-	if err != nil {
-		return *new(uint8), err
-	}
-	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	out0 := *abi.ConvertType(out[0], new([]IAppControllerAppRoles)).(*[]IAppControllerAppRoles)
 	return out0, nil
 }
 
@@ -860,6 +894,216 @@ func (appController *AppController) UnpackGetMaxActiveAppsPerUser(data []byte) (
 	return out0, nil
 }
 
+// PackGetRoleAdmin is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x248a9ca3.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function getRoleAdmin(bytes32 role) view returns(bytes32)
+func (appController *AppController) PackGetRoleAdmin(role [32]byte) []byte {
+	enc, err := appController.abi.Pack("getRoleAdmin", role)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackGetRoleAdmin is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x248a9ca3.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function getRoleAdmin(bytes32 role) view returns(bytes32)
+func (appController *AppController) TryPackGetRoleAdmin(role [32]byte) ([]byte, error) {
+	return appController.abi.Pack("getRoleAdmin", role)
+}
+
+// UnpackGetRoleAdmin is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x248a9ca3.
+//
+// Solidity: function getRoleAdmin(bytes32 role) view returns(bytes32)
+func (appController *AppController) UnpackGetRoleAdmin(data []byte) ([32]byte, error) {
+	out, err := appController.abi.Unpack("getRoleAdmin", data)
+	if err != nil {
+		return *new([32]byte), err
+	}
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+	return out0, nil
+}
+
+// PackGetRoleMember is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x9010d07c.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function getRoleMember(bytes32 role, uint256 index) view returns(address)
+func (appController *AppController) PackGetRoleMember(role [32]byte, index *big.Int) []byte {
+	enc, err := appController.abi.Pack("getRoleMember", role, index)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackGetRoleMember is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x9010d07c.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function getRoleMember(bytes32 role, uint256 index) view returns(address)
+func (appController *AppController) TryPackGetRoleMember(role [32]byte, index *big.Int) ([]byte, error) {
+	return appController.abi.Pack("getRoleMember", role, index)
+}
+
+// UnpackGetRoleMember is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x9010d07c.
+//
+// Solidity: function getRoleMember(bytes32 role, uint256 index) view returns(address)
+func (appController *AppController) UnpackGetRoleMember(data []byte) (common.Address, error) {
+	out, err := appController.abi.Unpack("getRoleMember", data)
+	if err != nil {
+		return *new(common.Address), err
+	}
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+	return out0, nil
+}
+
+// PackGetRoleMemberCount is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xca15c873.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function getRoleMemberCount(bytes32 role) view returns(uint256)
+func (appController *AppController) PackGetRoleMemberCount(role [32]byte) []byte {
+	enc, err := appController.abi.Pack("getRoleMemberCount", role)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackGetRoleMemberCount is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xca15c873.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function getRoleMemberCount(bytes32 role) view returns(uint256)
+func (appController *AppController) TryPackGetRoleMemberCount(role [32]byte) ([]byte, error) {
+	return appController.abi.Pack("getRoleMemberCount", role)
+}
+
+// UnpackGetRoleMemberCount is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0xca15c873.
+//
+// Solidity: function getRoleMemberCount(bytes32 role) view returns(uint256)
+func (appController *AppController) UnpackGetRoleMemberCount(data []byte) (*big.Int, error) {
+	out, err := appController.abi.Unpack("getRoleMemberCount", data)
+	if err != nil {
+		return new(big.Int), err
+	}
+	out0 := abi.ConvertType(out[0], new(big.Int)).(*big.Int)
+	return out0, nil
+}
+
+// PackGetTeamRoleMember is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x1d349e61.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function getTeamRoleMember(address team, uint8 role, uint256 index) view returns(address)
+func (appController *AppController) PackGetTeamRoleMember(team common.Address, role uint8, index *big.Int) []byte {
+	enc, err := appController.abi.Pack("getTeamRoleMember", team, role, index)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackGetTeamRoleMember is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x1d349e61.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function getTeamRoleMember(address team, uint8 role, uint256 index) view returns(address)
+func (appController *AppController) TryPackGetTeamRoleMember(team common.Address, role uint8, index *big.Int) ([]byte, error) {
+	return appController.abi.Pack("getTeamRoleMember", team, role, index)
+}
+
+// UnpackGetTeamRoleMember is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x1d349e61.
+//
+// Solidity: function getTeamRoleMember(address team, uint8 role, uint256 index) view returns(address)
+func (appController *AppController) UnpackGetTeamRoleMember(data []byte) (common.Address, error) {
+	out, err := appController.abi.Unpack("getTeamRoleMember", data)
+	if err != nil {
+		return *new(common.Address), err
+	}
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+	return out0, nil
+}
+
+// PackGetTeamRoleMemberCount is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x3c98ff65.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function getTeamRoleMemberCount(address team, uint8 role) view returns(uint256)
+func (appController *AppController) PackGetTeamRoleMemberCount(team common.Address, role uint8) []byte {
+	enc, err := appController.abi.Pack("getTeamRoleMemberCount", team, role)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackGetTeamRoleMemberCount is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x3c98ff65.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function getTeamRoleMemberCount(address team, uint8 role) view returns(uint256)
+func (appController *AppController) TryPackGetTeamRoleMemberCount(team common.Address, role uint8) ([]byte, error) {
+	return appController.abi.Pack("getTeamRoleMemberCount", team, role)
+}
+
+// UnpackGetTeamRoleMemberCount is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x3c98ff65.
+//
+// Solidity: function getTeamRoleMemberCount(address team, uint8 role) view returns(uint256)
+func (appController *AppController) UnpackGetTeamRoleMemberCount(data []byte) (*big.Int, error) {
+	out, err := appController.abi.Unpack("getTeamRoleMemberCount", data)
+	if err != nil {
+		return new(big.Int), err
+	}
+	out0 := abi.ConvertType(out[0], new(big.Int)).(*big.Int)
+	return out0, nil
+}
+
+// PackGetTeamRoleMembers is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x60257ae6.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function getTeamRoleMembers(address team, uint8 role) view returns(address[])
+func (appController *AppController) PackGetTeamRoleMembers(team common.Address, role uint8) []byte {
+	enc, err := appController.abi.Pack("getTeamRoleMembers", team, role)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackGetTeamRoleMembers is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x60257ae6.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function getTeamRoleMembers(address team, uint8 role) view returns(address[])
+func (appController *AppController) TryPackGetTeamRoleMembers(team common.Address, role uint8) ([]byte, error) {
+	return appController.abi.Pack("getTeamRoleMembers", team, role)
+}
+
+// UnpackGetTeamRoleMembers is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x60257ae6.
+//
+// Solidity: function getTeamRoleMembers(address team, uint8 role) view returns(address[])
+func (appController *AppController) UnpackGetTeamRoleMembers(data []byte) ([]common.Address, error) {
+	out, err := appController.abi.Unpack("getTeamRoleMembers", data)
+	if err != nil {
+		return *new([]common.Address), err
+	}
+	out0 := *abi.ConvertType(out[0], new([]common.Address)).(*[]common.Address)
+	return out0, nil
+}
+
 // PackGlobalActiveAppCount is the Go binding used to pack the parameters required for calling
 // the contract method with ID 0xa8aa2bd3.  This method will panic if any
 // invalid/nil inputs are passed.
@@ -892,6 +1136,120 @@ func (appController *AppController) UnpackGlobalActiveAppCount(data []byte) (uin
 		return *new(uint32), err
 	}
 	out0 := *abi.ConvertType(out[0], new(uint32)).(*uint32)
+	return out0, nil
+}
+
+// PackGrantRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x2f2ff15d.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function grantRole(bytes32 role, address account) returns()
+func (appController *AppController) PackGrantRole(role [32]byte, account common.Address) []byte {
+	enc, err := appController.abi.Pack("grantRole", role, account)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackGrantRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x2f2ff15d.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function grantRole(bytes32 role, address account) returns()
+func (appController *AppController) TryPackGrantRole(role [32]byte, account common.Address) ([]byte, error) {
+	return appController.abi.Pack("grantRole", role, account)
+}
+
+// PackGrantTeamRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x58f2c536.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function grantTeamRole(address team, uint8 role, address account) returns()
+func (appController *AppController) PackGrantTeamRole(team common.Address, role uint8, account common.Address) []byte {
+	enc, err := appController.abi.Pack("grantTeamRole", team, role, account)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackGrantTeamRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x58f2c536.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function grantTeamRole(address team, uint8 role, address account) returns()
+func (appController *AppController) TryPackGrantTeamRole(team common.Address, role uint8, account common.Address) ([]byte, error) {
+	return appController.abi.Pack("grantTeamRole", team, role, account)
+}
+
+// PackHasRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x91d14854.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function hasRole(bytes32 role, address account) view returns(bool)
+func (appController *AppController) PackHasRole(role [32]byte, account common.Address) []byte {
+	enc, err := appController.abi.Pack("hasRole", role, account)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackHasRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x91d14854.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function hasRole(bytes32 role, address account) view returns(bool)
+func (appController *AppController) TryPackHasRole(role [32]byte, account common.Address) ([]byte, error) {
+	return appController.abi.Pack("hasRole", role, account)
+}
+
+// UnpackHasRole is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x91d14854.
+//
+// Solidity: function hasRole(bytes32 role, address account) view returns(bool)
+func (appController *AppController) UnpackHasRole(data []byte) (bool, error) {
+	out, err := appController.abi.Unpack("hasRole", data)
+	if err != nil {
+		return *new(bool), err
+	}
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+	return out0, nil
+}
+
+// PackHasTeamRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x54bfb170.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function hasTeamRole(address team, uint8 role, address account) view returns(bool)
+func (appController *AppController) PackHasTeamRole(team common.Address, role uint8, account common.Address) []byte {
+	enc, err := appController.abi.Pack("hasTeamRole", team, role, account)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackHasTeamRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x54bfb170.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function hasTeamRole(address team, uint8 role, address account) view returns(bool)
+func (appController *AppController) TryPackHasTeamRole(team common.Address, role uint8, account common.Address) ([]byte, error) {
+	return appController.abi.Pack("hasTeamRole", team, role, account)
+}
+
+// UnpackHasTeamRole is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x54bfb170.
+//
+// Solidity: function hasTeamRole(address team, uint8 role, address account) view returns(bool)
+func (appController *AppController) UnpackHasTeamRole(data []byte) (bool, error) {
+	out, err := appController.abi.Unpack("hasTeamRole", data)
+	if err != nil {
+		return *new(bool), err
+	}
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
 	return out0, nil
 }
 
@@ -950,6 +1308,28 @@ func (appController *AppController) UnpackMaxGlobalActiveApps(data []byte) (uint
 	}
 	out0 := *abi.ConvertType(out[0], new(uint32)).(*uint32)
 	return out0, nil
+}
+
+// PackMigrateAdmins is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x00b73d4c.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function migrateAdmins(address[] apps) returns()
+func (appController *AppController) PackMigrateAdmins(apps []common.Address) []byte {
+	enc, err := appController.abi.Pack("migrateAdmins", apps)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackMigrateAdmins is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x00b73d4c.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function migrateAdmins(address[] apps) returns()
+func (appController *AppController) TryPackMigrateAdmins(apps []common.Address) ([]byte, error) {
+	return appController.abi.Pack("migrateAdmins", apps)
 }
 
 // PackPermissionController is the Go binding used to pack the parameters required for calling
@@ -1015,6 +1395,129 @@ func (appController *AppController) TryPackReleaseManager() ([]byte, error) {
 // Solidity: function releaseManager() view returns(address)
 func (appController *AppController) UnpackReleaseManager(data []byte) (common.Address, error) {
 	out, err := appController.abi.Unpack("releaseManager", data)
+	if err != nil {
+		return *new(common.Address), err
+	}
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+	return out0, nil
+}
+
+// PackRenounceRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x36568abe.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function renounceRole(bytes32 role, address account) returns()
+func (appController *AppController) PackRenounceRole(role [32]byte, account common.Address) []byte {
+	enc, err := appController.abi.Pack("renounceRole", role, account)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackRenounceRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x36568abe.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function renounceRole(bytes32 role, address account) returns()
+func (appController *AppController) TryPackRenounceRole(role [32]byte, account common.Address) ([]byte, error) {
+	return appController.abi.Pack("renounceRole", role, account)
+}
+
+// PackRenounceTeamRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x17f4c90b.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function renounceTeamRole(address team, uint8 role) returns()
+func (appController *AppController) PackRenounceTeamRole(team common.Address, role uint8) []byte {
+	enc, err := appController.abi.Pack("renounceTeamRole", team, role)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackRenounceTeamRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x17f4c90b.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function renounceTeamRole(address team, uint8 role) returns()
+func (appController *AppController) TryPackRenounceTeamRole(team common.Address, role uint8) ([]byte, error) {
+	return appController.abi.Pack("renounceTeamRole", team, role)
+}
+
+// PackRevokeRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xd547741f.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function revokeRole(bytes32 role, address account) returns()
+func (appController *AppController) PackRevokeRole(role [32]byte, account common.Address) []byte {
+	enc, err := appController.abi.Pack("revokeRole", role, account)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackRevokeRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xd547741f.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function revokeRole(bytes32 role, address account) returns()
+func (appController *AppController) TryPackRevokeRole(role [32]byte, account common.Address) ([]byte, error) {
+	return appController.abi.Pack("revokeRole", role, account)
+}
+
+// PackRevokeTeamRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x11b652e2.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function revokeTeamRole(address team, uint8 role, address account) returns()
+func (appController *AppController) PackRevokeTeamRole(team common.Address, role uint8, account common.Address) []byte {
+	enc, err := appController.abi.Pack("revokeTeamRole", team, role, account)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackRevokeTeamRole is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x11b652e2.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function revokeTeamRole(address team, uint8 role, address account) returns()
+func (appController *AppController) TryPackRevokeTeamRole(team common.Address, role uint8, account common.Address) ([]byte, error) {
+	return appController.abi.Pack("revokeTeamRole", team, role, account)
+}
+
+// PackSafeTimelockFactory is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xa03d2a81.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function safeTimelockFactory() view returns(address)
+func (appController *AppController) PackSafeTimelockFactory() []byte {
+	enc, err := appController.abi.Pack("safeTimelockFactory")
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackSafeTimelockFactory is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xa03d2a81.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function safeTimelockFactory() view returns(address)
+func (appController *AppController) TryPackSafeTimelockFactory() ([]byte, error) {
+	return appController.abi.Pack("safeTimelockFactory")
+}
+
+// UnpackSafeTimelockFactory is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0xa03d2a81.
+//
+// Solidity: function safeTimelockFactory() view returns(address)
+func (appController *AppController) UnpackSafeTimelockFactory(data []byte) (common.Address, error) {
+	out, err := appController.abi.Unpack("safeTimelockFactory", data)
 	if err != nil {
 		return *new(common.Address), err
 	}
@@ -1110,6 +1613,41 @@ func (appController *AppController) TryPackStopApp(app common.Address) ([]byte, 
 	return appController.abi.Pack("stopApp", app)
 }
 
+// PackSupportsInterface is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x01ffc9a7.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
+func (appController *AppController) PackSupportsInterface(interfaceId [4]byte) []byte {
+	enc, err := appController.abi.Pack("supportsInterface", interfaceId)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackSupportsInterface is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x01ffc9a7.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
+func (appController *AppController) TryPackSupportsInterface(interfaceId [4]byte) ([]byte, error) {
+	return appController.abi.Pack("supportsInterface", interfaceId)
+}
+
+// UnpackSupportsInterface is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x01ffc9a7.
+//
+// Solidity: function supportsInterface(bytes4 interfaceId) view returns(bool)
+func (appController *AppController) UnpackSupportsInterface(data []byte) (bool, error) {
+	out, err := appController.abi.Unpack("supportsInterface", data)
+	if err != nil {
+		return *new(bool), err
+	}
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+	return out0, nil
+}
+
 // PackSuspend is the Go binding used to pack the parameters required for calling
 // the contract method with ID 0xcb1e6ff7.  This method will panic if any
 // invalid/nil inputs are passed.
@@ -1174,6 +1712,28 @@ func (appController *AppController) PackTerminateAppByAdmin(app common.Address) 
 // Solidity: function terminateAppByAdmin(address app) returns()
 func (appController *AppController) TryPackTerminateAppByAdmin(app common.Address) ([]byte, error) {
 	return appController.abi.Pack("terminateAppByAdmin", app)
+}
+
+// PackTransferOwnership is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x6d435421.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function transferOwnership(address app, address newOwner) returns()
+func (appController *AppController) PackTransferOwnership(app common.Address, newOwner common.Address) []byte {
+	enc, err := appController.abi.Pack("transferOwnership", app, newOwner)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackTransferOwnership is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x6d435421.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function transferOwnership(address app, address newOwner) returns()
+func (appController *AppController) TryPackTransferOwnership(app common.Address, newOwner common.Address) ([]byte, error) {
+	return appController.abi.Pack("transferOwnership", app, newOwner)
 }
 
 // PackUpdateAppMetadataURI is the Go binding used to pack the parameters required for calling
@@ -1270,7 +1830,7 @@ func (appController *AppController) UnpackVersion(data []byte) (string, error) {
 
 // AppControllerAppCreated represents a AppCreated event raised by the AppController contract.
 type AppControllerAppCreated struct {
-	Creator       common.Address
+	Owner         common.Address
 	App           common.Address
 	OperatorSetId uint32
 	Raw           *types.Log // Blockchain specific contextual infos
@@ -1286,7 +1846,7 @@ func (AppControllerAppCreated) ContractEventName() string {
 // UnpackAppCreatedEvent is the Go binding that unpacks the event data emitted
 // by contract.
 //
-// Solidity: event AppCreated(address indexed creator, address indexed app, uint32 operatorSetId)
+// Solidity: event AppCreated(address indexed owner, address indexed app, uint32 operatorSetId)
 func (appController *AppController) UnpackAppCreatedEvent(log *types.Log) (*AppControllerAppCreated, error) {
 	event := "AppCreated"
 	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
@@ -1335,6 +1895,49 @@ func (appController *AppController) UnpackAppMetadataURIUpdatedEvent(log *types.
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(AppControllerAppMetadataURIUpdated)
+	if len(log.Data) > 0 {
+		if err := appController.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
+			return nil, err
+		}
+	}
+	var indexed abi.Arguments
+	for _, arg := range appController.abi.Events[event].Inputs {
+		if arg.Indexed {
+			indexed = append(indexed, arg)
+		}
+	}
+	if err := abi.ParseTopics(out, indexed, log.Topics[1:]); err != nil {
+		return nil, err
+	}
+	out.Raw = log
+	return out, nil
+}
+
+// AppControllerAppOwnershipTransferred represents a AppOwnershipTransferred event raised by the AppController contract.
+type AppControllerAppOwnershipTransferred struct {
+	App           common.Address
+	PreviousOwner common.Address
+	NewOwner      common.Address
+	Raw           *types.Log // Blockchain specific contextual infos
+}
+
+const AppControllerAppOwnershipTransferredEventName = "AppOwnershipTransferred"
+
+// ContractEventName returns the user-defined event name.
+func (AppControllerAppOwnershipTransferred) ContractEventName() string {
+	return AppControllerAppOwnershipTransferredEventName
+}
+
+// UnpackAppOwnershipTransferredEvent is the Go binding that unpacks the event data emitted
+// by contract.
+//
+// Solidity: event AppOwnershipTransferred(address indexed app, address indexed previousOwner, address indexed newOwner)
+func (appController *AppController) UnpackAppOwnershipTransferredEvent(log *types.Log) (*AppControllerAppOwnershipTransferred, error) {
+	event := "AppOwnershipTransferred"
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
+	}
+	out := new(AppControllerAppOwnershipTransferred)
 	if len(log.Data) > 0 {
 		if err := appController.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
 			return nil, err
@@ -1725,6 +2328,135 @@ func (appController *AppController) UnpackMaxActiveAppsSetEvent(log *types.Log) 
 	return out, nil
 }
 
+// AppControllerRoleAdminChanged represents a RoleAdminChanged event raised by the AppController contract.
+type AppControllerRoleAdminChanged struct {
+	Role              [32]byte
+	PreviousAdminRole [32]byte
+	NewAdminRole      [32]byte
+	Raw               *types.Log // Blockchain specific contextual infos
+}
+
+const AppControllerRoleAdminChangedEventName = "RoleAdminChanged"
+
+// ContractEventName returns the user-defined event name.
+func (AppControllerRoleAdminChanged) ContractEventName() string {
+	return AppControllerRoleAdminChangedEventName
+}
+
+// UnpackRoleAdminChangedEvent is the Go binding that unpacks the event data emitted
+// by contract.
+//
+// Solidity: event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)
+func (appController *AppController) UnpackRoleAdminChangedEvent(log *types.Log) (*AppControllerRoleAdminChanged, error) {
+	event := "RoleAdminChanged"
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
+	}
+	out := new(AppControllerRoleAdminChanged)
+	if len(log.Data) > 0 {
+		if err := appController.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
+			return nil, err
+		}
+	}
+	var indexed abi.Arguments
+	for _, arg := range appController.abi.Events[event].Inputs {
+		if arg.Indexed {
+			indexed = append(indexed, arg)
+		}
+	}
+	if err := abi.ParseTopics(out, indexed, log.Topics[1:]); err != nil {
+		return nil, err
+	}
+	out.Raw = log
+	return out, nil
+}
+
+// AppControllerRoleGranted represents a RoleGranted event raised by the AppController contract.
+type AppControllerRoleGranted struct {
+	Role    [32]byte
+	Account common.Address
+	Sender  common.Address
+	Raw     *types.Log // Blockchain specific contextual infos
+}
+
+const AppControllerRoleGrantedEventName = "RoleGranted"
+
+// ContractEventName returns the user-defined event name.
+func (AppControllerRoleGranted) ContractEventName() string {
+	return AppControllerRoleGrantedEventName
+}
+
+// UnpackRoleGrantedEvent is the Go binding that unpacks the event data emitted
+// by contract.
+//
+// Solidity: event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)
+func (appController *AppController) UnpackRoleGrantedEvent(log *types.Log) (*AppControllerRoleGranted, error) {
+	event := "RoleGranted"
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
+	}
+	out := new(AppControllerRoleGranted)
+	if len(log.Data) > 0 {
+		if err := appController.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
+			return nil, err
+		}
+	}
+	var indexed abi.Arguments
+	for _, arg := range appController.abi.Events[event].Inputs {
+		if arg.Indexed {
+			indexed = append(indexed, arg)
+		}
+	}
+	if err := abi.ParseTopics(out, indexed, log.Topics[1:]); err != nil {
+		return nil, err
+	}
+	out.Raw = log
+	return out, nil
+}
+
+// AppControllerRoleRevoked represents a RoleRevoked event raised by the AppController contract.
+type AppControllerRoleRevoked struct {
+	Role    [32]byte
+	Account common.Address
+	Sender  common.Address
+	Raw     *types.Log // Blockchain specific contextual infos
+}
+
+const AppControllerRoleRevokedEventName = "RoleRevoked"
+
+// ContractEventName returns the user-defined event name.
+func (AppControllerRoleRevoked) ContractEventName() string {
+	return AppControllerRoleRevokedEventName
+}
+
+// UnpackRoleRevokedEvent is the Go binding that unpacks the event data emitted
+// by contract.
+//
+// Solidity: event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)
+func (appController *AppController) UnpackRoleRevokedEvent(log *types.Log) (*AppControllerRoleRevoked, error) {
+	event := "RoleRevoked"
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
+	}
+	out := new(AppControllerRoleRevoked)
+	if len(log.Data) > 0 {
+		if err := appController.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
+			return nil, err
+		}
+	}
+	var indexed abi.Arguments
+	for _, arg := range appController.abi.Events[event].Inputs {
+		if arg.Indexed {
+			indexed = append(indexed, arg)
+		}
+	}
+	if err := abi.ParseTopics(out, indexed, log.Topics[1:]); err != nil {
+		return nil, err
+	}
+	out.Raw = log
+	return out, nil
+}
+
 // UnpackError attempts to decode the provided error data using user-defined
 // error definitions.
 func (appController *AppController) UnpackError(raw []byte) (any, error) {
@@ -1736,6 +2468,9 @@ func (appController *AppController) UnpackError(raw []byte) (any, error) {
 	}
 	if bytes.Equal(raw[:4], appController.abi.Errors["AppDoesNotExist"].ID.Bytes()[:4]) {
 		return appController.UnpackAppDoesNotExistError(raw[4:])
+	}
+	if bytes.Equal(raw[:4], appController.abi.Errors["CannotRevokeLastAdmin"].ID.Bytes()[:4]) {
+		return appController.UnpackCannotRevokeLastAdminError(raw[4:])
 	}
 	if bytes.Equal(raw[:4], appController.abi.Errors["GlobalMaxActiveAppsExceeded"].ID.Bytes()[:4]) {
 		return appController.UnpackGlobalMaxActiveAppsExceededError(raw[4:])
@@ -1834,6 +2569,29 @@ func AppControllerAppDoesNotExistErrorID() common.Hash {
 func (appController *AppController) UnpackAppDoesNotExistError(raw []byte) (*AppControllerAppDoesNotExist, error) {
 	out := new(AppControllerAppDoesNotExist)
 	if err := appController.abi.UnpackIntoInterface(out, "AppDoesNotExist", raw); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AppControllerCannotRevokeLastAdmin represents a CannotRevokeLastAdmin error raised by the AppController contract.
+type AppControllerCannotRevokeLastAdmin struct {
+}
+
+// ErrorID returns the hash of canonical representation of the error's signature.
+//
+// Solidity: error CannotRevokeLastAdmin()
+func AppControllerCannotRevokeLastAdminErrorID() common.Hash {
+	return common.HexToHash("0x7b3c5626cbfd5fdcf52b63e673866e76bff45fc309aa6b0de7826cd85e9ec325")
+}
+
+// UnpackCannotRevokeLastAdminError is the Go binding used to decode the provided
+// error data into the corresponding Go error struct.
+//
+// Solidity: error CannotRevokeLastAdmin()
+func (appController *AppController) UnpackCannotRevokeLastAdminError(raw []byte) (*AppControllerCannotRevokeLastAdmin, error) {
+	out := new(AppControllerCannotRevokeLastAdmin)
+	if err := appController.abi.UnpackIntoInterface(out, "CannotRevokeLastAdmin", raw); err != nil {
 		return nil, err
 	}
 	return out, nil
