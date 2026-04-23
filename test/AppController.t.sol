@@ -2,6 +2,7 @@
 pragma solidity ^0.8.27;
 
 import {IAppController} from "../src/interfaces/IAppController.sol";
+import {AppController} from "../src/AppController.sol";
 import {ComputeDeployer} from "./utils/ComputeDeployer.sol";
 import {IApp} from "../src/interfaces/IApp.sol";
 import {PermissionControllerMixin} from "@eigenlayer-contracts/src/contracts/mixins/PermissionControllerMixin.sol";
@@ -1347,5 +1348,105 @@ contract AppControllerTest is ComputeDeployer {
         assertEq(appController.getActiveAppCount(address(app)), 0);
         assertEq(appController.getActiveAppCount(developer), 0);
         assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.TERMINATED));
+    }
+
+    // ========== Timelocked-gate regression tests ==========
+    //
+    // These tests pin down the runtime invariant that sensitive ops against a
+    // Timelock-owned app must go through schedule → execute. The gate lives
+    // in upgradeApp / terminateApp / terminateAppByAdmin and fires whenever
+    // `_appConfigs[app].timelocked == true`, which is set at creation if
+    // msg.sender is a factory-registered Timelock.
+    //
+    // We mock `isTimelock(developer)` to true so createApp flips the flag,
+    // then assert that a PermissionController-permitted co-admin is blocked
+    // from calling the sensitive op directly.
+
+    function _mockIsTimelock(address account) internal {
+        address factory = address(AppController(address(appController)).safeTimelockFactory());
+        vm.mockCall(factory, abi.encodeWithSignature("isTimelock(address)", account), abi.encode(true));
+    }
+
+    function test_createApp_flagsTimelockedWhenCallerIsTimelock() public {
+        _mockIsTimelock(developer);
+
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        assertTrue(appController.getAppTimelocked(app), "Timelock-created app must have timelocked=true at creation");
+    }
+
+    function test_createApp_doesNotFlagTimelockedForNonTimelockCaller() public {
+        // No mock: factory returns false for random addresses. Regression
+        // guard that the fix doesn't over-apply the flag.
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        assertFalse(appController.getAppTimelocked(app), "EOA-created app must not be flagged timelocked");
+    }
+
+    function test_upgradeApp_timelockedBlocksNonOwnerEvenWithPermission() public {
+        _mockIsTimelock(developer);
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+        require(appController.getAppTimelocked(app), "precondition: app must be timelocked");
+
+        // Grant a PermissionController admin to another address — the exact
+        // path a compromised or cooperating admin would use to upgrade
+        // instantly before the fix.
+        // developer (app creator) becomes admin, then promotes a co-admin.
+        vm.prank(developer);
+        permissionController.acceptAdmin(address(app));
+        address coAdmin = makeAddr("coAdmin");
+        vm.prank(developer);
+        permissionController.addPendingAdmin(address(app), coAdmin);
+        vm.prank(coAdmin);
+        permissionController.acceptAdmin(address(app));
+
+        // Direct upgrade from the co-admin MUST revert.
+        vm.prank(coAdmin);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.upgradeApp(app, _assembleRelease());
+
+        // The Timelock itself (app.creator) can still call upgrade directly —
+        // representing the path where a scheduled op is being executed.
+        vm.prank(developer);
+        appController.upgradeApp(app, _assembleRelease());
+    }
+
+    function test_terminateApp_timelockedBlocksNonOwner() public {
+        _mockIsTimelock(developer);
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        // developer (app creator) becomes admin, then promotes a co-admin.
+        vm.prank(developer);
+        permissionController.acceptAdmin(address(app));
+        address coAdmin = makeAddr("coAdmin");
+        vm.prank(developer);
+        permissionController.addPendingAdmin(address(app), coAdmin);
+        vm.prank(coAdmin);
+        permissionController.acceptAdmin(address(app));
+
+        vm.prank(coAdmin);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.terminateApp(app);
+
+        // Timelock (creator) can terminate.
+        vm.prank(developer);
+        appController.terminateApp(app);
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.TERMINATED));
+    }
+
+    function test_terminateAppByAdmin_refusesTimelockedApp() public {
+        _mockIsTimelock(developer);
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        // Even the protocol admin cannot terminate a timelocked app directly —
+        // they must go through the Timelock to preserve the delay invariant.
+        vm.prank(admin);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.terminateAppByAdmin(app);
     }
 }
