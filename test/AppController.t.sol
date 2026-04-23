@@ -1449,4 +1449,125 @@ contract AppControllerTest is ComputeDeployer {
         vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
         appController.terminateAppByAdmin(app);
     }
+
+    // ========== transferOwnership ==========
+
+    event AppOwnershipTransferred(IApp indexed app, address indexed previousOwner, address indexed newOwner);
+
+    function test_transferOwnership_toEOA_clearsTimelocked() public {
+        // Start with a Timelock-owned app.
+        _mockIsTimelock(developer);
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+        vm.prank(developer);
+        permissionController.acceptAdmin(address(app));
+        assertTrue(appController.getAppTimelocked(app));
+
+        address plainEOA = makeAddr("plainEOA");
+
+        vm.expectEmit(true, true, true, true);
+        emit AppOwnershipTransferred(app, developer, plainEOA);
+
+        vm.prank(developer);
+        appController.transferOwnership(app, plainEOA);
+
+        assertFalse(appController.getAppTimelocked(app), "timelocked must clear when new owner is not a Timelock");
+        assertEq(appController.getAppCreator(app), plainEOA);
+    }
+
+    function test_transferOwnership_toTimelock_setsTimelocked() public {
+        // Non-timelocked starting state.
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+        vm.prank(developer);
+        permissionController.acceptAdmin(address(app));
+        assertFalse(appController.getAppTimelocked(app));
+
+        address newTimelock = makeAddr("newTimelock");
+        _mockIsTimelock(newTimelock);
+
+        vm.prank(developer);
+        appController.transferOwnership(app, newTimelock);
+
+        assertTrue(appController.getAppTimelocked(app), "timelocked must set when new owner is a Timelock");
+        assertEq(appController.getAppCreator(app), newTimelock);
+    }
+
+    function test_transferOwnership_timelockedBlocksNonOwner() public {
+        _mockIsTimelock(developer);
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        vm.prank(developer);
+        permissionController.acceptAdmin(address(app));
+        address coAdmin = makeAddr("coAdmin");
+        vm.prank(developer);
+        permissionController.addPendingAdmin(address(app), coAdmin);
+        vm.prank(coAdmin);
+        permissionController.acceptAdmin(address(app));
+
+        address attacker = makeAddr("attacker");
+        vm.prank(coAdmin);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.transferOwnership(app, attacker);
+
+        // Timelock itself can still transfer.
+        vm.prank(developer);
+        appController.transferOwnership(app, attacker);
+        assertEq(appController.getAppCreator(app), attacker);
+    }
+
+    function test_transferOwnership_revertsZeroAddress() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+        vm.prank(developer);
+        permissionController.acceptAdmin(address(app));
+
+        vm.prank(developer);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.transferOwnership(app, address(0));
+    }
+
+    function test_transferOwnership_defaultBilling_movesActiveCounter() public {
+        // Default billing: creator is the billing account. Counter must move
+        // so future terminate/suspend on the new owner doesn't underflow.
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+        vm.prank(developer);
+        permissionController.acceptAdmin(address(app));
+
+        address newOwner = makeAddr("newOwner");
+        _setMaxActiveAppsPerUser(newOwner, 10);
+
+        uint32 beforeDev = appController.getActiveAppCount(developer);
+        uint32 beforeNew = appController.getActiveAppCount(newOwner);
+
+        vm.prank(developer);
+        appController.transferOwnership(app, newOwner);
+
+        assertEq(appController.getActiveAppCount(developer), beforeDev - 1);
+        assertEq(appController.getActiveAppCount(newOwner), beforeNew + 1);
+    }
+
+    function test_transferOwnership_isolatedBilling_doesNotMoveCounter() public {
+        // ISOLATED billing apps bill the app address, so the creator's
+        // active-app counter was never incremented and must not move on transfer.
+        _setMaxActiveAppsPerUser(address(appController.calculateAppId(developer, SALT)), 10);
+
+        vm.prank(developer);
+        IApp app = appController.createAppWithIsolatedBilling(SALT, _assembleRelease());
+        vm.prank(developer);
+        permissionController.acceptAdmin(address(app));
+
+        uint32 beforeApp = appController.getActiveAppCount(address(app));
+        uint32 beforeDev = appController.getActiveAppCount(developer);
+
+        address newOwner = makeAddr("newOwner");
+        vm.prank(developer);
+        appController.transferOwnership(app, newOwner);
+
+        assertEq(appController.getActiveAppCount(address(app)), beforeApp);
+        assertEq(appController.getActiveAppCount(developer), beforeDev);
+        assertEq(appController.getActiveAppCount(newOwner), 0);
+    }
 }

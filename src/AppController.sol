@@ -130,6 +130,41 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// @inheritdoc IAppController
+    function transferOwnership(IApp app, address newOwner) external checkCanCall(address(app)) appExists(app) {
+        require(newOwner != address(0), InvalidPermissions());
+
+        AppConfigStorage storage config = _appConfigs[app];
+
+        // When already timelocked, only the Timelock owner itself may move the
+        // app. Otherwise any admin the Timelock had granted via UAM could
+        // transfer out of its governance entirely, bypassing the queue delay.
+        if (config.timelocked) {
+            require(msg.sender == config.creator, InvalidPermissions());
+        }
+
+        address previousOwner = config.creator;
+        config.creator = newOwner;
+
+        // Flip the flag based on the new owner. Non-factory addresses (EOAs,
+        // externally-deployed Safes, arbitrary contracts) clear it — they have
+        // no schedule→execute semantics we can trust. Factory-deployed
+        // Timelocks enable it.
+        config.timelocked = address(safeTimelockFactory) != address(0) && safeTimelockFactory.isTimelock(newOwner);
+
+        // ISOLATED billing apps bill the app address, not the creator, so
+        // ownership transfer has no effect on billing accounting. DEFAULT
+        // billing apps bill the creator, so we need to move the active-app
+        // counter from the previous creator to the new one; otherwise a future
+        // terminate/suspend would underflow the new owner's counter.
+        if (config.billingType == BillingType.DEFAULT && _isActive(config.status)) {
+            _userConfigs[previousOwner].activeAppCount--;
+            _userConfigs[newOwner].activeAppCount++;
+        }
+
+        emit AppOwnershipTransferred(app, previousOwner, newOwner);
+    }
+
+    /// @inheritdoc IAppController
     function updateAppMetadataURI(IApp app, string calldata metadataURI)
         external
         checkCanCall(address(app))

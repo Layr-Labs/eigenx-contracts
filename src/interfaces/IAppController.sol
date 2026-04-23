@@ -59,6 +59,9 @@ interface IAppController {
     /// @notice Emitted when an app's metadata URI is updated
     event AppMetadataURIUpdated(IApp indexed app, string metadataURI);
 
+    /// @notice Emitted when app ownership is transferred to a new address
+    event AppOwnershipTransferred(IApp indexed app, address indexed previousOwner, address indexed newOwner);
+
     /// @notice Enum for app status
     enum AppStatus {
         NONE, // App has not been created yet
@@ -173,6 +176,21 @@ interface IAppController {
      * @dev The app must not be AppStatus.TERMINATED
      */
     function upgradeApp(IApp app, Release calldata release) external returns (uint256);
+
+    /**
+     * @notice Transfers app ownership to a new address.
+     * @param app The app to transfer ownership of
+     * @param newOwner The new owner address
+     * @dev Caller must be UAM permissioned for the app.
+     * @dev When `newOwner` is a factory-deployed Timelock the app's `timelocked`
+     *      flag is flipped to true, causing subsequent sensitive ops to require
+     *      msg.sender == owner (i.e. go through schedule → execute).
+     *      When `newOwner` is not a factory Timelock (EOA, Safe, non-factory
+     *      contract) the flag is cleared.
+     * @dev When the app is already timelocked, only the current Timelock owner
+     *      itself may call — any other admin would bypass the queue delay.
+     */
+    function transferOwnership(IApp app, address newOwner) external;
 
     /**
      * @notice Updates the metadata URI for an app
