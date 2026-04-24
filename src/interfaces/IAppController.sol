@@ -29,11 +29,14 @@ interface IAppController {
     /// @notice Thrown when trying to suspend an account that still has active apps
     error AccountHasActiveApps();
 
-    /// @notice Thrown when a caller lacks the required per-app team role.
-    error InvalidTeamRole();
+    /// @notice Thrown when a caller is not the current owner (creator) of an app.
+    ///         Critical ops (upgrade/transfer/terminate) are owner-gated.
+    error NotCreator();
 
-    /// @notice Thrown when revoking/renouncing ADMIN would leave the team with zero admins.
-    error CannotRevokeLastAdmin();
+    /// @notice Thrown when a caller lacks the required operational role on an
+    ///         app. Operational roles (PAUSER, DEVELOPER) are queried from
+    ///         AppAuthority; this error is raised when the queried check fails.
+    error InvalidTeamRole();
 
     /// @notice Emitted when a new app is successfully created
     event AppCreated(address indexed creator, IApp indexed app, uint32 operatorSetId);
@@ -68,12 +71,6 @@ interface IAppController {
     /// @notice Emitted when app ownership is transferred to a new address
     event AppOwnershipTransferred(IApp indexed app, address indexed previousOwner, address indexed newOwner);
 
-    /// @notice Emitted when a team role is granted on an app.
-    event TeamRoleGranted(IApp indexed app, TeamRole indexed role, address indexed account);
-
-    /// @notice Emitted when a team role is revoked on an app (by an admin or via renounce).
-    event TeamRoleRevoked(IApp indexed app, TeamRole indexed role, address indexed account);
-
     /// @notice Enum for app status
     enum AppStatus {
         NONE, // App has not been created yet
@@ -89,29 +86,10 @@ interface IAppController {
         ISOLATED // Billed to the app's own address
     }
 
-    /// @notice Per-app team roles.
-    /// @dev ADMIN is the authoritative role for CRITICAL app-level ops
-    ///      (upgradeApp / transferOwnership / terminateApp) and for managing
-    ///      team membership. PAUSER and DEVELOPER are OPERATIONAL:
-    ///
-    ///        - PAUSER    → may call stopApp
-    ///        - DEVELOPER → may call updateAppMetadataURI
-    ///        - ADMIN     → may call everything operational, plus all
-    ///                      critical ops, plus grant/revoke team roles,
-    ///                      plus transferOwnership.
-    ///
-    ///      Roles live in `AppController` storage, NOT in
-    ///      PermissionController. That's intentional — the Timelock
-    ///      guarantees only bind if the admin set the gates trust is a
-    ///      set this contract controls. PermissionController admins are
-    ///      still used for platform-admin-level functions on this
-    ///      contract itself (setMaxActiveAppsPerUser, setMaxGlobalActiveApps,
-    ///      migrateAdmins, terminateAppByAdmin, suspend).
-    enum TeamRole {
-        ADMIN,
-        PAUSER,
-        DEVELOPER
-    }
+    // Team-role enum lives in IAppAuthority (IAppAuthority.Role). AppController
+    // consults AppAuthority for operational role checks (PAUSER, DEVELOPER)
+    // and is the only caller of consumer-gated methods on AppAuthority
+    // (initializeScope, transferScopeOwnership, migrateAdmins).
 
     /**
      * @notice A struct containing a release and its environment
@@ -203,10 +181,10 @@ interface IAppController {
      * @param app The app to upgrade with the release
      * @param release The release to upgrade to
      * @return releaseId The unique identifier for the published release
-     * @dev Caller must hold ADMIN on the app's team.
-     * @dev When the app is timelocked, caller must additionally be the creator
-     *      (the Timelock itself) — in practice, this forces the call to come
-     *      from a scheduled → executed Timelock operation.
+     * @dev Caller must be the app's current owner (`creator`). For timelocked
+     *      apps this is the Timelock itself, so the call is forced through
+     *      schedule → execute. For non-timelocked apps (EOA / Safe-owned) the
+     *      owner acts directly. Co-ADMINs cannot upgrade.
      * @dev The rms release must have exactly one artifact, with the digest being the docker
      * image digest and the registry being the docker registry it is stored at.
      * @dev The env must be a JSON marshalled bytes representing the public environment variables for the app.
@@ -220,12 +198,12 @@ interface IAppController {
      * @notice Transfers app ownership to a new address. Critical op.
      * @param app The app to transfer ownership of
      * @param newOwner The new owner address
-     * @dev Caller must hold ADMIN on the app's team.
+     * @dev Caller must be the app's current owner (`creator`).
      * @dev When `newOwner` is a factory-deployed Timelock the app's `timelocked`
      *      flag is flipped to true; otherwise it's cleared.
-     * @dev When the app is already timelocked, only the Timelock itself (via
-     *      schedule → execute) may transfer. The new owner is automatically
-     *      granted ADMIN on the new team so they can govern going forward.
+     * @dev The new owner is atomically granted ADMIN on the team and the
+     *      previous owner is atomically removed from ADMIN. This is the only
+     *      path that rotates ADMIN membership for the owner.
      */
     function transferOwnership(IApp app, address newOwner) external;
 
@@ -256,9 +234,8 @@ interface IAppController {
     /**
      * @notice Terminates an app permanently. Critical op.
      * @param app The app to terminate
-     * @dev Caller must hold ADMIN on the app's team.
-     * @dev When the app is timelocked, caller must additionally be the
-     *      creator (Timelock).
+     * @dev Caller must be the app's current owner (`creator`). Co-ADMINs
+     *      cannot terminate.
      * @dev Once terminated, no further write operations are allowed.
      */
     function terminateApp(IApp app) external;
@@ -282,49 +259,17 @@ interface IAppController {
     function suspend(address account, IApp[] calldata apps) external;
 
     /**
-     * @notice Grant a team role to `account` on `app`.
-     * @dev Caller must be ADMIN on the app.
-     * @dev When the team is timelocked AND `role == ADMIN`, the caller must
-     *      additionally be the creator (the Timelock itself) — which in
-     *      practice means going through schedule → execute. Grants of PAUSER
-     *      / DEVELOPER on a timelocked app do NOT require going through the
-     *      Timelock; those are operational powers the admin can revoke at
-     *      any time. Fixes audit finding A-2.
-     */
-    function grantTeamRole(IApp app, TeamRole role, address account) external;
-
-    /**
-     * @notice Revoke a team role from `account` on `app`.
-     * @dev Caller must be ADMIN on the app.
-     * @dev When the team is timelocked AND `role == ADMIN`, the caller must
-     *      additionally be the creator. Revoking any ADMIN below the
-     *      last-admin floor reverts. Operational role revocations on a
-     *      timelocked app are NOT timelock-gated. Fixes audit finding A-3.
-     */
-    function revokeTeamRole(IApp app, TeamRole role, address account) external;
-
-    /**
-     * @notice Renounce your own team role on `app`.
-     * @dev Renouncing ADMIN below the last-admin floor reverts.
-     */
-    function renounceTeamRole(IApp app, TeamRole role) external;
-
-    /**
-     * @notice Returns true iff `account` holds `role` on `app`.
-     */
-    function hasTeamRole(IApp app, TeamRole role, address account) external view returns (bool);
-
-    /**
-     * @notice Migrate pre-v1.5.0 apps from PermissionController-based auth to
-     *         the new per-app team RBAC. For each app in `apps`, every admin
-     *         currently registered in PermissionController is granted the
-     *         ADMIN role in AppController's own storage. No-op for apps that
-     *         already have an ADMIN.
+     * @notice Migrate pre-v1.5.0 apps to AppAuthority-based RBAC. For each
+     *         app in `apps`:
+     *         - seeds AppAuthority.scopeOwner(app) from AppController.creator
+     *           if not already set;
+     *         - seeds AppAuthority.ADMIN role with the app's PermissionController
+     *           admins (operational-only role under the Option-2 model).
      * @dev Caller must be UAM permissioned for the AppController itself
      *      (platform admin). Intended to be called once per app after the
      *      v1.5.0 upgrade; safe to call again (idempotent per-(app, admin)).
      */
-    function migrateAdmins(IApp[] calldata apps) external;
+    function migrateAppsToAppAuthority(IApp[] calldata apps) external;
 
     /**
      * @notice Gets the maximum global active apps limit

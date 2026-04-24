@@ -10,7 +10,9 @@ import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {AppController} from "../../../src/AppController.sol";
 import {SafeTimelockFactory} from "../../../src/factories/SafeTimelockFactory.sol";
 import {TimelockControllerImpl} from "../../../src/governance/TimelockControllerImpl.sol";
+import {AppAuthority} from "../../../src/governance/AppAuthority.sol";
 import {ISafeTimelockFactory} from "../../../src/interfaces/ISafeTimelockFactory.sol";
+import {IAppAuthority} from "../../../src/interfaces/IAppAuthority.sol";
 
 /**
  * @title DeployGovernanceContracts (v1.5.0-governance phase 1)
@@ -58,7 +60,24 @@ contract DeployGovernanceContracts is EOADeployer {
         );
         deployProxy({name: type(SafeTimelockFactory).name, deployedTo: address(safeTimelockFactoryProxy)});
 
-        // 4. New AppController implementation — wired to the factory proxy.
+        // 4. AppAuthority implementation — consumer-bound to the existing
+        // AppController proxy. AppAuthority's `consumer` immutable is the
+        // AppController proxy address; AppController at the proxy already
+        // exists (it's the v1.4.0 AppController we're about to upgrade).
+        AppAuthority appAuthorityImpl = new AppAuthority(address(Env.proxy.appController()));
+        deployImpl({name: type(AppAuthority).name, deployedTo: address(appAuthorityImpl)});
+
+        // 5. AppAuthority proxy.
+        TransparentUpgradeableProxy appAuthorityProxy = new TransparentUpgradeableProxy(
+            address(appAuthorityImpl), address(Env.proxyAdmin()), abi.encodeCall(AppAuthority.initialize, ())
+        );
+        deployProxy({name: type(AppAuthority).name, deployedTo: address(appAuthorityProxy)});
+
+        // 6. New AppController implementation — wired to the factory proxy
+        //    and the AppAuthority proxy. The AppAuthority immutable is the
+        //    proxy address; the impl's consumer check authenticates calls
+        //    from AppController's proxy, which is what the upgraded impl
+        //    (delegatecalled from the proxy) will look like.
         AppController newAppControllerImpl = new AppController({
             _version: Env.deployVersion(),
             _permissionController: Env.permissionController(),
@@ -66,7 +85,8 @@ contract DeployGovernanceContracts is EOADeployer {
             _computeAVSRegistrar: Env.proxy.computeAVSRegistrar(),
             _computeOperator: Env.proxy.computeOperator(),
             _appBeacon: Env.beacon.appBeacon(),
-            _safeTimelockFactory: ISafeTimelockFactory(address(safeTimelockFactoryProxy))
+            _safeTimelockFactory: ISafeTimelockFactory(address(safeTimelockFactoryProxy)),
+            _appAuthority: IAppAuthority(address(appAuthorityProxy))
         });
         deployImpl({name: type(AppController).name, deployedTo: address(newAppControllerImpl)});
 
@@ -136,6 +156,10 @@ contract DeployGovernanceContracts is EOADeployer {
             address(Env.proxy.safeTimelockFactory()),
             "safeTimelockFactory mismatch"
         );
+        assertEq(address(appImpl.appAuthority()), address(Env.proxy.appAuthority()), "appAuthority mismatch");
+
+        AppAuthority authorityImpl = Env.impl.appAuthority();
+        assertEq(authorityImpl.consumer(), address(Env.proxy.appController()), "AppAuthority consumer mismatch");
     }
 
     function _getProxyImpl(address proxy) internal view returns (address) {

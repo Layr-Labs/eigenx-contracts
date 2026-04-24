@@ -24,6 +24,7 @@ import {ImageAllowlist} from "../../src/ImageAllowlist.sol";
 import {USDCCredits} from "../../src/USDCCredits.sol";
 import {SafeTimelockFactory} from "../../src/factories/SafeTimelockFactory.sol";
 import {TimelockControllerImpl} from "../../src/governance/TimelockControllerImpl.sol";
+import {AppAuthority} from "../../src/governance/AppAuthority.sol";
 
 library Env {
     using ZEnvHelpers for *;
@@ -116,6 +117,10 @@ library Env {
         return SafeTimelockFactory(_deployedProxy(type(SafeTimelockFactory).name));
     }
 
+    function appAuthority(DeployedProxy) internal view returns (AppAuthority) {
+        return AppAuthority(_deployedProxy(type(AppAuthority).name));
+    }
+
     function appBeacon(DeployedBeacon) internal view returns (UpgradeableBeacon) {
         return UpgradeableBeacon(_deployedBeacon(type(App).name));
     }
@@ -149,6 +154,10 @@ library Env {
 
     function safeTimelockFactory(DeployedImpl) internal view returns (SafeTimelockFactory) {
         return SafeTimelockFactory(_deployedImpl(type(SafeTimelockFactory).name));
+    }
+
+    function appAuthority(DeployedImpl) internal view returns (AppAuthority) {
+        return AppAuthority(_deployedImpl(type(AppAuthority).name));
     }
 
     /// @notice TimelockControllerImpl — the clone-master for Timelocks created

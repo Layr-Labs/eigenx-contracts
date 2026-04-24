@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import {Deploy} from "../../script/Deploy.s.sol";
 import {Parser} from "../../script/Parser.s.sol";
 import {IAppController} from "../../src/interfaces/IAppController.sol";
+import {IAppAuthority} from "../../src/interfaces/IAppAuthority.sol";
 import {ComputeAVSRegistrar} from "../../src/ComputeAVSRegistrar.sol";
 import {ComputeOperator} from "../../src/ComputeOperator.sol";
 import {ImageAllowlist} from "../../src/ImageAllowlist.sol";
@@ -27,6 +28,7 @@ contract ComputeDeployer is Test {
     address public admin = makeAddr("admin");
 
     IAppController public appController;
+    IAppAuthority public appAuthority;
     PermissionController public permissionController;
     ReleaseManager public releaseManager;
     AllocationManager public allocationManager;
@@ -66,6 +68,7 @@ contract ComputeDeployer is Test {
         Parser.DeployedContracts memory deployed = deployer.deployForTesting(params);
 
         appController = deployed.appController;
+        appAuthority = deployed.appAuthority;
         computeAVSRegistrar = ComputeAVSRegistrar(address(deployed.computeAVSRegistrar));
         computeOperator = ComputeOperator(address(deployed.computeOperator));
         imageAllowlist = ImageAllowlist(address(deployed.imageAllowlist));

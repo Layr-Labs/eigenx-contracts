@@ -2,6 +2,7 @@
 pragma solidity ^0.8.27;
 
 import {IAppController} from "../src/interfaces/IAppController.sol";
+import {IAppAuthority} from "../src/interfaces/IAppAuthority.sol";
 import {AppController} from "../src/AppController.sol";
 import {ComputeDeployer} from "./utils/ComputeDeployer.sol";
 import {IApp} from "../src/interfaces/IApp.sol";
@@ -275,9 +276,11 @@ contract AppControllerTest is ComputeDeployer {
         IAppController.Release memory release =
             IAppController.Release({rmsRelease: rmsRelease, publicEnv: "", encryptedEnv: ""});
 
-        // Try to upgrade as unauthorized user
+        // Try to upgrade as unauthorized user. Critical ops are owner-gated
+        // unconditionally now — not even an ADMIN other than the owner can
+        // trigger an upgrade.
         vm.prank(user);
-        vm.expectRevert(IAppController.InvalidTeamRole.selector);
+        vm.expectRevert(IAppController.NotCreator.selector);
         appController.upgradeApp(app, release);
     }
 
@@ -1405,12 +1408,13 @@ contract AppControllerTest is ComputeDeployer {
         // Timelock ADMIN grant on a timelocked app requires msg.sender == creator;
         // developer IS the creator (via _mockIsTimelock), so this passes directly.
         vm.prank(developer);
-        appController.grantTeamRole(app, IAppController.TeamRole.ADMIN, coAdmin);
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
 
-        // Direct upgrade from the co-admin MUST revert with InvalidPermissions —
-        // the role check passes but the creator-only gate fires.
+        // Direct upgrade from the co-admin MUST revert with NotCreator —
+        // the owner-gate blocks everyone except the current owner, regardless
+        // of ADMIN membership.
         vm.prank(coAdmin);
-        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        vm.expectRevert(IAppController.NotCreator.selector);
         appController.upgradeApp(app, _assembleRelease());
 
         // The Timelock itself (app.creator) can still call upgrade directly —
@@ -1426,10 +1430,10 @@ contract AppControllerTest is ComputeDeployer {
 
         address coAdmin = makeAddr("coAdmin");
         vm.prank(developer);
-        appController.grantTeamRole(app, IAppController.TeamRole.ADMIN, coAdmin);
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
 
         vm.prank(coAdmin);
-        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        vm.expectRevert(IAppController.NotCreator.selector);
         appController.terminateApp(app);
 
         // Timelock (creator) can terminate.
@@ -1503,11 +1507,11 @@ contract AppControllerTest is ComputeDeployer {
         // block them from moving the app out of governance.
         address coAdmin = makeAddr("coAdmin");
         vm.prank(developer);
-        appController.grantTeamRole(app, IAppController.TeamRole.ADMIN, coAdmin);
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
 
         address attacker = makeAddr("attacker");
         vm.prank(coAdmin);
-        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        vm.expectRevert(IAppController.NotCreator.selector);
         appController.transferOwnership(app, attacker);
 
         // Timelock itself can still transfer.
@@ -1605,12 +1609,22 @@ contract AppControllerTest is ComputeDeployer {
         );
     }
 
-    function test_canCall_doesNotRejectNonTimelockedUpgradeApp() public {
-        // App is not timelocked: canCall defers to runtime (returns true).
+    function test_canCall_rejectsNonOwnerUpgradeAppEvenWhenNotTimelocked() public {
+        // Owner-gated model: canCall rejects any non-owner schedule of a
+        // critical op, regardless of timelocked state. Previously this was
+        // only checked for timelocked apps; now owner-gating is unconditional
+        // so schedule-time rejection matches runtime.
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
         bytes memory callData = abi.encodeWithSelector(IAppController.upgradeApp.selector, app, _assembleRelease());
-        assertTrue(ICallValidator(address(appController)).canCall(makeAddr("anyone"), callData));
+
+        assertFalse(
+            ICallValidator(address(appController)).canCall(makeAddr("anyone"), callData),
+            "canCall must reject non-owner schedule even for non-timelocked apps"
+        );
+        assertTrue(
+            ICallValidator(address(appController)).canCall(developer, callData), "canCall must accept owner schedule"
+        );
     }
 
     function test_canCall_rejectsTerminateAppByAdminOnTimelockedApp() public {
@@ -1631,8 +1645,7 @@ contract AppControllerTest is ComputeDeployer {
         IApp app = appController.createApp(SALT, _assembleRelease());
 
         assertTrue(
-            appController.hasTeamRole(app, IAppController.TeamRole.ADMIN, developer),
-            "creator must be seeded as ADMIN on create"
+            appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, developer), "creator must be seeded as ADMIN on create"
         );
     }
 
@@ -1642,9 +1655,9 @@ contract AppControllerTest is ComputeDeployer {
 
         address pauser = makeAddr("pauser");
         vm.prank(developer);
-        appController.grantTeamRole(app, IAppController.TeamRole.PAUSER, pauser);
+        appAuthority.grantRole(app, IAppAuthority.Role.PAUSER, pauser);
 
-        assertTrue(appController.hasTeamRole(app, IAppController.TeamRole.PAUSER, pauser));
+        assertTrue(appAuthority.hasRole(app, IAppAuthority.Role.PAUSER, pauser));
     }
 
     function test_grantTeamRole_nonAdminCannotGrant() public {
@@ -1653,8 +1666,8 @@ contract AppControllerTest is ComputeDeployer {
 
         address outsider = makeAddr("outsider");
         vm.prank(outsider);
-        vm.expectRevert(IAppController.InvalidTeamRole.selector);
-        appController.grantTeamRole(app, IAppController.TeamRole.PAUSER, outsider);
+        vm.expectRevert(IAppAuthority.InvalidRole.selector);
+        appAuthority.grantRole(app, IAppAuthority.Role.PAUSER, outsider);
     }
 
     function test_grantTeamRole_timelockedOperationalRoleNotGated() public {
@@ -1669,77 +1682,101 @@ contract AppControllerTest is ComputeDeployer {
         // coAdmin can grant PAUSER freely (no creator-only gate).
         address coAdmin = makeAddr("coAdmin");
         vm.prank(developer);
-        appController.grantTeamRole(app, IAppController.TeamRole.ADMIN, coAdmin);
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
 
         address pauser = makeAddr("pauser");
         vm.prank(coAdmin);
-        appController.grantTeamRole(app, IAppController.TeamRole.PAUSER, pauser);
-        assertTrue(appController.hasTeamRole(app, IAppController.TeamRole.PAUSER, pauser));
+        appAuthority.grantRole(app, IAppAuthority.Role.PAUSER, pauser);
+        assertTrue(appAuthority.hasRole(app, IAppAuthority.Role.PAUSER, pauser));
     }
 
-    function test_grantTeamRole_timelockedAdminGrantGatedByCreator() public {
-        // A-2 fix: ADMIN grants on timelocked apps MUST come from the
-        // Timelock itself. Otherwise a compromised co-admin could add
-        // another ADMIN in one tx and circumvent the delay on upgrades.
+    function test_grantTeamRole_adminGrantGatedByCreator() public {
+        // Owner-gated model: ADMIN grants are creator-only regardless of
+        // timelocked/Safe/EOA ownership. Applies to timelocked apps (Timelock
+        // is creator) and to non-timelocked apps (EOA/Safe is creator). A
+        // co-ADMIN cannot mint another ADMIN.
         _mockIsTimelock(developer);
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
 
         address coAdmin = makeAddr("coAdmin");
         vm.prank(developer);
-        appController.grantTeamRole(app, IAppController.TeamRole.ADMIN, coAdmin);
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
 
-        // coAdmin has ADMIN but is NOT the creator: grant attempt must fail.
+        // coAdmin has ADMIN but is NOT the owner: grant attempt must fail.
         address usurper = makeAddr("usurper");
         vm.prank(coAdmin);
-        vm.expectRevert(IAppController.InvalidTeamRole.selector);
-        appController.grantTeamRole(app, IAppController.TeamRole.ADMIN, usurper);
+        vm.expectRevert(IAppAuthority.NotScopeOwner.selector);
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, usurper);
 
-        // The Timelock itself can still grant.
+        // The Timelock (owner) can still grant.
         vm.prank(developer);
-        appController.grantTeamRole(app, IAppController.TeamRole.ADMIN, usurper);
-        assertTrue(appController.hasTeamRole(app, IAppController.TeamRole.ADMIN, usurper));
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, usurper);
+        assertTrue(appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, usurper));
     }
 
-    function test_revokeTeamRole_timelockedAdminRevokeGatedByCreator() public {
-        // A-3 fix: revoking ADMIN on a timelocked app requires msg.sender == creator.
-        // Without this, a co-admin could strip the Timelock in one tx.
+    function test_grantTeamRole_adminGrantGatedByCreator_nonTimelocked() public {
+        // Safe/EOA-owned app: same owner-only rule applies. This is what
+        // prevents a co-ADMIN from silently escalating to owner on Safe-owned
+        // apps and bypassing the multisig.
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address coAdmin = makeAddr("coAdmin");
+        vm.prank(developer);
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
+
+        address usurper = makeAddr("usurper");
+        vm.prank(coAdmin);
+        vm.expectRevert(IAppAuthority.NotScopeOwner.selector);
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, usurper);
+    }
+
+    function test_revokeTeamRole_adminRevokeGatedByCreator() public {
+        // Mirror of grant: revoking ADMIN is owner-only unconditionally.
         _mockIsTimelock(developer);
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
 
         address coAdmin = makeAddr("coAdmin");
         vm.prank(developer);
-        appController.grantTeamRole(app, IAppController.TeamRole.ADMIN, coAdmin);
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
 
         // coAdmin attempts to revoke the Timelock — MUST fail.
         vm.prank(coAdmin);
-        vm.expectRevert(IAppController.InvalidTeamRole.selector);
-        appController.revokeTeamRole(app, IAppController.TeamRole.ADMIN, developer);
+        vm.expectRevert(IAppAuthority.NotScopeOwner.selector);
+        appAuthority.revokeRole(app, IAppAuthority.Role.ADMIN, developer);
 
-        // The Timelock itself can revoke coAdmin.
+        // The Timelock (creator) can revoke coAdmin.
         vm.prank(developer);
-        appController.revokeTeamRole(app, IAppController.TeamRole.ADMIN, coAdmin);
-        assertFalse(appController.hasTeamRole(app, IAppController.TeamRole.ADMIN, coAdmin));
+        appAuthority.revokeRole(app, IAppAuthority.Role.ADMIN, coAdmin);
+        assertFalse(appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, coAdmin));
     }
 
-    function test_revokeTeamRole_cannotRevokeLastAdmin() public {
-        vm.prank(developer);
-        IApp app = appController.createApp(SALT, _assembleRelease());
-
-        // Sole ADMIN trying to revoke themselves via revokeTeamRole reverts.
-        vm.prank(developer);
-        vm.expectRevert(IAppController.CannotRevokeLastAdmin.selector);
-        appController.revokeTeamRole(app, IAppController.TeamRole.ADMIN, developer);
-    }
-
-    function test_renounceTeamRole_cannotRenounceLastAdmin() public {
+    function test_revokeTeamRole_creatorCannotRevokeSelf() public {
+        // The creator is the only address that can call revokeTeamRole(ADMIN),
+        // but they cannot revoke their own ADMIN — the invariant
+        // `creator ∈ ADMIN` must hold. transferOwnership is the only path that
+        // rotates.
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
 
         vm.prank(developer);
-        vm.expectRevert(IAppController.CannotRevokeLastAdmin.selector);
-        appController.renounceTeamRole(app, IAppController.TeamRole.ADMIN);
+        vm.expectRevert(IAppAuthority.CannotRemoveOwnerAdmin.selector);
+        appAuthority.revokeRole(app, IAppAuthority.Role.ADMIN, developer);
+    }
+
+    function test_renounceTeamRole_creatorCannotRenounceAdmin() public {
+        // The creator cannot drop out of ADMIN via renounce — doing so would
+        // leave the owner slot pointing at an address that isn't ADMIN
+        // (though ADMIN is operational-only in this model, keeping the
+        // invariant still matters for startApp and role-management clarity).
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        vm.prank(developer);
+        vm.expectRevert(IAppAuthority.CannotRemoveOwnerAdmin.selector);
+        appAuthority.renounceRole(app, IAppAuthority.Role.ADMIN);
     }
 
     function test_renounceTeamRole_operationalRoleOk() public {
@@ -1748,11 +1785,11 @@ contract AppControllerTest is ComputeDeployer {
 
         address pauser = makeAddr("pauser");
         vm.prank(developer);
-        appController.grantTeamRole(app, IAppController.TeamRole.PAUSER, pauser);
+        appAuthority.grantRole(app, IAppAuthority.Role.PAUSER, pauser);
 
         vm.prank(pauser);
-        appController.renounceTeamRole(app, IAppController.TeamRole.PAUSER);
-        assertFalse(appController.hasTeamRole(app, IAppController.TeamRole.PAUSER, pauser));
+        appAuthority.renounceRole(app, IAppAuthority.Role.PAUSER);
+        assertFalse(appAuthority.hasRole(app, IAppAuthority.Role.PAUSER, pauser));
     }
 
     function test_stopApp_pauserCanCall() public {
@@ -1761,7 +1798,7 @@ contract AppControllerTest is ComputeDeployer {
 
         address pauser = makeAddr("pauser");
         vm.prank(developer);
-        appController.grantTeamRole(app, IAppController.TeamRole.PAUSER, pauser);
+        appAuthority.grantRole(app, IAppAuthority.Role.PAUSER, pauser);
 
         vm.prank(pauser);
         appController.stopApp(app);
@@ -1774,7 +1811,7 @@ contract AppControllerTest is ComputeDeployer {
 
         address dev = makeAddr("dev");
         vm.prank(developer);
-        appController.grantTeamRole(app, IAppController.TeamRole.DEVELOPER, dev);
+        appAuthority.grantRole(app, IAppAuthority.Role.DEVELOPER, dev);
 
         vm.prank(dev);
         vm.expectRevert(IAppController.InvalidTeamRole.selector);
@@ -1787,7 +1824,7 @@ contract AppControllerTest is ComputeDeployer {
 
         address dev = makeAddr("dev");
         vm.prank(developer);
-        appController.grantTeamRole(app, IAppController.TeamRole.DEVELOPER, dev);
+        appAuthority.grantRole(app, IAppAuthority.Role.DEVELOPER, dev);
 
         vm.prank(dev);
         appController.updateAppMetadataURI(app, "ipfs://new");
@@ -1799,7 +1836,7 @@ contract AppControllerTest is ComputeDeployer {
 
         address pauser = makeAddr("pauser");
         vm.prank(developer);
-        appController.grantTeamRole(app, IAppController.TeamRole.PAUSER, pauser);
+        appAuthority.grantRole(app, IAppAuthority.Role.PAUSER, pauser);
 
         vm.prank(pauser);
         vm.expectRevert(IAppController.InvalidTeamRole.selector);
@@ -1817,9 +1854,57 @@ contract AppControllerTest is ComputeDeployer {
         appController.transferOwnership(app, newOwner);
 
         assertTrue(
-            appController.hasTeamRole(app, IAppController.TeamRole.ADMIN, newOwner),
+            appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, newOwner),
             "new owner must be granted ADMIN automatically"
         );
+    }
+
+    function test_transferOwnership_removesPreviousOwnerFromAdmin() public {
+        // Fix for audit A-3 / V-10: the previous owner must be removed from
+        // the ADMIN set on transfer. Otherwise an old EOA (or an old
+        // Timelock post-handoff) retains operational powers and, in the
+        // non-timelocked case, can re-grab the app.
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address newOwner = makeAddr("newOwner");
+        _setMaxActiveAppsPerUser(newOwner, 10);
+
+        vm.prank(developer);
+        appController.transferOwnership(app, newOwner);
+
+        assertFalse(
+            appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, developer),
+            "previous owner must be removed from ADMIN on transfer"
+        );
+        assertTrue(appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, newOwner), "new owner must still be ADMIN");
+    }
+
+    function test_transferOwnership_previousOwnerLosesCriticalPower() public {
+        // After transfer, the previous owner cannot perform critical ops
+        // even though they used to. This is the direct user-visible
+        // consequence of the owner-gate + ADMIN cleanup together.
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address newOwner = makeAddr("newOwner");
+        _setMaxActiveAppsPerUser(newOwner, 10);
+
+        vm.prank(developer);
+        appController.transferOwnership(app, newOwner);
+
+        // Previous owner cannot upgrade, terminate, or transfer.
+        vm.prank(developer);
+        vm.expectRevert(IAppController.NotCreator.selector);
+        appController.upgradeApp(app, _assembleRelease());
+
+        vm.prank(developer);
+        vm.expectRevert(IAppController.NotCreator.selector);
+        appController.terminateApp(app);
+
+        vm.prank(developer);
+        vm.expectRevert(IAppController.NotCreator.selector);
+        appController.transferOwnership(app, makeAddr("someoneElse"));
     }
 
     function test_migrateAdmins_seedsAdminFromPermissionController() public {
@@ -1840,16 +1925,16 @@ contract AppControllerTest is ComputeDeployer {
         vm.prank(pcAdminB);
         permissionController.acceptAdmin(address(app));
 
-        assertFalse(appController.hasTeamRole(app, IAppController.TeamRole.ADMIN, pcAdminA));
-        assertFalse(appController.hasTeamRole(app, IAppController.TeamRole.ADMIN, pcAdminB));
+        assertFalse(appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, pcAdminA));
+        assertFalse(appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, pcAdminB));
 
         IApp[] memory apps = new IApp[](1);
         apps[0] = app;
         vm.prank(admin);
-        appController.migrateAdmins(apps);
+        appController.migrateAppsToAppAuthority(apps);
 
-        assertTrue(appController.hasTeamRole(app, IAppController.TeamRole.ADMIN, pcAdminA));
-        assertTrue(appController.hasTeamRole(app, IAppController.TeamRole.ADMIN, pcAdminB));
+        assertTrue(appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, pcAdminA));
+        assertTrue(appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, pcAdminB));
     }
 
     function test_migrateAdmins_callerMustBePlatformAdmin() public {
@@ -1860,6 +1945,6 @@ contract AppControllerTest is ComputeDeployer {
         apps[0] = app;
         vm.prank(user);
         vm.expectRevert();
-        appController.migrateAdmins(apps);
+        appController.migrateAppsToAppAuthority(apps);
     }
 }

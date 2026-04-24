@@ -10,6 +10,7 @@ import {IAppController} from "../interfaces/IAppController.sol";
 import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {ISafeTimelockFactory} from "../interfaces/ISafeTimelockFactory.sol";
+import {IAppAuthority} from "../interfaces/IAppAuthority.sol";
 
 abstract contract AppControllerStorage is IAppController {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -42,6 +43,12 @@ abstract contract AppControllerStorage is IAppController {
     /// @notice Factory used to verify Safe and Timelock deployments for governance detection
     ISafeTimelockFactory public immutable safeTimelockFactory;
 
+    /// @notice Authority contract that owns per-app ownership and RBAC state.
+    /// @dev AppController delegates auth to this contract — ownership transfer,
+    ///      role management, and schedule-time validation all flow through
+    ///      AppAuthority. The Option-2 invariants are enforced there, not here.
+    IAppAuthority public immutable appAuthority;
+
     /// @notice Set of all created apps
     EnumerableSet.AddressSet internal _allApps;
 
@@ -57,25 +64,20 @@ abstract contract AppControllerStorage is IAppController {
     /// @inheritdoc IAppController
     uint32 public globalActiveAppCount;
 
-    /// @notice Per-app, per-role set of addresses holding the role.
-    ///         app → role → { account, account, ... }
-    /// @dev This slot was inside __gap on v1.4.0 and is guaranteed zero on
-    ///      every existing app. __gap below shrinks by 1 to compensate so
-    ///      the end of the storage footprint is stable.
-    mapping(IApp => mapping(TeamRole => EnumerableSet.AddressSet)) internal _teamRoles;
-
     constructor(
         IReleaseManager _releaseManager,
         IComputeOperator _computeOperator,
         IComputeAVSRegistrar _computeAVSRegistrar,
         IBeacon _appBeacon,
-        ISafeTimelockFactory _safeTimelockFactory
+        ISafeTimelockFactory _safeTimelockFactory,
+        IAppAuthority _appAuthority
     ) {
         releaseManager = _releaseManager;
         computeOperator = _computeOperator;
         computeAVSRegistrar = _computeAVSRegistrar;
         appBeacon = _appBeacon;
         safeTimelockFactory = _safeTimelockFactory;
+        appAuthority = _appAuthority;
     }
 
     /**
@@ -83,5 +85,5 @@ abstract contract AppControllerStorage is IAppController {
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
-    uint256[44] private __gap;
+    uint256[45] private __gap;
 }
