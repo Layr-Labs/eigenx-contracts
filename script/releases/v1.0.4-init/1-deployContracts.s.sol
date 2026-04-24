@@ -22,7 +22,6 @@ import {ComputeOperator} from "../../../src/ComputeOperator.sol";
 import {IAppController} from "../../../src/interfaces/IAppController.sol";
 import {IComputeAVSRegistrar} from "../../../src/interfaces/IComputeAVSRegistrar.sol";
 import {IComputeOperator} from "../../../src/interfaces/IComputeOperator.sol";
-import {ISafeTimelockFactory} from "../../../src/interfaces/ISafeTimelockFactory.sol";
 import {IAppAuthority} from "../../../src/interfaces/IAppAuthority.sol";
 
 /**
@@ -85,9 +84,8 @@ contract Deploy is EOADeployer {
             _computeAVSRegistrar: IComputeAVSRegistrar(address(computeAVSRegistrarProxy)),
             _computeOperator: IComputeOperator(address(computeOperatorProxy)),
             _appBeacon: appBeacon,
-            // v1.0.4 predates SafeTimelockFactory + AppAuthority. Historical script
-            // kept compilable against the current constructor; this path never runs.
-            _safeTimelockFactory: ISafeTimelockFactory(address(0)),
+            // v1.0.4 predates AppAuthority. Historical script kept compilable
+            // against the current constructor; this path never runs.
             _appAuthority: IAppAuthority(address(0))
         });
 

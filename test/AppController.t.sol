@@ -1360,53 +1360,22 @@ contract AppControllerTest is ComputeDeployer {
         assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.TERMINATED));
     }
 
-    // ========== Timelocked-gate regression tests ==========
+    // ========== Owner-gated critical ops ==========
     //
-    // These tests pin down the runtime invariant that sensitive ops against a
-    // Timelock-owned app must go through schedule → execute. The gate lives
-    // in upgradeApp / terminateApp / terminateAppByAdmin and fires whenever
-    // `_appConfigs[app].timelocked == true`, which is set at creation if
-    // msg.sender is a factory-registered Timelock.
-    //
-    // We mock `isTimelock(developer)` to true so createApp flips the flag,
-    // then assert that a PermissionController-permitted co-admin is blocked
-    // from calling the sensitive op directly.
+    // These tests pin down the runtime invariant that sensitive ops on any
+    // app are gated on the current owner — not on ADMIN membership. If the
+    // owner happens to be a Timelock, critical ops naturally flow through
+    // schedule → execute; if a Safe, through the multisig; if an EOA,
+    // directly. AppController does not classify the owner contract.
 
-    function _mockIsTimelock(address account) internal {
-        address factory = address(AppController(address(appController)).safeTimelockFactory());
-        vm.mockCall(factory, abi.encodeWithSignature("isTimelock(address)", account), abi.encode(true));
-    }
-
-    function test_createApp_flagsTimelockedWhenCallerIsTimelock() public {
-        _mockIsTimelock(developer);
-
+    function test_upgradeApp_blocksCoAdminNonOwner() public {
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
 
-        assertTrue(appController.getAppTimelocked(app), "Timelock-created app must have timelocked=true at creation");
-    }
-
-    function test_createApp_doesNotFlagTimelockedForNonTimelockCaller() public {
-        // No mock: factory returns false for random addresses. Regression
-        // guard that the fix doesn't over-apply the flag.
-        vm.prank(developer);
-        IApp app = appController.createApp(SALT, _assembleRelease());
-
-        assertFalse(appController.getAppTimelocked(app), "EOA-created app must not be flagged timelocked");
-    }
-
-    function test_upgradeApp_timelockedBlocksNonOwnerEvenWithPermission() public {
-        _mockIsTimelock(developer);
-        vm.prank(developer);
-        IApp app = appController.createApp(SALT, _assembleRelease());
-        require(appController.getAppTimelocked(app), "precondition: app must be timelocked");
-
-        // Timelock (creator) grants ADMIN role to a co-admin. Under the RBAC
-        // model, only ADMIN can even attempt upgradeApp; holding ADMIN is
-        // the strongest authority the co-admin could plausibly have.
+        // Owner grants ADMIN to a co-admin. Under the owner-gated model,
+        // holding ADMIN is the strongest authority a co-admin could
+        // plausibly have — but ADMIN does NOT convey upgrade power.
         address coAdmin = makeAddr("coAdmin");
-        // Timelock ADMIN grant on a timelocked app requires msg.sender == creator;
-        // developer IS the creator (via _mockIsTimelock), so this passes directly.
         vm.prank(developer);
         appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
 
@@ -1417,14 +1386,12 @@ contract AppControllerTest is ComputeDeployer {
         vm.expectRevert(IAppController.NotCreator.selector);
         appController.upgradeApp(app, _assembleRelease());
 
-        // The Timelock itself (app.creator) can still call upgrade directly —
-        // representing the path where a scheduled op is being executed.
+        // The owner can still upgrade directly.
         vm.prank(developer);
         appController.upgradeApp(app, _assembleRelease());
     }
 
-    function test_terminateApp_timelockedBlocksNonOwner() public {
-        _mockIsTimelock(developer);
+    function test_terminateApp_blocksCoAdminNonOwner() public {
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
 
@@ -1436,85 +1403,67 @@ contract AppControllerTest is ComputeDeployer {
         vm.expectRevert(IAppController.NotCreator.selector);
         appController.terminateApp(app);
 
-        // Timelock (creator) can terminate.
+        // Owner can terminate.
         vm.prank(developer);
         appController.terminateApp(app);
         assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.TERMINATED));
     }
 
-    function test_terminateAppByAdmin_refusesTimelockedApp() public {
-        _mockIsTimelock(developer);
+    function test_terminateAppByAdmin_worksOnAnyApp() public {
+        // Protocol admin can terminate any app uniformly. No longer gated on
+        // governance type. If the protocol wants its own termination actions
+        // to be delay-gated, that's an operational decision about the UAM
+        // admin multisig — not an AppController concern.
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
 
-        // Even the protocol admin cannot terminate a timelocked app directly —
-        // they must go through the Timelock to preserve the delay invariant.
         vm.prank(admin);
-        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
         appController.terminateAppByAdmin(app);
+
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.TERMINATED));
     }
 
     // ========== transferOwnership ==========
 
     event AppOwnershipTransferred(IApp indexed app, address indexed previousOwner, address indexed newOwner);
 
-    function test_transferOwnership_toEOA_clearsTimelocked() public {
-        // Start with a Timelock-owned app.
-        _mockIsTimelock(developer);
+    function test_transferOwnership_emitsEvent() public {
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
         vm.prank(developer);
         permissionController.acceptAdmin(address(app));
-        assertTrue(appController.getAppTimelocked(app));
 
-        address plainEOA = makeAddr("plainEOA");
+        address newOwner = makeAddr("newOwner");
+        _setMaxActiveAppsPerUser(newOwner, 10);
 
         vm.expectEmit(true, true, true, true);
-        emit AppOwnershipTransferred(app, developer, plainEOA);
+        emit AppOwnershipTransferred(app, developer, newOwner);
 
         vm.prank(developer);
-        appController.transferOwnership(app, plainEOA);
+        appController.transferOwnership(app, newOwner);
 
-        assertFalse(appController.getAppTimelocked(app), "timelocked must clear when new owner is not a Timelock");
-        assertEq(appController.getAppCreator(app), plainEOA);
+        assertEq(appController.getAppCreator(app), newOwner);
     }
 
-    function test_transferOwnership_toTimelock_setsTimelocked() public {
-        // Non-timelocked starting state.
-        vm.prank(developer);
-        IApp app = appController.createApp(SALT, _assembleRelease());
-        vm.prank(developer);
-        permissionController.acceptAdmin(address(app));
-        assertFalse(appController.getAppTimelocked(app));
-
-        address newTimelock = makeAddr("newTimelock");
-        _mockIsTimelock(newTimelock);
-
-        vm.prank(developer);
-        appController.transferOwnership(app, newTimelock);
-
-        assertTrue(appController.getAppTimelocked(app), "timelocked must set when new owner is a Timelock");
-        assertEq(appController.getAppCreator(app), newTimelock);
-    }
-
-    function test_transferOwnership_timelockedBlocksNonOwner() public {
-        _mockIsTimelock(developer);
+    function test_transferOwnership_blocksCoAdminNonOwner() public {
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
 
-        // Timelock grants ADMIN to coAdmin. ADMIN is the strongest role a
-        // co-admin could plausibly have; the creator-only gate must still
-        // block them from moving the app out of governance.
+        // Owner grants ADMIN to coAdmin. ADMIN is the strongest role a
+        // co-admin could plausibly have; the owner-gate must still block
+        // them from moving the app.
         address coAdmin = makeAddr("coAdmin");
         vm.prank(developer);
         appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
 
         address attacker = makeAddr("attacker");
+        _setMaxActiveAppsPerUser(attacker, 10);
+
         vm.prank(coAdmin);
         vm.expectRevert(IAppController.NotCreator.selector);
         appController.transferOwnership(app, attacker);
 
-        // Timelock itself can still transfer.
+        // Owner can still transfer.
         vm.prank(developer);
         appController.transferOwnership(app, attacker);
         assertEq(appController.getAppCreator(app), attacker);
@@ -1591,51 +1540,21 @@ contract AppControllerTest is ComputeDeployer {
         assertTrue(ICallValidator(address(appController)).canCall(address(this), hex"00"));
     }
 
-    function test_canCall_rejectsNonTimelockCallerOnTimelockedUpgradeApp() public {
-        _mockIsTimelock(developer);
-        vm.prank(developer);
-        IApp app = appController.createApp(SALT, _assembleRelease());
-
-        bytes memory callData = abi.encodeWithSelector(IAppController.upgradeApp.selector, app, _assembleRelease());
-        address notOwner = makeAddr("notOwner");
-
-        assertFalse(
-            ICallValidator(address(appController)).canCall(notOwner, callData),
-            "canCall must reject non-owner schedule of timelocked upgradeApp"
-        );
-        assertTrue(
-            ICallValidator(address(appController)).canCall(developer, callData),
-            "canCall must accept owner (Timelock itself) schedule of timelocked upgradeApp"
-        );
-    }
-
-    function test_canCall_rejectsNonOwnerUpgradeAppEvenWhenNotTimelocked() public {
+    function test_canCall_rejectsNonOwnerUpgradeApp() public {
         // Owner-gated model: canCall rejects any non-owner schedule of a
-        // critical op, regardless of timelocked state. Previously this was
-        // only checked for timelocked apps; now owner-gating is unconditional
-        // so schedule-time rejection matches runtime.
+        // critical op. Schedule-time rejection matches the runtime
+        // onlyCreator gate.
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
         bytes memory callData = abi.encodeWithSelector(IAppController.upgradeApp.selector, app, _assembleRelease());
 
         assertFalse(
             ICallValidator(address(appController)).canCall(makeAddr("anyone"), callData),
-            "canCall must reject non-owner schedule even for non-timelocked apps"
+            "canCall must reject non-owner schedule"
         );
         assertTrue(
             ICallValidator(address(appController)).canCall(developer, callData), "canCall must accept owner schedule"
         );
-    }
-
-    function test_canCall_rejectsTerminateAppByAdminOnTimelockedApp() public {
-        _mockIsTimelock(developer);
-        vm.prank(developer);
-        IApp app = appController.createApp(SALT, _assembleRelease());
-
-        bytes memory callData = abi.encodeWithSelector(IAppController.terminateAppByAdmin.selector, app);
-        // terminateAppByAdmin against a timelocked app is unconditionally doomed
-        // regardless of caller — canCall reflects that.
-        assertFalse(ICallValidator(address(appController)).canCall(admin, callData));
     }
 
     // ========== Team-role RBAC ==========
@@ -1670,16 +1589,13 @@ contract AppControllerTest is ComputeDeployer {
         appAuthority.grantRole(app, IAppAuthority.Role.PAUSER, outsider);
     }
 
-    function test_grantTeamRole_timelockedOperationalRoleNotGated() public {
-        // A-2 fix: PAUSER/DEVELOPER grants on timelocked apps are NOT
-        // routed through the Timelock. Any existing ADMIN can grant — the
-        // power delegated is operational only.
-        _mockIsTimelock(developer);
+    function test_grantTeamRole_operationalRoleNotOwnerGated() public {
+        // PAUSER/DEVELOPER grants are NOT owner-gated — any existing ADMIN
+        // can grant these bounded operational roles.
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
 
-        // Give coAdmin ADMIN via the Timelock (creator), then confirm
-        // coAdmin can grant PAUSER freely (no creator-only gate).
+        // Give coAdmin ADMIN, then confirm coAdmin can grant PAUSER freely.
         address coAdmin = makeAddr("coAdmin");
         vm.prank(developer);
         appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
@@ -1690,12 +1606,10 @@ contract AppControllerTest is ComputeDeployer {
         assertTrue(appAuthority.hasRole(app, IAppAuthority.Role.PAUSER, pauser));
     }
 
-    function test_grantTeamRole_adminGrantGatedByCreator() public {
-        // Owner-gated model: ADMIN grants are creator-only regardless of
-        // timelocked/Safe/EOA ownership. Applies to timelocked apps (Timelock
-        // is creator) and to non-timelocked apps (EOA/Safe is creator). A
-        // co-ADMIN cannot mint another ADMIN.
-        _mockIsTimelock(developer);
+    function test_grantTeamRole_adminGrantGatedByOwner() public {
+        // Owner-gated model: ADMIN grants are owner-only regardless of
+        // whether the owner is an EOA, Safe, or Timelock. A co-ADMIN
+        // cannot mint another ADMIN.
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
 
@@ -1709,32 +1623,14 @@ contract AppControllerTest is ComputeDeployer {
         vm.expectRevert(IAppAuthority.NotScopeOwner.selector);
         appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, usurper);
 
-        // The Timelock (owner) can still grant.
+        // The owner can still grant.
         vm.prank(developer);
         appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, usurper);
         assertTrue(appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, usurper));
     }
 
-    function test_grantTeamRole_adminGrantGatedByCreator_nonTimelocked() public {
-        // Safe/EOA-owned app: same owner-only rule applies. This is what
-        // prevents a co-ADMIN from silently escalating to owner on Safe-owned
-        // apps and bypassing the multisig.
-        vm.prank(developer);
-        IApp app = appController.createApp(SALT, _assembleRelease());
-
-        address coAdmin = makeAddr("coAdmin");
-        vm.prank(developer);
-        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
-
-        address usurper = makeAddr("usurper");
-        vm.prank(coAdmin);
-        vm.expectRevert(IAppAuthority.NotScopeOwner.selector);
-        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, usurper);
-    }
-
-    function test_revokeTeamRole_adminRevokeGatedByCreator() public {
+    function test_revokeTeamRole_adminRevokeGatedByOwner() public {
         // Mirror of grant: revoking ADMIN is owner-only unconditionally.
-        _mockIsTimelock(developer);
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
 
@@ -1861,9 +1757,10 @@ contract AppControllerTest is ComputeDeployer {
 
     function test_transferOwnership_removesPreviousOwnerFromAdmin() public {
         // Fix for audit A-3 / V-10: the previous owner must be removed from
-        // the ADMIN set on transfer. Otherwise an old EOA (or an old
-        // Timelock post-handoff) retains operational powers and, in the
-        // non-timelocked case, can re-grab the app.
+        // the ADMIN set on transfer. Otherwise an old owner (EOA, Safe, or
+        // old Timelock post-handoff) retains operational powers and, if
+        // they remain ADMIN while the new owner holds a weaker key, they
+        // can re-grab the app.
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
 

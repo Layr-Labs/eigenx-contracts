@@ -9,7 +9,6 @@ import {IApp} from "../interfaces/IApp.sol";
 import {IAppController} from "../interfaces/IAppController.sol";
 import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {ISafeTimelockFactory} from "../interfaces/ISafeTimelockFactory.sol";
 import {IAppAuthority} from "../interfaces/IAppAuthority.sol";
 
 abstract contract AppControllerStorage is IAppController {
@@ -40,9 +39,6 @@ abstract contract AppControllerStorage is IAppController {
     /// @notice The beacon used for creating App proxies
     IBeacon public immutable appBeacon;
 
-    /// @notice Factory used to verify Safe and Timelock deployments for governance detection
-    ISafeTimelockFactory public immutable safeTimelockFactory;
-
     /// @notice Authority contract that owns per-app ownership and RBAC state.
     /// @dev AppController delegates auth to this contract — ownership transfer,
     ///      role management, and schedule-time validation all flow through
@@ -69,14 +65,12 @@ abstract contract AppControllerStorage is IAppController {
         IComputeOperator _computeOperator,
         IComputeAVSRegistrar _computeAVSRegistrar,
         IBeacon _appBeacon,
-        ISafeTimelockFactory _safeTimelockFactory,
         IAppAuthority _appAuthority
     ) {
         releaseManager = _releaseManager;
         computeOperator = _computeOperator;
         computeAVSRegistrar = _computeAVSRegistrar;
         appBeacon = _appBeacon;
-        safeTimelockFactory = _safeTimelockFactory;
         appAuthority = _appAuthority;
     }
 

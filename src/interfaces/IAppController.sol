@@ -119,17 +119,18 @@ interface IAppController {
         //   bytes 24-27: uint32  latestReleaseBlockNumber ( 4 bytes)
         //   byte  28:    AppStatus status           ( 1 byte)
         //   byte  29:    BillingType billingType    ( 1 byte)   ← present on v1.4.0 chain state
-        //   byte  30:    bool timelocked            ( 1 byte)   ← new in v1.5.0; safely zero on all v1.4.0 apps
-        //   byte  31:    (unused)
+        //   bytes 30-31: (unused)
+        //
+        // Byte 30 was briefly earmarked for a `timelocked` boolean in an
+        // earlier v1.5.0 draft. That design has been retired — critical ops
+        // are owner-gated and the governance mechanism is determined by the
+        // owner contract itself, not a flag on AppController. Byte 30 is
+        // therefore unused and guaranteed zero on all chain state.
         address creator;
         uint32 operatorSetId;
         uint32 latestReleaseBlockNumber;
         AppStatus status;
         BillingType billingType;
-        // true = owner is a factory Timelock; sensitive ops must go through
-        // Timelock.schedule → execute. Must NOT be placed at byte 29 — that
-        // byte already holds `billingType` on existing deployed contracts.
-        bool timelocked;
     }
 
     /// @notice User configuration and state
@@ -181,10 +182,11 @@ interface IAppController {
      * @param app The app to upgrade with the release
      * @param release The release to upgrade to
      * @return releaseId The unique identifier for the published release
-     * @dev Caller must be the app's current owner (`creator`). For timelocked
-     *      apps this is the Timelock itself, so the call is forced through
-     *      schedule → execute. For non-timelocked apps (EOA / Safe-owned) the
-     *      owner acts directly. Co-ADMINs cannot upgrade.
+     * @dev Caller must be the app's current owner (`creator`). If the owner
+     *      is a Timelock, the call is forced through schedule → execute;
+     *      if it's a Safe, through the multisig threshold; if it's an EOA,
+     *      directly. The governance mechanism is whatever the owner contract
+     *      is — AppController does not classify it. Co-ADMINs cannot upgrade.
      * @dev The rms release must have exactly one artifact, with the digest being the docker
      * image digest and the registry being the docker registry it is stored at.
      * @dev The env must be a JSON marshalled bytes representing the public environment variables for the app.
@@ -199,11 +201,13 @@ interface IAppController {
      * @param app The app to transfer ownership of
      * @param newOwner The new owner address
      * @dev Caller must be the app's current owner (`creator`).
-     * @dev When `newOwner` is a factory-deployed Timelock the app's `timelocked`
-     *      flag is flipped to true; otherwise it's cleared.
-     * @dev The new owner is atomically granted ADMIN on the team and the
-     *      previous owner is atomically removed from ADMIN. This is the only
-     *      path that rotates ADMIN membership for the owner.
+     * @dev The new owner is atomically granted ADMIN on the team in
+     *      AppAuthority and the previous owner is atomically removed from
+     *      ADMIN. This is the only path that rotates ADMIN membership for
+     *      the owner.
+     * @dev The new owner's contract type (EOA / Safe / Timelock / other)
+     *      determines the governance mechanism for future critical ops.
+     *      AppController does not classify or enforce a choice here.
      */
     function transferOwnership(IApp app, address newOwner) external;
 
@@ -332,15 +336,6 @@ interface IAppController {
      * @return The billing type (DEFAULT or ISOLATED)
      */
     function getBillingType(IApp app) external view returns (BillingType);
-
-    /**
-     * @notice Returns whether the app's creator is a factory Timelock.
-     * @param app The app to check
-     * @return True iff sensitive ops (upgrade/terminate) must go through
-     *         Timelock.schedule → execute — i.e. direct calls by any non-owner
-     *         are rejected regardless of PermissionController grants.
-     */
-    function getAppTimelocked(IApp app) external view returns (bool);
 
     /**
      * @notice Gets the operator set ID for a given app

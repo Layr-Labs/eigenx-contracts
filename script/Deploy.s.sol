@@ -24,7 +24,6 @@ import {ComputeAVSRegistrar} from "../src/ComputeAVSRegistrar.sol";
 import {ComputeOperator} from "../src/ComputeOperator.sol";
 import {ImageAllowlist} from "../src/ImageAllowlist.sol";
 import {IImageAllowlist} from "../src/interfaces/IImageAllowlist.sol";
-import {ISafeTimelockFactory} from "../src/interfaces/ISafeTimelockFactory.sol";
 import {SafeTimelockFactory} from "../src/factories/SafeTimelockFactory.sol";
 import {TimelockControllerImpl} from "../src/governance/TimelockControllerImpl.sol";
 import {IAppAuthority} from "../src/interfaces/IAppAuthority.sol";
@@ -96,11 +95,12 @@ contract Deploy is Parser {
         UpgradeableBeacon appBeacon =
             new UpgradeableBeacon(address(new App(params.version, IPermissionController(params.permissionController))));
 
-        // Deploy SafeTimelockFactory (needed by AppController for governance
-        // detection). Safe infrastructure addresses (singleton / proxy factory
-        // / fallback handler) are left as zero here; tests and local deploys
-        // don't exercise deploySafe. Production releases use a dedicated
-        // release script that wires real Safe addresses.
+        // Deploy SafeTimelockFactory so tests / local deploys can exercise
+        // the deployTimelock / deploySafe paths. AppController no longer
+        // depends on this factory — governance is whatever the app's owner
+        // contract is. Safe infrastructure addresses are zero here; local
+        // deploys don't exercise deploySafe. Production releases wire real
+        // Safe addresses in the v1.5.0 release script.
         TimelockControllerImpl timelockImpl = new TimelockControllerImpl();
         SafeTimelockFactory safeTimelockFactoryImpl = new SafeTimelockFactory({
             _safeSingleton: address(0),
@@ -108,7 +108,7 @@ contract Deploy is Parser {
             _safeFallbackHandler: address(0),
             _timelockImplementation: address(timelockImpl)
         });
-        TransparentUpgradeableProxy safeTimelockFactoryProxy = new TransparentUpgradeableProxy(
+        new TransparentUpgradeableProxy(
             address(safeTimelockFactoryImpl),
             address(params.proxyAdmin),
             abi.encodeCall(SafeTimelockFactory.initialize, ())
@@ -148,7 +148,6 @@ contract Deploy is Parser {
                 _computeAVSRegistrar: IComputeAVSRegistrar(address(proxies.computeAVSRegistrar)),
                 _computeOperator: IComputeOperator(address(proxies.computeOperator)),
                 _appBeacon: appBeacon,
-                _safeTimelockFactory: ISafeTimelockFactory(address(safeTimelockFactoryProxy)),
                 _appAuthority: IAppAuthority(address(appAuthorityProxy))
             }),
             imageAllowlist: new ImageAllowlist(),

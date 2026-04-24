@@ -19,7 +19,6 @@ import {IAppController} from "./interfaces/IAppController.sol";
 import {IAppAuthority} from "./interfaces/IAppAuthority.sol";
 import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {IApp} from "./interfaces/IApp.sol";
-import {ISafeTimelockFactory} from "./interfaces/ISafeTimelockFactory.sol";
 import {ICallValidator} from "./interfaces/ICallValidator.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
@@ -83,14 +82,11 @@ contract AppController is
         IComputeAVSRegistrar _computeAVSRegistrar,
         IComputeOperator _computeOperator,
         IBeacon _appBeacon,
-        ISafeTimelockFactory _safeTimelockFactory,
         IAppAuthority _appAuthority
     )
         SignatureUtilsMixin(_version)
         PermissionControllerMixin(_permissionController)
-        AppControllerStorage(
-            _releaseManager, _computeOperator, _computeAVSRegistrar, _appBeacon, _safeTimelockFactory, _appAuthority
-        )
+        AppControllerStorage(_releaseManager, _computeOperator, _computeAVSRegistrar, _appBeacon, _appAuthority)
     {
         _disableInitializers();
     }
@@ -152,10 +148,11 @@ contract AppController is
         appIsActive(app)
         returns (uint256)
     {
-        // Critical op: only the current owner (`creator`) may call. For
-        // timelocked apps, `creator` is the Timelock itself, which forces
-        // the call through schedule → execute. For non-timelocked apps the
-        // owner acts directly. Co-ADMINs cannot upgrade.
+        // Critical op: only the current owner may call. If the owner is a
+        // Timelock, this forces the call through schedule → execute; if it's
+        // a Safe, through the multisig; if it's an EOA, directly. The
+        // governance mechanism is whatever the owner contract is — AppController
+        // doesn't need to classify it.
         return _upgradeApp(app, release);
     }
 
@@ -175,12 +172,6 @@ contract AppController is
         // / event stability. AppAuthority is the source of truth; this is
         // the cache.
         config.creator = newOwner;
-
-        // Flip the flag based on the new owner. Non-factory addresses (EOAs,
-        // externally-deployed Safes, arbitrary contracts) clear it — they have
-        // no schedule→execute semantics we can trust. Factory-deployed
-        // Timelocks enable it.
-        config.timelocked = address(safeTimelockFactory) != address(0) && safeTimelockFactory.isTimelock(newOwner);
 
         // ISOLATED billing apps bill the app address, not the creator, so
         // ownership transfer has no effect on billing accounting. DEFAULT
@@ -227,11 +218,13 @@ contract AppController is
 
     /// @inheritdoc IAppController
     function terminateAppByAdmin(IApp app) external checkCanCall(address(this)) appIsActive(app) {
-        // Protocol admin may not unilaterally terminate a Timelock-owned app;
-        // doing so would bypass the delay the user specifically opted into.
-        // If intervention is required, protocol admin should schedule the
-        // termination through the Timelock itself.
-        require(!_appConfigs[app].timelocked, InvalidPermissions());
+        // Protocol admin (UAM-gated) may terminate any app. This is protocol
+        // policy that sits above app-level governance — abuse, legal, or
+        // platform-level concerns require a uniform lever regardless of what
+        // the user chose as the app's owner. If the protocol wants its own
+        // termination actions to be delay-gated, the protocol's UAM admin
+        // multisig should itself be behind a Timelock — that's an operational
+        // decision, not an AppController concern.
         _terminateApp(app);
         emit AppTerminatedByAdmin(app);
     }
@@ -322,14 +315,6 @@ contract AppController is
         _appConfigs[app].latestReleaseBlockNumber = 0;
         _appConfigs[app].creator = msg.sender;
         _appConfigs[app].billingType = _billingType;
-        // If the creator is a factory-deployed Timelock, mark the app
-        // timelocked at creation so sensitive-op gates fire immediately.
-        // Not doing this here leaves a window where any co-admin could run
-        // upgradeApp / terminateApp before ownership is "transferred" — and
-        // in fact createApp never involves transferOwnership at all.
-        if (address(safeTimelockFactory) != address(0)) {
-            _appConfigs[app].timelocked = safeTimelockFactory.isTimelock(msg.sender);
-        }
         _allApps.add(address(app));
 
         // Register the scope + seed creator as ADMIN in AppAuthority. All
@@ -605,11 +590,6 @@ contract AppController is
         return _appConfigs[app].billingType;
     }
 
-    /// @inheritdoc IAppController
-    function getAppTimelocked(IApp app) external view returns (bool) {
-        return _appConfigs[app].timelocked;
-    }
-
     /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
         return interfaceId == type(ICallValidator).interfaceId || interfaceId == type(IERC165).interfaceId;
@@ -636,12 +616,6 @@ contract AppController is
         ) {
             IApp app = abi.decode(data[4:36], (IApp));
             if (!appAuthority.isScopeOwner(app, caller)) return false;
-        }
-
-        // terminateAppByAdmin refuses timelocked apps unconditionally.
-        if (selector == this.terminateAppByAdmin.selector) {
-            IApp app = abi.decode(data[4:36], (IApp));
-            if (_appConfigs[app].timelocked) return false;
         }
 
         return true;

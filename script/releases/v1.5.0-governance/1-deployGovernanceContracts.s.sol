@@ -11,7 +11,6 @@ import {AppController} from "../../../src/AppController.sol";
 import {SafeTimelockFactory} from "../../../src/factories/SafeTimelockFactory.sol";
 import {TimelockControllerImpl} from "../../../src/governance/TimelockControllerImpl.sol";
 import {AppAuthority} from "../../../src/governance/AppAuthority.sol";
-import {ISafeTimelockFactory} from "../../../src/interfaces/ISafeTimelockFactory.sol";
 import {IAppAuthority} from "../../../src/interfaces/IAppAuthority.sol";
 
 /**
@@ -73,11 +72,11 @@ contract DeployGovernanceContracts is EOADeployer {
         );
         deployProxy({name: type(AppAuthority).name, deployedTo: address(appAuthorityProxy)});
 
-        // 6. New AppController implementation — wired to the factory proxy
-        //    and the AppAuthority proxy. The AppAuthority immutable is the
-        //    proxy address; the impl's consumer check authenticates calls
-        //    from AppController's proxy, which is what the upgraded impl
-        //    (delegatecalled from the proxy) will look like.
+        // 6. New AppController implementation — wired to the AppAuthority
+        //    proxy. AppController no longer references SafeTimelockFactory;
+        //    the factory is still deployed (steps 2–3) because users /
+        //    tooling can use it to deploy attested Safes and Timelocks, but
+        //    AppController's correctness no longer depends on it.
         AppController newAppControllerImpl = new AppController({
             _version: Env.deployVersion(),
             _permissionController: Env.permissionController(),
@@ -85,7 +84,6 @@ contract DeployGovernanceContracts is EOADeployer {
             _computeAVSRegistrar: Env.proxy.computeAVSRegistrar(),
             _computeOperator: Env.proxy.computeOperator(),
             _appBeacon: Env.beacon.appBeacon(),
-            _safeTimelockFactory: ISafeTimelockFactory(address(safeTimelockFactoryProxy)),
             _appAuthority: IAppAuthority(address(appAuthorityProxy))
         });
         deployImpl({name: type(AppController).name, deployedTo: address(newAppControllerImpl)});
@@ -151,11 +149,6 @@ contract DeployGovernanceContracts is EOADeployer {
         );
         assertEq(address(appImpl.computeOperator()), address(Env.proxy.computeOperator()), "computeOperator mismatch");
         assertEq(address(appImpl.appBeacon()), address(Env.beacon.appBeacon()), "appBeacon mismatch");
-        assertEq(
-            address(appImpl.safeTimelockFactory()),
-            address(Env.proxy.safeTimelockFactory()),
-            "safeTimelockFactory mismatch"
-        );
         assertEq(address(appImpl.appAuthority()), address(Env.proxy.appAuthority()), "appAuthority mismatch");
 
         AppAuthority authorityImpl = Env.impl.appAuthority();
