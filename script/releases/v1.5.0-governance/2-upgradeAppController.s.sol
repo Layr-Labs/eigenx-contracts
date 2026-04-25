@@ -8,17 +8,21 @@ import "../Env.sol";
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
 /**
- * @title UpgradeAppController (v1.5.0-governance phase 2)
- * @notice Multisig phase: point the AppController proxy at the new
- *         implementation deployed in phase 1. No initializer call — the
- *         impl's storage layout is append-only (new `bool timelocked` sits
- *         at byte 30 of an existing slot, previously zero on every app).
+ * @title UpgradeAppController
+ * @notice Second step of the v1.5.0 release. Run by the ops multisig after
+ *         the EOA-deployed impls from `1-deployGovernanceContracts.s.sol`
+ *         are on-chain. Points the AppController proxy at the new impl via
+ *         `ProxyAdmin.upgrade`. No initializer call — the new impl's
+ *         storage layout is append-only vs. v1.4.0, so every existing app
+ *         keeps its prior state (creator, operatorSetId, status, billingType)
+ *         with no rewrites required.
  *
- *         Once this upgrade lands, existing apps retain their prior state
- *         (creator, operatorSetId, status, billingType) and gain the
- *         timelocked flag defaulted to false. New governance features —
- *         transferOwnership, hardened sensitive-op gates, ICallValidator
- *         schedule-time checks — become active immediately.
+ *         Post-upgrade, AppController delegates auth to AppAuthority (also
+ *         deployed in phase 1). Critical ops are owner-gated; operational
+ *         roles (PAUSER, DEVELOPER) can be granted via AppAuthority. A
+ *         follow-up call to `migrateAppsToAppAuthority` seeds AppAuthority
+ *         state for existing apps — without it, auth checks on pre-upgrade
+ *         apps revert because AppAuthority has no owner recorded.
  */
 contract UpgradeAppController is MultisigBuilder, DeployGovernanceContracts {
     using Env for *;

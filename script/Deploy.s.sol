@@ -95,12 +95,13 @@ contract Deploy is Parser {
         UpgradeableBeacon appBeacon =
             new UpgradeableBeacon(address(new App(params.version, IPermissionController(params.permissionController))));
 
-        // Deploy SafeTimelockFactory so tests / local deploys can exercise
-        // the deployTimelock / deploySafe paths. AppController no longer
-        // depends on this factory — governance is whatever the app's owner
-        // contract is. Safe infrastructure addresses are zero here; local
-        // deploys don't exercise deploySafe. Production releases wire real
-        // Safe addresses in the v1.5.0 release script.
+        // SafeTimelockFactory for tests and local deploys that need to
+        // exercise the deployTimelock / deploySafe paths. Safe infra
+        // addresses (singleton / proxy factory / fallback handler) are zero
+        // here because local environments don't have canonical Safe
+        // deployments; deploySafe is not callable in that configuration but
+        // deployTimelock remains functional. Production deploys set real
+        // Safe addresses via zeus env in the release scripts.
         TimelockControllerImpl timelockImpl = new TimelockControllerImpl();
         SafeTimelockFactory safeTimelockFactoryImpl = new SafeTimelockFactory({
             _safeSingleton: address(0),

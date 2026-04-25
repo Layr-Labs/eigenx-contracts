@@ -86,11 +86,6 @@ interface IAppController {
         ISOLATED // Billed to the app's own address
     }
 
-    // Team-role enum lives in IAppAuthority (IAppAuthority.Role). AppController
-    // consults AppAuthority for operational role checks (PAUSER, DEVELOPER)
-    // and is the only caller of consumer-gated methods on AppAuthority
-    // (initializeScope, transferScopeOwnership, migrateAdmins).
-
     /**
      * @notice A struct containing a release and its environment
      * @param rmsRelease The release to publish
@@ -113,19 +108,6 @@ interface IAppController {
 
     /// @notice Internal storage config for an app, extends AppConfig with additional fields
     struct AppConfigStorage {
-        // Slot layout (all 32 bytes packed):
-        //   bytes 0-19:  address creator            (20 bytes)
-        //   bytes 20-23: uint32  operatorSetId      ( 4 bytes)
-        //   bytes 24-27: uint32  latestReleaseBlockNumber ( 4 bytes)
-        //   byte  28:    AppStatus status           ( 1 byte)
-        //   byte  29:    BillingType billingType    ( 1 byte)   ← present on v1.4.0 chain state
-        //   bytes 30-31: (unused)
-        //
-        // Byte 30 was briefly earmarked for a `timelocked` boolean in an
-        // earlier v1.5.0 draft. That design has been retired — critical ops
-        // are owner-gated and the governance mechanism is determined by the
-        // owner contract itself, not a flag on AppController. Byte 30 is
-        // therefore unused and guaranteed zero on all chain state.
         address creator;
         uint32 operatorSetId;
         uint32 latestReleaseBlockNumber;

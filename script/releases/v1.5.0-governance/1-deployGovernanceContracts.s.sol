@@ -14,23 +14,26 @@ import {AppAuthority} from "../../../src/governance/AppAuthority.sol";
 import {IAppAuthority} from "../../../src/interfaces/IAppAuthority.sol";
 
 /**
- * @title DeployGovernanceContracts (v1.5.0-governance phase 1)
- * @notice EOA phase of the governance release.
+ * @title DeployGovernanceContracts
+ * @notice First step of the v1.5.0 release. Run by an EOA; deploys all new
+ *         impls and non-upgrade proxies. The AppController proxy itself is
+ *         NOT upgraded here — that's `2-upgradeAppController.s.sol`, run by
+ *         the ops multisig.
  *
  * Deploys, in order:
- *   1. TimelockControllerImpl — clone-master for Timelocks created by the
- *      factory. Deployed directly (not behind a proxy); immutable.
- *   2. SafeTimelockFactory implementation — references the Timelock impl
- *      above and the canonical Gnosis Safe infrastructure for the current
- *      chain (pulled from zeus env).
- *   3. SafeTimelockFactory proxy — TransparentUpgradeableProxy pointing at
- *      the impl. ProxyAdmin is the existing protocol ProxyAdmin.
- *   4. New AppController implementation — wired to the factory proxy so
- *      the timelocked-flag detection (safeTimelockFactory.isTimelock) has
- *      a real target once the AppController proxy is upgraded in phase 2.
- *
- * The AppController proxy itself is NOT upgraded here; the multisig phase
- * does that in 2-upgradeAppController.s.sol.
+ *   1. `TimelockControllerImpl` — clone master for Timelocks created by the
+ *      factory. Deployed directly, no proxy.
+ *   2. `SafeTimelockFactory` impl — references the Timelock impl above and
+ *      the canonical Gnosis Safe infrastructure (pulled from zeus env).
+ *   3. `SafeTimelockFactory` proxy — `TransparentUpgradeableProxy` behind
+ *      the existing protocol `ProxyAdmin`.
+ *   4. `AppAuthority` impl — consumer-bound to the existing AppController
+ *      proxy address. The consumer immutable is how AppAuthority
+ *      authenticates mutation calls from the upgraded AppController.
+ *   5. `AppAuthority` proxy — `TransparentUpgradeableProxy` behind the same
+ *      `ProxyAdmin`.
+ *   6. New `AppController` impl — wired to the AppAuthority proxy. Critical
+ *      ops delegate to AppAuthority for owner and role checks.
  */
 contract DeployGovernanceContracts is EOADeployer {
     using Env for *;
