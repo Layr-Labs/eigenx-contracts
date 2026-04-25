@@ -268,7 +268,9 @@ interface IAppController {
      *         - seeds AppAuthority.scopeOwner(app) from AppController.creator
      *           if not already set;
      *         - seeds AppAuthority.ADMIN role with the app's PermissionController
-     *           admins (operational-only role under the Option-2 model).
+     *           admins. ADMIN is an operational-only role — it does NOT
+     *           confer critical-op power (upgrade / transfer / terminate),
+     *           so migrated admins cannot replay pre-v1.5.0 critical ops.
      * @dev Caller must be UAM permissioned for the AppController itself
      *      (platform admin). Intended to be called once per app after the
      *      v1.5.0 upgrade; safe to call again (idempotent per-(app, admin)).

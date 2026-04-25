@@ -12,19 +12,24 @@ import {IApp} from "../interfaces/IApp.sol";
  *         AppController is the sole consumer — it authenticates callers of
  *         app-lifecycle operations and delegates the auth state here.
  *
- * @dev The contract enforces the Option-2 invariants by construction:
- *      - Only the owner may grant/revoke/transfer ADMIN.
- *      - The owner is always ADMIN on their scope, cannot renounce or
- *        self-revoke.
- *      - `transferScopeOwnership` is the only path that rotates the owner,
- *        and it adds the new owner + removes the previous owner from ADMIN
- *        atomically.
+ * @dev The contract enforces the owner-gated RBAC model by construction:
+ *      - Only the scope owner may grant / revoke ADMIN. ADMIN itself is an
+ *        operational-only role — it does NOT confer critical-op power on
+ *        the consumer (upgrade / transfer / terminate). Those are gated on
+ *        `isScopeOwner` at the consumer layer.
+ *      - The owner is always ADMIN on their scope; they cannot renounce or
+ *        self-revoke ADMIN. `transferScopeOwnership` is the only path that
+ *        rotates the owner, and it adds the new owner + removes the previous
+ *        owner from ADMIN atomically.
+ *      - Non-ADMIN roles (PAUSER, DEVELOPER) are bounded, revocable
+ *        operational powers any ADMIN may grant. They carry no critical-op
+ *        authority.
  *
- * @dev Why extract: the Timelock guarantee binds iff the admin set the
- *      critical-op gate trusts is a set the contract enforcing the gate
- *      controls. AppController delegates to this contract; this contract's
- *      mutation surface is minimal and fully enumerable. Moving the auth
- *      logic here makes the trust boundary explicit and shrinks the audit
+ * @dev Why extract: the critical-op gate on AppController
+ *      (`msg.sender == scopeOwner`) binds iff the owner identity the gate
+ *      reads is mutated only through paths this contract controls. Owning
+ *      the state in a small dedicated contract with a narrow mutation
+ *      surface makes that trust boundary explicit and shrinks the audit
  *      surface of AppController accordingly.
  */
 contract AppAuthority is Initializable, IAppAuthority {

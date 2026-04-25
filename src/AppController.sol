@@ -270,8 +270,10 @@ contract AppController is
         //   (1) If AppAuthority has no owner recorded, initialize the scope
         //       with AppController's cached `creator` field.
         //   (2) Seed AppAuthority's ADMIN role with the app's
-        //       PermissionController admins (operational-only under Option 2;
-        //       no critical-op exposure).
+        //       PermissionController admins. ADMIN is an operational-only
+        //       role in this model — it does NOT confer upgrade / transfer /
+        //       terminate power, so migrated admins carry no critical-op
+        //       exposure; the owner remains the only critical-op authority.
         // Idempotent: re-running is safe because initializeScope reverts on
         // reinit (handled), and grantRole is set-semantics.
         uint256 n = apps.length;

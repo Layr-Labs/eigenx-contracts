@@ -40,9 +40,12 @@ abstract contract AppControllerStorage is IAppController {
     IBeacon public immutable appBeacon;
 
     /// @notice Authority contract that owns per-app ownership and RBAC state.
-    /// @dev AppController delegates auth to this contract — ownership transfer,
-    ///      role management, and schedule-time validation all flow through
-    ///      AppAuthority. The Option-2 invariants are enforced there, not here.
+    /// @dev AppController delegates auth to this contract — ownership
+    ///      transfer, role management, and the scope-owner reads used by
+    ///      `onlyCreator` / `canCall` all flow through AppAuthority. The
+    ///      owner-gated invariants (only the owner may mutate ADMIN; owner
+    ///      is always in ADMIN; transferScopeOwnership is the only owner
+    ///      rotation path) are enforced in AppAuthority, not here.
     IAppAuthority public immutable appAuthority;
 
     /// @notice Set of all created apps
