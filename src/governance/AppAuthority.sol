@@ -88,6 +88,10 @@ contract AppAuthority is Initializable, IAppAuthority {
 
         address previousOwner = _scopeOwner[scope];
         if (previousOwner == address(0)) revert ScopeNotInitialized();
+        // Self-transfer would collapse the ADMIN add+remove pair into a net
+        // remove — the owner would lose their ADMIN role despite the owner
+        // pointer not changing. Reject explicitly.
+        if (newOwner == previousOwner) revert SameOwnerTransfer();
 
         _scopeOwner[scope] = newOwner;
 

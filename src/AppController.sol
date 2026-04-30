@@ -531,13 +531,18 @@ contract AppController is
     }
 
     /**
-     * @notice Check if address is developer of app
-     * @param app The app to check
-     * @param developer The developer to check
-     * @return True if the developer is the developer of the app
+     * @notice Check whether `developer` has app-level authority on `app`.
+     * @dev Used as a predicate by `getAppsByDeveloper` to enumerate apps a
+     *      given address can operate on. After the v1.5.0 migration, app-
+     *      level authority is AppAuthority's ADMIN role (operational
+     *      superset, held by the scope owner and anyone they've granted).
+     *      Pre-migration fallback via PermissionController is intentionally
+     *      NOT consulted here — addresses that existed only as
+     *      PermissionController admins get reflected in AppAuthority's ADMIN
+     *      set via `migrateAppsToAppAuthority`.
      */
     function _isDeveloper(IApp app, address developer) private view returns (bool) {
-        return permissionController.isAdmin(address(app), developer);
+        return appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, developer);
     }
 
     /**

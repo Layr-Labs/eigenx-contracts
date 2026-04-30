@@ -54,6 +54,13 @@ interface IAppAuthority {
     /// @notice Thrown when a zero address is passed where non-zero is required.
     error ZeroAddress();
 
+    /// @notice Thrown when `transferScopeOwnership` is called with the new
+    ///         owner equal to the current owner. The operation is a no-op
+    ///         in intent, but the naive implementation would incorrectly
+    ///         remove the owner from ADMIN (add/remove on the same address
+    ///         collapses to a net remove). Reject explicitly.
+    error SameOwnerTransfer();
+
     /// @notice Emitted when a scope is first initialized with an owner.
     event ScopeInitialized(IApp indexed scope, address indexed owner);
 

@@ -644,34 +644,39 @@ contract AppControllerTest is ComputeDeployer {
         assertEq(address(otherApps[1]), address(otherApp2));
     }
 
-    function test_getAppsByCreator_worksWithoutAdminRights() public {
+    function test_getAppsByDeveloper_filtersByAppAuthorityAdmin() public {
+        // Developer creates two apps; both auto-seed developer as ADMIN in
+        // AppAuthority at createApp time.
         vm.prank(developer);
         IApp app1 = appController.createApp(keccak256("admin_test_1"), _assembleRelease());
         vm.prank(developer);
         IApp app2 = appController.createApp(keccak256("admin_test_2"), _assembleRelease());
 
-        // Only accept admin on app1, leave app2 without accepting admin
-        vm.prank(developer);
-        permissionController.acceptAdmin(address(app1));
-
-        // getAppsByCreator should return BOTH apps (filters by creator, not admin)
+        // Both apps list developer as creator AND as ADMIN.
         (IApp[] memory creatorApps,) = appController.getAppsByCreator(developer, 0, 10);
         assertEq(creatorApps.length, 2);
-        assertEq(address(creatorApps[0]), address(app1));
-        assertEq(address(creatorApps[1]), address(app2));
 
-        // getAppsByDeveloper should only return app1 (developer only accepted admin on app1)
         (IApp[] memory devApps,) = appController.getAppsByDeveloper(developer, 0, 10);
+        assertEq(devApps.length, 2, "developer is ADMIN on every app they created");
+
+        // Transfer app2 to another owner. transferScopeOwnership removes
+        // developer from ADMIN on app2 atomically.
+        address newOwner = makeAddr("newOwner");
+        _setMaxActiveAppsPerUser(newOwner, 10);
+        vm.prank(developer);
+        appController.transferOwnership(app2, newOwner);
+
+        // Now developer is ADMIN only on app1, but remains "creator" on
+        // app1 only (creator got overwritten on app2 transfer). So
+        // getAppsByDeveloper reflects the change.
+        (devApps,) = appController.getAppsByDeveloper(developer, 0, 10);
         assertEq(devApps.length, 1);
         assertEq(address(devApps[0]), address(app1));
 
-        // Verify the creator field is set correctly for both apps
-        assertEq(appController.getAppCreator(app1), developer);
-        assertEq(appController.getAppCreator(app2), developer);
-
-        // Verify developer is only admin of app1
-        assertTrue(permissionController.isAdmin(address(app1), developer));
-        assertFalse(permissionController.isAdmin(address(app2), developer));
+        // Sanity: app2's new owner is now ADMIN on app2.
+        (IApp[] memory newOwnerApps,) = appController.getAppsByDeveloper(newOwner, 0, 10);
+        assertEq(newOwnerApps.length, 1);
+        assertEq(address(newOwnerApps[0]), address(app2));
     }
 
     // ========== Helper Functions ==========

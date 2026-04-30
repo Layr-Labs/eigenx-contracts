@@ -95,6 +95,22 @@ contract AppAuthorityTest is Test {
         authority.transferScopeOwnership(APP_A, address(0));
     }
 
+    function test_transferScopeOwnership_rejectsSelfTransfer() public {
+        // Self-transfer would collapse add(alice) + remove(alice) on the
+        // ADMIN set into a net remove — alice ends up not-an-ADMIN despite
+        // the owner pointer unchanged. Must reject explicitly.
+        vm.prank(consumer);
+        authority.initializeScope(APP_A, alice);
+
+        vm.prank(consumer);
+        vm.expectRevert(IAppAuthority.SameOwnerTransfer.selector);
+        authority.transferScopeOwnership(APP_A, alice);
+
+        // State must be untouched.
+        assertEq(authority.scopeOwner(APP_A), alice);
+        assertTrue(authority.hasRole(APP_A, IAppAuthority.Role.ADMIN, alice));
+    }
+
     // ========== grantRole ==========
 
     function test_grantRole_adminRequiresOwner() public {
