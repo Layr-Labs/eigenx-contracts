@@ -38,6 +38,9 @@ interface IAppController {
     ///         AppAuthority; this error is raised when the queried check fails.
     error InvalidTeamRole();
 
+    /// @notice Thrown when trying to confirm an upgrade with no pending release
+    error NoPendingUpgrade();
+
     /// @notice Emitted when a new app is successfully created
     event AppCreated(address indexed creator, IApp indexed app, uint32 operatorSetId);
 
@@ -58,6 +61,9 @@ interface IAppController {
 
     /// @notice Emitted when an app is suspended
     event AppSuspended(IApp indexed app);
+
+    /// @notice Emitted when a pending upgrade is confirmed
+    event UpgradeConfirmed(IApp indexed app, uint32 pendingReleaseBlockNumber);
 
     /// @notice Emitted when the maximum active apps limit is set for an address
     event MaxActiveAppsSet(address indexed user, uint32 limit);
@@ -86,16 +92,41 @@ interface IAppController {
         ISOLATED // Billed to the app's own address
     }
 
+    /// @notice A key-value pair representing an environment variable
+    struct EnvVar {
+        string key;
+        string value;
+    }
+
+    /**
+     * @notice Container execution policy set by the app developer at createApp/upgradeApp time.
+     * @dev Each field is opt-in: an empty/zero-length field means "no restriction" for that field.
+     * @param args Expected container arguments (exact match)
+     * @param cmdOverride Expected command override (exact match)
+     * @param env Required environment variables (subset match: all key/value pairs must appear in container env)
+     * @param envOverride Expected environment variable overrides (subset match)
+     * @param restartPolicy Expected restart policy (exact match)
+     */
+    struct ContainerPolicy {
+        string[] args;
+        string[] cmdOverride;
+        EnvVar[] env;
+        EnvVar[] envOverride;
+        string restartPolicy;
+    }
+
     /**
      * @notice A struct containing a release and its environment
      * @param rmsRelease The release to publish
-     * @param env The environment for the release
-     * @param encryptedSecrets The encrypted secrets for the release
+     * @param publicEnv The public environment variables for the release
+     * @param encryptedEnv The encrypted secrets for the release
+     * @param containerPolicy The container execution policy for the release
      */
     struct Release {
         IReleaseManagerTypes.Release rmsRelease;
         bytes publicEnv;
         bytes encryptedEnv;
+        ContainerPolicy containerPolicy;
     }
 
     /// @notice The controller's config for an app (public-facing, ABI-stable)
@@ -103,6 +134,7 @@ interface IAppController {
         address creator;
         uint32 operatorSetId;
         uint32 latestReleaseBlockNumber;
+        uint32 pendingReleaseBlockNumber;
         AppStatus status;
     }
 
@@ -111,6 +143,7 @@ interface IAppController {
         address creator;
         uint32 operatorSetId;
         uint32 latestReleaseBlockNumber;
+        uint32 pendingReleaseBlockNumber;
         AppStatus status;
         BillingType billingType;
     }
@@ -192,6 +225,14 @@ interface IAppController {
      *      AppController does not classify or enforce a choice here.
      */
     function transferOwnership(IApp app, address newOwner) external;
+
+    /**
+     * @notice Confirms a pending upgrade, promoting the pending release to the confirmed (latest) release
+     * @param app The app to confirm the upgrade for
+     * @dev Caller must be UAM permissioned for the AppController (i.e., the Coordinator)
+     * @dev Reverts with NoPendingUpgrade if there is no pending release
+     */
+    function confirmUpgrade(IApp app) external;
 
     /**
      * @notice Updates the metadata URI for an app. Operational.
@@ -329,11 +370,18 @@ interface IAppController {
     function getAppOperatorSetId(IApp app) external view returns (uint32);
 
     /**
-     * @notice Gets the latest release block number for a given app
+     * @notice Gets the confirmed (latest) release block number for a given app
      * @param app The app to get the latest release block number for
-     * @return The latest release block number
+     * @return The confirmed release block number
      */
     function getAppLatestReleaseBlockNumber(IApp app) external view returns (uint32);
+
+    /**
+     * @notice Gets the pending release block number for a given app
+     * @param app The app to get the pending release block number for
+     * @return The pending release block number (0 if no pending upgrade)
+     */
+    function getAppPendingReleaseBlockNumber(IApp app) external view returns (uint32);
 
     /**
      * @notice Retrieves a paginated list of all apps and their configurations
