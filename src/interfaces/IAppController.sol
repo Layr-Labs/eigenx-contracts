@@ -29,6 +29,15 @@ interface IAppController {
     /// @notice Thrown when trying to suspend an account that still has active apps
     error AccountHasActiveApps();
 
+    /// @notice Thrown when a caller is not the current owner (creator) of an app.
+    ///         Critical ops (upgrade/transfer/terminate) are owner-gated.
+    error NotCreator();
+
+    /// @notice Thrown when a caller lacks the required operational role on an
+    ///         app. Operational roles (PAUSER, DEVELOPER) are queried from
+    ///         AppAuthority; this error is raised when the queried check fails.
+    error InvalidTeamRole();
+
     /// @notice Thrown when trying to confirm an upgrade with no pending release
     error NoPendingUpgrade();
 
@@ -64,6 +73,9 @@ interface IAppController {
 
     /// @notice Emitted when an app's metadata URI is updated
     event AppMetadataURIUpdated(IApp indexed app, string metadataURI);
+
+    /// @notice Emitted when app ownership is transferred to a new address
+    event AppOwnershipTransferred(IApp indexed app, address indexed previousOwner, address indexed newOwner);
 
     /// @notice Enum for app status
     enum AppStatus {
@@ -181,11 +193,15 @@ interface IAppController {
     function createAppWithIsolatedBilling(bytes32 salt, Release calldata release) external returns (IApp app);
 
     /**
-     * @notice Upgrades an app with a new release to the ReleaseManager
+     * @notice Upgrades an app with a new release to the ReleaseManager. Critical op.
      * @param app The app to upgrade with the release
      * @param release The release to upgrade to
      * @return releaseId The unique identifier for the published release
-     * @dev Caller must be UAM permissioned for the app
+     * @dev Caller must be the app's current owner (`creator`). If the owner
+     *      is a Timelock, the call is forced through schedule → execute;
+     *      if it's a Safe, through the multisig threshold; if it's an EOA,
+     *      directly. The governance mechanism is whatever the owner contract
+     *      is — AppController does not classify it. Co-ADMINs cannot upgrade.
      * @dev The rms release must have exactly one artifact, with the digest being the docker
      * image digest and the registry being the docker registry it is stored at.
      * @dev The env must be a JSON marshalled bytes representing the public environment variables for the app.
@@ -196,6 +212,21 @@ interface IAppController {
     function upgradeApp(IApp app, Release calldata release) external returns (uint256);
 
     /**
+     * @notice Transfers app ownership to a new address. Critical op.
+     * @param app The app to transfer ownership of
+     * @param newOwner The new owner address
+     * @dev Caller must be the app's current owner (`creator`).
+     * @dev The new owner is atomically granted ADMIN on the team in
+     *      AppAuthority and the previous owner is atomically removed from
+     *      ADMIN. This is the only path that rotates ADMIN membership for
+     *      the owner.
+     * @dev The new owner's contract type (EOA / Safe / Timelock / other)
+     *      determines the governance mechanism for future critical ops.
+     *      AppController does not classify or enforce a choice here.
+     */
+    function transferOwnership(IApp app, address newOwner) external;
+
+    /**
      * @notice Confirms a pending upgrade, promoting the pending release to the confirmed (latest) release
      * @param app The app to confirm the upgrade for
      * @dev Caller must be UAM permissioned for the AppController (i.e., the Coordinator)
@@ -204,34 +235,35 @@ interface IAppController {
     function confirmUpgrade(IApp app) external;
 
     /**
-     * @notice Updates the metadata URI for an app
+     * @notice Updates the metadata URI for an app. Operational.
      * @param app The app to update the metadata URI for
      * @param metadataURI The new metadata URI
-     * @dev Caller must be UAM permissioned for the app
+     * @dev Permitted to ADMIN or DEVELOPER.
      */
     function updateAppMetadataURI(IApp app, string calldata metadataURI) external;
 
     /**
-     * @notice Starts an app, which starts the instance backing it
+     * @notice Starts an app, which starts the instance backing it.
      * @param app The app to start
-     * @dev Caller must be UAM permissioned for the app
-     * @dev App must be AppStatus.STOPPED
+     * @dev Permitted to ADMIN only — starting commits capacity; treated as
+     *      privileged. App must be STOPPED.
      */
     function startApp(IApp app) external;
 
     /**
-     * @notice Stops an app, which stops the instance backing it
+     * @notice Stops an app, which stops the instance backing it. Operational.
      * @param app The app to stop
-     * @dev Caller must be UAM permissioned for the app
-     * @dev App must be AppStatus.STARTED
+     * @dev Permitted to ADMIN or PAUSER.
+     * @dev App must be AppStatus.STARTED.
      */
     function stopApp(IApp app) external;
 
     /**
-     * @notice Terminates an app permanently
+     * @notice Terminates an app permanently. Critical op.
      * @param app The app to terminate
-     * @dev Caller must be UAM permissioned for the app
-     * @dev Once terminated, no further write operations are allowed
+     * @dev Caller must be the app's current owner (`creator`). Co-ADMINs
+     *      cannot terminate.
+     * @dev Once terminated, no further write operations are allowed.
      */
     function terminateApp(IApp app) external;
 
@@ -252,6 +284,21 @@ interface IAppController {
      * @dev Apps already suspended or terminated are silently skipped
      */
     function suspend(address account, IApp[] calldata apps) external;
+
+    /**
+     * @notice Migrate pre-v1.5.0 apps to AppAuthority-based RBAC. For each
+     *         app in `apps`:
+     *         - seeds AppAuthority.scopeOwner(app) from AppController.creator
+     *           if not already set;
+     *         - seeds AppAuthority.ADMIN role with the app's PermissionController
+     *           admins. ADMIN is an operational-only role — it does NOT
+     *           confer critical-op power (upgrade / transfer / terminate),
+     *           so migrated admins cannot replay pre-v1.5.0 critical ops.
+     * @dev Caller must be UAM permissioned for the AppController itself
+     *      (platform admin). Intended to be called once per app after the
+     *      v1.5.0 upgrade; safe to call again (idempotent per-(app, admin)).
+     */
+    function migrateAppsToAppAuthority(IApp[] calldata apps) external;
 
     /**
      * @notice Gets the maximum global active apps limit

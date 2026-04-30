@@ -9,6 +9,7 @@ import {IApp} from "../interfaces/IApp.sol";
 import {IAppController} from "../interfaces/IAppController.sol";
 import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {IAppAuthority} from "../interfaces/IAppAuthority.sol";
 
 abstract contract AppControllerStorage is IAppController {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -38,6 +39,15 @@ abstract contract AppControllerStorage is IAppController {
     /// @notice The beacon used for creating App proxies
     IBeacon public immutable appBeacon;
 
+    /// @notice Authority contract that owns per-app ownership and RBAC state.
+    /// @dev AppController delegates auth to this contract — ownership
+    ///      transfer, role management, and the scope-owner reads used by
+    ///      `onlyCreator` / `canCall` all flow through AppAuthority. The
+    ///      owner-gated invariants (only the owner may mutate ADMIN; owner
+    ///      is always in ADMIN; transferScopeOwnership is the only owner
+    ///      rotation path) are enforced in AppAuthority, not here.
+    IAppAuthority public immutable appAuthority;
+
     /// @notice Set of all created apps
     EnumerableSet.AddressSet internal _allApps;
 
@@ -57,12 +67,14 @@ abstract contract AppControllerStorage is IAppController {
         IReleaseManager _releaseManager,
         IComputeOperator _computeOperator,
         IComputeAVSRegistrar _computeAVSRegistrar,
-        IBeacon _appBeacon
+        IBeacon _appBeacon,
+        IAppAuthority _appAuthority
     ) {
         releaseManager = _releaseManager;
         computeOperator = _computeOperator;
         computeAVSRegistrar = _computeAVSRegistrar;
         appBeacon = _appBeacon;
+        appAuthority = _appAuthority;
     }
 
     /**

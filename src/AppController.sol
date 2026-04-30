@@ -2,9 +2,8 @@
 pragma solidity ^0.8.27;
 
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
-import {OwnableUpgradeable} from "@openzeppelin-upgrades/contracts/access/OwnableUpgradeable.sol";
-import {Initializable} from "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {Initializable} from "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
 import {SignatureUtilsMixin} from "@eigenlayer-contracts/src/contracts/mixins/SignatureUtilsMixin.sol";
 import {IPermissionController} from "@eigenlayer-contracts/src/contracts/interfaces/IPermissionController.sol";
 import {PermissionControllerMixin} from "@eigenlayer-contracts/src/contracts/mixins/PermissionControllerMixin.sol";
@@ -17,14 +16,45 @@ import {IComputeAVSRegistrar} from "./interfaces/IComputeAVSRegistrar.sol";
 import {IComputeOperator} from "./interfaces/IComputeOperator.sol";
 import {AppControllerStorage} from "./storage/AppControllerStorage.sol";
 import {IAppController} from "./interfaces/IAppController.sol";
-import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import {IAppAuthority} from "./interfaces/IAppAuthority.sol";
 import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {IApp} from "./interfaces/IApp.sol";
+import {ICallValidator} from "./interfaces/ICallValidator.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-contract AppController is Initializable, SignatureUtilsMixin, PermissionControllerMixin, AppControllerStorage {
+contract AppController is
+    Initializable,
+    SignatureUtilsMixin,
+    PermissionControllerMixin,
+    AppControllerStorage,
+    ICallValidator
+{
     using EnumerableSet for EnumerableSet.AddressSet;
 
     /// MODIFIERS
+
+    /// @notice Modifier to require the caller hold `role` on `app` (or ADMIN,
+    ///         which is a superset). Reverts with InvalidTeamRole otherwise.
+    /// @dev Role state lives in AppAuthority; AppController just queries it.
+    modifier onlyRoleOrAdmin(IApp app, IAppAuthority.Role role) {
+        if (!appAuthority.hasRoleOrAdmin(app, role, msg.sender)) revert InvalidTeamRole();
+        _;
+    }
+
+    /// @notice Modifier to require the caller is an ADMIN on `app`.
+    modifier onlyAdmin(IApp app) {
+        if (!appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, msg.sender)) revert InvalidTeamRole();
+        _;
+    }
+
+    /// @notice Modifier to require the caller is the current owner of `app`.
+    ///         Used on critical ops — ADMIN alone is not enough. Ownership
+    ///         lives in AppAuthority, mirrored into `_appConfigs[app].creator`
+    ///         for billing, events, and ABI stability.
+    modifier onlyCreator(IApp app) {
+        if (!appAuthority.isScopeOwner(app, msg.sender)) revert NotCreator();
+        _;
+    }
 
     /// @notice Modifier to ensure app exists
     modifier appExists(IApp app) {
@@ -51,11 +81,12 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         IReleaseManager _releaseManager,
         IComputeAVSRegistrar _computeAVSRegistrar,
         IComputeOperator _computeOperator,
-        IBeacon _appBeacon
+        IBeacon _appBeacon,
+        IAppAuthority _appAuthority
     )
         SignatureUtilsMixin(_version)
         PermissionControllerMixin(_permissionController)
-        AppControllerStorage(_releaseManager, _computeOperator, _computeAVSRegistrar, _appBeacon)
+        AppControllerStorage(_releaseManager, _computeOperator, _computeAVSRegistrar, _appBeacon, _appAuthority)
     {
         _disableInitializers();
     }
@@ -113,11 +144,46 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     /// @inheritdoc IAppController
     function upgradeApp(IApp app, Release calldata release)
         external
-        checkCanCall(address(app))
+        onlyCreator(app)
         appIsActive(app)
         returns (uint256)
     {
+        // Critical op: only the current owner may call. If the owner is a
+        // Timelock, this forces the call through schedule → execute; if it's
+        // a Safe, through the multisig; if it's an EOA, directly. The
+        // governance mechanism is whatever the owner contract is — AppController
+        // doesn't need to classify it.
         return _upgradeApp(app, release);
+    }
+
+    /// @inheritdoc IAppController
+    function transferOwnership(IApp app, address newOwner) external onlyCreator(app) appExists(app) {
+        require(newOwner != address(0), InvalidPermissions());
+
+        AppConfigStorage storage config = _appConfigs[app];
+        address previousOwner = config.creator;
+
+        // Rotate ownership + ADMIN atomically in AppAuthority. AppAuthority
+        // enforces the add-before-remove ordering so the ADMIN set never
+        // empties during the swap.
+        appAuthority.transferScopeOwnership(app, newOwner);
+
+        // Mirror the owner into our local cache for billing / App.initialize
+        // / event stability. AppAuthority is the source of truth; this is
+        // the cache.
+        config.creator = newOwner;
+
+        // ISOLATED billing apps bill the app address, not the creator, so
+        // ownership transfer has no effect on billing accounting. DEFAULT
+        // billing apps bill the creator, so we need to move the active-app
+        // counter from the previous creator to the new one; otherwise a future
+        // terminate/suspend would underflow the new owner's counter.
+        if (config.billingType == BillingType.DEFAULT && _isActive(config.status)) {
+            _userConfigs[previousOwner].activeAppCount--;
+            _userConfigs[newOwner].activeAppCount++;
+        }
+
+        emit AppOwnershipTransferred(app, previousOwner, newOwner);
     }
 
     /// @inheritdoc IAppController
@@ -133,19 +199,19 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     /// @inheritdoc IAppController
     function updateAppMetadataURI(IApp app, string calldata metadataURI)
         external
-        checkCanCall(address(app))
+        onlyRoleOrAdmin(app, IAppAuthority.Role.DEVELOPER)
         appExists(app)
     {
         emit AppMetadataURIUpdated(app, metadataURI);
     }
 
     /// @inheritdoc IAppController
-    function startApp(IApp app) external checkCanCall(address(app)) appExists(app) {
+    function startApp(IApp app) external onlyAdmin(app) appExists(app) {
         _startApp(app);
     }
 
     /// @inheritdoc IAppController
-    function stopApp(IApp app) external checkCanCall(address(app)) {
+    function stopApp(IApp app) external onlyRoleOrAdmin(app, IAppAuthority.Role.PAUSER) {
         AppConfigStorage storage config = _appConfigs[app];
         require(config.status == AppStatus.STARTED, InvalidAppStatus());
         config.status = AppStatus.STOPPED;
@@ -154,12 +220,21 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// @inheritdoc IAppController
-    function terminateApp(IApp app) external checkCanCall(address(app)) appIsActive(app) {
+    function terminateApp(IApp app) external onlyCreator(app) appIsActive(app) {
+        // Critical op: only the current owner (`creator`) may terminate.
+        // Termination is irreversible; a co-ADMIN cannot trigger it.
         _terminateApp(app);
     }
 
     /// @inheritdoc IAppController
     function terminateAppByAdmin(IApp app) external checkCanCall(address(this)) appIsActive(app) {
+        // Protocol admin (UAM-gated) may terminate any app. This is protocol
+        // policy that sits above app-level governance — abuse, legal, or
+        // platform-level concerns require a uniform lever regardless of what
+        // the user chose as the app's owner. If the protocol wants its own
+        // termination actions to be delay-gated, the protocol's UAM admin
+        // multisig should itself be behind a Timelock — that's an operational
+        // decision, not an AppController concern.
         _terminateApp(app);
         emit AppTerminatedByAdmin(app);
     }
@@ -191,6 +266,47 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         _setMaxActiveAppsPerUser(account, 0);
     }
 
+    /// TEAM ROLE MANAGEMENT — delegated to AppAuthority
+    ///
+    /// Role management (grant / revoke / renounce / hasRole) lives in
+    /// AppAuthority directly. Clients call `appAuthority.grantRole(app, ...)`
+    /// etc. AppController does not re-expose those entry points; doing so
+    /// would add an extra hop with no auth delta and double the audit
+    /// surface. See IAppAuthority for the role API.
+
+    /// @inheritdoc IAppController
+    function migrateAppsToAppAuthority(IApp[] calldata apps) external checkCanCall(address(this)) {
+        // For every pre-v1.5.0 app:
+        //   (1) If AppAuthority has no owner recorded, initialize the scope
+        //       with AppController's cached `creator` field.
+        //   (2) Seed AppAuthority's ADMIN role with the app's
+        //       PermissionController admins. ADMIN is an operational-only
+        //       role in this model — it does NOT confer upgrade / transfer /
+        //       terminate power, so migrated admins carry no critical-op
+        //       exposure; the owner remains the only critical-op authority.
+        // Idempotent: re-running is safe because initializeScope reverts on
+        // reinit (handled), and grantRole is set-semantics.
+        uint256 n = apps.length;
+        IApp[] memory scopes = new IApp[](n);
+        address[][] memory allAdmins = new address[][](n);
+
+        for (uint256 i = 0; i < n; i++) {
+            IApp app = apps[i];
+            address cachedOwner = _appConfigs[app].creator;
+
+            // Initialize the scope if not already initialized. scopeOwner
+            // returns address(0) for uninitialized scopes.
+            if (appAuthority.scopeOwner(app) == address(0) && cachedOwner != address(0)) {
+                appAuthority.initializeScope(app, cachedOwner);
+            }
+
+            scopes[i] = app;
+            allAdmins[i] = permissionController.getAdmins(address(app));
+        }
+
+        appAuthority.migrateAdmins(scopes, allAdmins);
+    }
+
     /// INTERNAL FUNCTIONS
 
     /**
@@ -212,6 +328,10 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         _appConfigs[app].creator = msg.sender;
         _appConfigs[app].billingType = _billingType;
         _allApps.add(address(app));
+
+        // Register the scope + seed creator as ADMIN in AppAuthority. All
+        // subsequent auth checks consult AppAuthority directly.
+        appAuthority.initializeScope(app, msg.sender);
 
         emit AppCreated(msg.sender, app, operatorSetId);
 
@@ -485,6 +605,37 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     /// @inheritdoc IAppController
     function getBillingType(IApp app) external view returns (BillingType) {
         return _appConfigs[app].billingType;
+    }
+
+    /// @inheritdoc IERC165
+    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
+        return interfaceId == type(ICallValidator).interfaceId || interfaceId == type(IERC165).interfaceId;
+    }
+
+    /// @inheritdoc ICallValidator
+    /// @dev Schedule-time validation hook consumed by TimelockControllerImpl.
+    ///      AppController is a common Timelock target; a scheduled critical
+    ///      op from a non-owner is doomed at execute time. Reject at
+    ///      schedule time so the delay window isn't burned on a doomed op.
+    ///
+    ///      Role-management selectors are NOT on this contract anymore —
+    ///      they live on AppAuthority. Scheduling role ops targets
+    ///      AppAuthority directly, which has its own ICallValidator surface
+    ///      (if wired) to validate there.
+    function canCall(address caller, bytes calldata data) external view returns (bool) {
+        if (data.length < 36) return true;
+        bytes4 selector = bytes4(data[:4]);
+
+        // Owner-gated critical ops (upgrade / terminate / transferOwnership).
+        if (
+            selector == this.upgradeApp.selector || selector == this.terminateApp.selector
+                || selector == this.transferOwnership.selector
+        ) {
+            IApp app = abi.decode(data[4:36], (IApp));
+            if (!appAuthority.isScopeOwner(app, caller)) return false;
+        }
+
+        return true;
     }
 
     /// @inheritdoc IAppController

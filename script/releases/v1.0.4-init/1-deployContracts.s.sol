@@ -22,6 +22,7 @@ import {ComputeOperator} from "../../../src/ComputeOperator.sol";
 import {IAppController} from "../../../src/interfaces/IAppController.sol";
 import {IComputeAVSRegistrar} from "../../../src/interfaces/IComputeAVSRegistrar.sol";
 import {IComputeOperator} from "../../../src/interfaces/IComputeOperator.sol";
+import {IAppAuthority} from "../../../src/interfaces/IAppAuthority.sol";
 
 /**
  * Purpose: use an EOA to deploy all compute contracts.
@@ -82,7 +83,10 @@ contract Deploy is EOADeployer {
             _releaseManager: Env.releaseManager(),
             _computeAVSRegistrar: IComputeAVSRegistrar(address(computeAVSRegistrarProxy)),
             _computeOperator: IComputeOperator(address(computeOperatorProxy)),
-            _appBeacon: appBeacon
+            _appBeacon: appBeacon,
+            // v1.0.4 predates AppAuthority. Historical script kept compilable
+            // against the current constructor; this path never runs.
+            _appAuthority: IAppAuthority(address(0))
         });
 
         // Upgrade proxies using ProxyAdmin
