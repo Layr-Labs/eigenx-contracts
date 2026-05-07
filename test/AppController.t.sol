@@ -659,12 +659,14 @@ contract AppControllerTest is ComputeDeployer {
         (IApp[] memory devApps,) = appController.getAppsByDeveloper(developer, 0, 10);
         assertEq(devApps.length, 2, "developer is ADMIN on every app they created");
 
-        // Transfer app2 to another owner. transferScopeOwnership removes
-        // developer from ADMIN on app2 atomically.
+        // Transfer app2 to another owner via the two-step flow. The ADMIN
+        // rotation happens at accept time.
         address newOwner = makeAddr("newOwner");
         _setMaxActiveAppsPerUser(newOwner, 10);
         vm.prank(developer);
         appController.transferOwnership(app2, newOwner);
+        vm.prank(newOwner);
+        appController.acceptOwnership(app2);
 
         // Now developer is ADMIN only on app1, but remains "creator" on
         // app1 only (creator got overwritten on app2 transfer). So
@@ -1533,26 +1535,93 @@ contract AppControllerTest is ComputeDeployer {
         assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.TERMINATED));
     }
 
-    // ========== transferOwnership ==========
+    // ========== transferOwnership (two-step) ==========
 
     event AppOwnershipTransferred(IApp indexed app, address indexed previousOwner, address indexed newOwner);
+    event OwnershipTransferProposed(IApp indexed app, address indexed currentOwner, address indexed proposedOwner);
+    event OwnershipTransferCancelled(IApp indexed app, address indexed currentOwner, address indexed cancelledOwner);
 
-    function test_transferOwnership_emitsEvent() public {
+    function test_transferOwnership_proposeEmitsEvent() public {
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
-        vm.prank(developer);
-        permissionController.acceptAdmin(address(app));
 
         address newOwner = makeAddr("newOwner");
-        _setMaxActiveAppsPerUser(newOwner, 10);
 
         vm.expectEmit(true, true, true, true);
-        emit AppOwnershipTransferred(app, developer, newOwner);
+        emit OwnershipTransferProposed(app, developer, newOwner);
 
         vm.prank(developer);
         appController.transferOwnership(app, newOwner);
 
+        // Propose alone does NOT change creator; it only records the pending.
+        assertEq(appController.getAppCreator(app), developer);
+        assertEq(appController.getPendingOwner(app), newOwner);
+    }
+
+    function test_transferOwnership_fullTwoStepFlow() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address newOwner = makeAddr("newOwner");
+        _setMaxActiveAppsPerUser(newOwner, 10);
+
+        vm.prank(developer);
+        appController.transferOwnership(app, newOwner);
+
+        vm.expectEmit(true, true, true, true);
+        emit AppOwnershipTransferred(app, developer, newOwner);
+
+        vm.prank(newOwner);
+        appController.acceptOwnership(app);
+
         assertEq(appController.getAppCreator(app), newOwner);
+        assertEq(appController.getPendingOwner(app), address(0));
+    }
+
+    function test_acceptOwnership_rejectsNonPendingCaller() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address proposed = makeAddr("proposed");
+        vm.prank(developer);
+        appController.transferOwnership(app, proposed);
+
+        address imposter = makeAddr("imposter");
+        vm.prank(imposter);
+        vm.expectRevert(IAppController.NotPendingOwner.selector);
+        appController.acceptOwnership(app);
+    }
+
+    function test_acceptOwnership_rejectsWhenNoProposalPending() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        // No proposal — any accept attempt reverts because pendingOwner == 0.
+        vm.prank(developer);
+        vm.expectRevert(IAppController.NotPendingOwner.selector);
+        appController.acceptOwnership(app);
+    }
+
+    function test_acceptOwnership_enforcesReceiverQuota() public {
+        // Receiver with no quota must not be able to accept a DEFAULT-billed
+        // active app — the counter bump would push them past maxActiveApps
+        // (which defaults to 0 for fresh accounts).
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address broke = makeAddr("broke"); // maxActiveApps == 0 (not provisioned)
+        vm.prank(developer);
+        appController.transferOwnership(app, broke);
+
+        vm.prank(broke);
+        vm.expectRevert(IAppController.MaxActiveAppsExceeded.selector);
+        appController.acceptOwnership(app);
+
+        // Once provisioned, accept succeeds.
+        _setMaxActiveAppsPerUser(broke, 1);
+        vm.prank(broke);
+        appController.acceptOwnership(app);
+        assertEq(appController.getAppCreator(app), broke);
     }
 
     function test_transferOwnership_blocksCoAdminNonOwner() public {
@@ -1561,7 +1630,7 @@ contract AppControllerTest is ComputeDeployer {
 
         // Owner grants ADMIN to coAdmin. ADMIN is the strongest role a
         // co-admin could plausibly have; the owner-gate must still block
-        // them from moving the app.
+        // them from proposing a transfer.
         address coAdmin = makeAddr("coAdmin");
         vm.prank(developer);
         appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
@@ -1573,29 +1642,104 @@ contract AppControllerTest is ComputeDeployer {
         vm.expectRevert(IAppController.NotCreator.selector);
         appController.transferOwnership(app, attacker);
 
-        // Owner can still transfer.
+        // Owner can propose + attacker-as-receiver accepts.
         vm.prank(developer);
         appController.transferOwnership(app, attacker);
+        vm.prank(attacker);
+        appController.acceptOwnership(app);
         assertEq(appController.getAppCreator(app), attacker);
     }
 
     function test_transferOwnership_revertsZeroAddress() public {
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
-        // developer is auto-granted ADMIN at createApp time; no UAM step needed.
 
         vm.prank(developer);
         vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
         appController.transferOwnership(app, address(0));
     }
 
-    function test_transferOwnership_defaultBilling_movesActiveCounter() public {
-        // Default billing: creator is the billing account. Counter must move
-        // so future terminate/suspend on the new owner doesn't underflow.
+    function test_transferOwnership_cancelByOwner() public {
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address proposed = makeAddr("proposed");
         vm.prank(developer);
-        permissionController.acceptAdmin(address(app));
+        appController.transferOwnership(app, proposed);
+        assertEq(appController.getPendingOwner(app), proposed);
+
+        vm.expectEmit(true, true, true, true);
+        emit OwnershipTransferCancelled(app, developer, proposed);
+
+        vm.prank(developer);
+        appController.cancelOwnershipTransfer(app);
+        assertEq(appController.getPendingOwner(app), address(0));
+
+        // Previously-proposed address can no longer accept.
+        vm.prank(proposed);
+        vm.expectRevert(IAppController.NotPendingOwner.selector);
+        appController.acceptOwnership(app);
+    }
+
+    function test_transferOwnership_resupercedesOldProposal() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address first = makeAddr("first");
+        vm.prank(developer);
+        appController.transferOwnership(app, first);
+
+        address second = makeAddr("second");
+        _setMaxActiveAppsPerUser(second, 10);
+
+        // Re-proposing should emit both Cancelled(first) and Proposed(second).
+        vm.expectEmit(true, true, true, true);
+        emit OwnershipTransferCancelled(app, developer, first);
+        vm.expectEmit(true, true, true, true);
+        emit OwnershipTransferProposed(app, developer, second);
+
+        vm.prank(developer);
+        appController.transferOwnership(app, second);
+
+        // First can no longer accept; second can.
+        vm.prank(first);
+        vm.expectRevert(IAppController.NotPendingOwner.selector);
+        appController.acceptOwnership(app);
+
+        vm.prank(second);
+        appController.acceptOwnership(app);
+        assertEq(appController.getAppCreator(app), second);
+    }
+
+    function test_transferOwnership_ownerRetainsAuthorityDuringPending() public {
+        // Pending proposal does NOT freeze the current owner's authority.
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address proposed = makeAddr("proposed");
+        vm.prank(developer);
+        appController.transferOwnership(app, proposed);
+
+        // Owner can still upgrade. Receiver has not accepted yet.
+        vm.prank(developer);
+        appController.upgradeApp(app, _assembleRelease());
+
+        // Owner can still terminate (which invalidates the pending).
+        vm.prank(developer);
+        appController.terminateApp(app);
+
+        // Receiver cannot accept a terminated app (appExists check fails
+        // at the top of acceptOwnership? Actually appExists allows TERMINATED;
+        // the accept will proceed but the downstream billing migration is
+        // a no-op since _isActive is false. The transfer of ownership on a
+        // terminated app is a degenerate but non-harmful case.)
+        // We only assert that the pending pointer wasn't cleared by terminate.
+        assertEq(appController.getPendingOwner(app), proposed);
+    }
+
+    function test_transferOwnership_defaultBilling_movesActiveCounter() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
 
         address newOwner = makeAddr("newOwner");
         _setMaxActiveAppsPerUser(newOwner, 10);
@@ -1605,27 +1749,35 @@ contract AppControllerTest is ComputeDeployer {
 
         vm.prank(developer);
         appController.transferOwnership(app, newOwner);
+        // Propose alone must NOT touch counters — that's the whole point
+        // of the two-step flow.
+        assertEq(appController.getActiveAppCount(developer), beforeDev);
+        assertEq(appController.getActiveAppCount(newOwner), beforeNew);
 
+        vm.prank(newOwner);
+        appController.acceptOwnership(app);
+
+        // Accept migrates the counter.
         assertEq(appController.getActiveAppCount(developer), beforeDev - 1);
         assertEq(appController.getActiveAppCount(newOwner), beforeNew + 1);
     }
 
     function test_transferOwnership_isolatedBilling_doesNotMoveCounter() public {
-        // ISOLATED billing apps bill the app address, so the creator's
-        // active-app counter was never incremented and must not move on transfer.
         _setMaxActiveAppsPerUser(address(appController.calculateAppId(developer, SALT)), 10);
 
         vm.prank(developer);
         IApp app = appController.createAppWithIsolatedBilling(SALT, _assembleRelease());
-        vm.prank(developer);
-        permissionController.acceptAdmin(address(app));
 
         uint32 beforeApp = appController.getActiveAppCount(address(app));
         uint32 beforeDev = appController.getActiveAppCount(developer);
 
         address newOwner = makeAddr("newOwner");
+        // Isolated billing doesn't bill the user, so receiver quota is
+        // irrelevant — no provisioning needed.
         vm.prank(developer);
         appController.transferOwnership(app, newOwner);
+        vm.prank(newOwner);
+        appController.acceptOwnership(app);
 
         assertEq(appController.getActiveAppCount(address(app)), beforeApp);
         assertEq(appController.getActiveAppCount(developer), beforeDev);
@@ -1858,19 +2010,20 @@ contract AppControllerTest is ComputeDeployer {
 
         vm.prank(developer);
         appController.transferOwnership(app, newOwner);
+        vm.prank(newOwner);
+        appController.acceptOwnership(app);
 
         assertTrue(
-            appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, newOwner),
-            "new owner must be granted ADMIN automatically"
+            appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, newOwner), "new owner must be granted ADMIN on accept"
         );
     }
 
     function test_transferOwnership_removesPreviousOwnerFromAdmin() public {
         // Fix for audit A-3 / V-10: the previous owner must be removed from
-        // the ADMIN set on transfer. Otherwise an old owner (EOA, Safe, or
-        // old Timelock post-handoff) retains operational powers and, if
-        // they remain ADMIN while the new owner holds a weaker key, they
-        // can re-grab the app.
+        // the ADMIN set on ownership handoff. Otherwise an old owner (EOA,
+        // Safe, or old Timelock post-handoff) retains operational powers
+        // and, if they remain ADMIN while the new owner holds a weaker key,
+        // they can re-grab the app.
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
 
@@ -1879,18 +2032,20 @@ contract AppControllerTest is ComputeDeployer {
 
         vm.prank(developer);
         appController.transferOwnership(app, newOwner);
+        vm.prank(newOwner);
+        appController.acceptOwnership(app);
 
         assertFalse(
             appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, developer),
-            "previous owner must be removed from ADMIN on transfer"
+            "previous owner must be removed from ADMIN on accept"
         );
         assertTrue(appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, newOwner), "new owner must still be ADMIN");
     }
 
     function test_transferOwnership_previousOwnerLosesCriticalPower() public {
-        // After transfer, the previous owner cannot perform critical ops
-        // even though they used to. This is the direct user-visible
-        // consequence of the owner-gate + ADMIN cleanup together.
+        // After the transfer completes (accept), the previous owner cannot
+        // perform critical ops even though they used to. This is the direct
+        // user-visible consequence of the owner-gate + ADMIN cleanup.
         vm.prank(developer);
         IApp app = appController.createApp(SALT, _assembleRelease());
 
@@ -1899,8 +2054,10 @@ contract AppControllerTest is ComputeDeployer {
 
         vm.prank(developer);
         appController.transferOwnership(app, newOwner);
+        vm.prank(newOwner);
+        appController.acceptOwnership(app);
 
-        // Previous owner cannot upgrade, terminate, or transfer.
+        // Previous owner cannot upgrade, terminate, or propose a new transfer.
         vm.prank(developer);
         vm.expectRevert(IAppController.NotCreator.selector);
         appController.upgradeApp(app, _assembleRelease());

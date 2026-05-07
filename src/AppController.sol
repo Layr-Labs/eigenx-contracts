@@ -161,29 +161,57 @@ contract AppController is
         require(newOwner != address(0), InvalidPermissions());
 
         AppConfigStorage storage config = _appConfigs[app];
+        address previousPending = config.pendingOwner;
+        config.pendingOwner = newOwner;
+
+        // Surface the supersession explicitly so off-chain consumers can
+        // invalidate any UI state tied to the previous proposal.
+        if (previousPending != address(0) && previousPending != newOwner) {
+            emit OwnershipTransferCancelled(app, msg.sender, previousPending);
+        }
+        emit OwnershipTransferProposed(app, msg.sender, newOwner);
+    }
+
+    /// @inheritdoc IAppController
+    function acceptOwnership(IApp app) external appExists(app) {
+        AppConfigStorage storage config = _appConfigs[app];
+        if (msg.sender != config.pendingOwner) revert NotPendingOwner();
+
         address previousOwner = config.creator;
 
-        // Rotate ownership + ADMIN atomically in AppAuthority. AppAuthority
-        // enforces the add-before-remove ordering so the ADMIN set never
-        // empties during the swap.
-        appAuthority.transferScopeOwnership(app, newOwner);
-
-        // Mirror the owner into our local cache for billing / App.initialize
-        // / event stability. AppAuthority is the source of truth; this is
-        // the cache.
-        config.creator = newOwner;
-
-        // ISOLATED billing apps bill the app address, not the creator, so
-        // ownership transfer has no effect on billing accounting. DEFAULT
-        // billing apps bill the creator, so we need to move the active-app
-        // counter from the previous creator to the new one; otherwise a future
-        // terminate/suspend would underflow the new owner's counter.
+        // For DEFAULT-billed active apps, the counter is about to migrate
+        // to the receiver — they must have capacity. Matches `createApp`
+        // semantics exactly: strictly-less-than check against both the
+        // per-user cap and the global cap (global is already at capacity
+        // in this scenario means we're transferring from one user to
+        // another, net zero, so it can never fail — but we still enforce
+        // the user-level cap).
         if (config.billingType == BillingType.DEFAULT && _isActive(config.status)) {
-            _userConfigs[previousOwner].activeAppCount--;
-            _userConfigs[newOwner].activeAppCount++;
+            UserConfig storage receiverCfg = _userConfigs[msg.sender];
+            require(receiverCfg.activeAppCount < receiverCfg.maxActiveApps, MaxActiveAppsExceeded());
         }
 
-        emit AppOwnershipTransferred(app, previousOwner, newOwner);
+        // Rotate ownership + ADMIN atomically in AppAuthority.
+        appAuthority.transferScopeOwnership(app, msg.sender);
+
+        config.creator = msg.sender;
+        delete config.pendingOwner;
+
+        if (config.billingType == BillingType.DEFAULT && _isActive(config.status)) {
+            _userConfigs[previousOwner].activeAppCount--;
+            _userConfigs[msg.sender].activeAppCount++;
+        }
+
+        emit AppOwnershipTransferred(app, previousOwner, msg.sender);
+    }
+
+    /// @inheritdoc IAppController
+    function cancelOwnershipTransfer(IApp app) external onlyCreator(app) appExists(app) {
+        AppConfigStorage storage config = _appConfigs[app];
+        address pending = config.pendingOwner;
+        if (pending == address(0)) return;
+        delete config.pendingOwner;
+        emit OwnershipTransferCancelled(app, msg.sender, pending);
     }
 
     /// @inheritdoc IAppController
@@ -597,6 +625,11 @@ contract AppController is
         return _appConfigs[app].creator;
     }
 
+    /// @inheritdoc IAppController
+    function getPendingOwner(IApp app) external view returns (address) {
+        return _appConfigs[app].pendingOwner;
+    }
+
     /**
      * @notice Resolves the billing account for an app
      * @param app The app instance to resolve billing for
@@ -631,10 +664,15 @@ contract AppController is
         if (data.length < 36) return true;
         bytes4 selector = bytes4(data[:4]);
 
-        // Owner-gated critical ops (upgrade / terminate / transferOwnership).
+        // Owner-gated critical ops. transferOwnership is a proposal under
+        // the two-step model — still owner-gated at the proposer side.
+        // cancelOwnershipTransfer is also owner-gated. acceptOwnership is
+        // intentionally NOT listed: it's gated on the pending-owner field,
+        // which is per-app dynamic state; we let the runtime check handle
+        // it rather than duplicate the lookup here.
         if (
             selector == this.upgradeApp.selector || selector == this.terminateApp.selector
-                || selector == this.transferOwnership.selector
+                || selector == this.transferOwnership.selector || selector == this.cancelOwnershipTransfer.selector
         ) {
             IApp app = abi.decode(data[4:36], (IApp));
             if (!appAuthority.isScopeOwner(app, caller)) return false;
