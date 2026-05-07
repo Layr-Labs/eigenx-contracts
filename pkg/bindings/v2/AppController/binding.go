@@ -70,7 +70,7 @@ type IReleaseManagerTypesRelease struct {
 
 // AppControllerMetaData contains all meta data concerning the AppController contract.
 var AppControllerMetaData = bind.MetaData{
-	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"_permissionController\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"},{\"name\":\"_releaseManager\",\"type\":\"address\",\"internalType\":\"contractIReleaseManager\"},{\"name\":\"_computeAVSRegistrar\",\"type\":\"address\",\"internalType\":\"contractIComputeAVSRegistrar\"},{\"name\":\"_computeOperator\",\"type\":\"address\",\"internalType\":\"contractIComputeOperator\"},{\"name\":\"_appBeacon\",\"type\":\"address\",\"internalType\":\"contractIBeacon\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"API_PERMISSION_TYPEHASH\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"appBeacon\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIBeacon\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"calculateApiPermissionDigestHash\",\"inputs\":[{\"name\":\"permission\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"},{\"name\":\"expiry\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"calculateAppId\",\"inputs\":[{\"name\":\"deployer\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeAVSRegistrar\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIComputeAVSRegistrar\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeOperator\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIComputeOperator\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"confirmUpgrade\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"createApp\",\"inputs\":[{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"containerPolicy\",\"type\":\"tuple\",\"internalType\":\"structIAppController.ContainerPolicy\",\"components\":[{\"name\":\"args\",\"type\":\"string[]\",\"internalType\":\"string[]\"},{\"name\":\"cmdOverride\",\"type\":\"string[]\",\"internalType\":\"string[]\"},{\"name\":\"env\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.EnvVar[]\",\"components\":[{\"name\":\"key\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"value\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"envOverride\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.EnvVar[]\",\"components\":[{\"name\":\"key\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"value\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"restartPolicy\",\"type\":\"string\",\"internalType\":\"string\"}]}]}],\"outputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"createAppWithIsolatedBilling\",\"inputs\":[{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"containerPolicy\",\"type\":\"tuple\",\"internalType\":\"structIAppController.ContainerPolicy\",\"components\":[{\"name\":\"args\",\"type\":\"string[]\",\"internalType\":\"string[]\"},{\"name\":\"cmdOverride\",\"type\":\"string[]\",\"internalType\":\"string[]\"},{\"name\":\"env\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.EnvVar[]\",\"components\":[{\"name\":\"key\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"value\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"envOverride\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.EnvVar[]\",\"components\":[{\"name\":\"key\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"value\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"restartPolicy\",\"type\":\"string\",\"internalType\":\"string\"}]}]}],\"outputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"domainSeparator\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getActiveAppCount\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppCreator\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppLatestReleaseBlockNumber\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppOperatorSetId\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppPendingReleaseBlockNumber\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppStatus\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getApps\",\"inputs\":[{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"pendingReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsByBillingAccount\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"pendingReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsByCreator\",\"inputs\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"pendingReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsByDeveloper\",\"inputs\":[{\"name\":\"developer\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"pendingReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getBillingAccount\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getBillingType\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.BillingType\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getMaxActiveAppsPerUser\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"globalActiveAppCount\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"admin\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"maxGlobalActiveApps\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"permissionController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"releaseManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIReleaseManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"setMaxActiveAppsPerUser\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"limit\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setMaxGlobalActiveApps\",\"inputs\":[{\"name\":\"limit\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"startApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"stopApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"suspend\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"terminateApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"terminateAppByAdmin\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"updateAppMetadataURI\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"},{\"name\":\"metadataURI\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"upgradeApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"containerPolicy\",\"type\":\"tuple\",\"internalType\":\"structIAppController.ContainerPolicy\",\"components\":[{\"name\":\"args\",\"type\":\"string[]\",\"internalType\":\"string[]\"},{\"name\":\"cmdOverride\",\"type\":\"string[]\",\"internalType\":\"string[]\"},{\"name\":\"env\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.EnvVar[]\",\"components\":[{\"name\":\"key\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"value\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"envOverride\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.EnvVar[]\",\"components\":[{\"name\":\"key\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"value\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"restartPolicy\",\"type\":\"string\",\"internalType\":\"string\"}]}]}],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"AppCreated\",\"inputs\":[{\"name\":\"creator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppMetadataURIUpdated\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"metadataURI\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppStarted\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppStopped\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppSuspended\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppTerminated\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppTerminatedByAdmin\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppUpgraded\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"rmsReleaseId\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"release\",\"type\":\"tuple\",\"indexed\":false,\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"containerPolicy\",\"type\":\"tuple\",\"internalType\":\"structIAppController.ContainerPolicy\",\"components\":[{\"name\":\"args\",\"type\":\"string[]\",\"internalType\":\"string[]\"},{\"name\":\"cmdOverride\",\"type\":\"string[]\",\"internalType\":\"string[]\"},{\"name\":\"env\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.EnvVar[]\",\"components\":[{\"name\":\"key\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"value\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"envOverride\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.EnvVar[]\",\"components\":[{\"name\":\"key\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"value\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"restartPolicy\",\"type\":\"string\",\"internalType\":\"string\"}]}]}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"GlobalMaxActiveAppsSet\",\"inputs\":[{\"name\":\"limit\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MaxActiveAppsSet\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"limit\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"UpgradeConfirmed\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"pendingReleaseBlockNumber\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"AccountHasActiveApps\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"AppAlreadyExists\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"AppDoesNotExist\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"GlobalMaxActiveAppsExceeded\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidAppStatus\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidPermissions\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidReleaseMetadataURI\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidShortString\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidSignature\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"MaxActiveAppsExceeded\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"MoreThanOneArtifact\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NoPendingUpgrade\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"SignatureExpired\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"StringTooLong\",\"inputs\":[{\"name\":\"str\",\"type\":\"string\",\"internalType\":\"string\"}]}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_version\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"_permissionController\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"},{\"name\":\"_releaseManager\",\"type\":\"address\",\"internalType\":\"contractIReleaseManager\"},{\"name\":\"_computeAVSRegistrar\",\"type\":\"address\",\"internalType\":\"contractIComputeAVSRegistrar\"},{\"name\":\"_computeOperator\",\"type\":\"address\",\"internalType\":\"contractIComputeOperator\"},{\"name\":\"_appBeacon\",\"type\":\"address\",\"internalType\":\"contractIBeacon\"},{\"name\":\"_appAuthority\",\"type\":\"address\",\"internalType\":\"contractIAppAuthority\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"API_PERMISSION_TYPEHASH\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"acceptOwnership\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"appAuthority\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIAppAuthority\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"appBeacon\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIBeacon\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"calculateApiPermissionDigestHash\",\"inputs\":[{\"name\":\"permission\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"},{\"name\":\"expiry\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"calculateAppId\",\"inputs\":[{\"name\":\"deployer\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"canCall\",\"inputs\":[{\"name\":\"caller\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"data\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"cancelOwnershipTransfer\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"computeAVSRegistrar\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIComputeAVSRegistrar\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"computeOperator\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIComputeOperator\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"confirmUpgrade\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"createApp\",\"inputs\":[{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"containerPolicy\",\"type\":\"tuple\",\"internalType\":\"structIAppController.ContainerPolicy\",\"components\":[{\"name\":\"args\",\"type\":\"string[]\",\"internalType\":\"string[]\"},{\"name\":\"cmdOverride\",\"type\":\"string[]\",\"internalType\":\"string[]\"},{\"name\":\"env\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.EnvVar[]\",\"components\":[{\"name\":\"key\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"value\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"envOverride\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.EnvVar[]\",\"components\":[{\"name\":\"key\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"value\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"restartPolicy\",\"type\":\"string\",\"internalType\":\"string\"}]}]}],\"outputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"createAppWithIsolatedBilling\",\"inputs\":[{\"name\":\"salt\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"containerPolicy\",\"type\":\"tuple\",\"internalType\":\"structIAppController.ContainerPolicy\",\"components\":[{\"name\":\"args\",\"type\":\"string[]\",\"internalType\":\"string[]\"},{\"name\":\"cmdOverride\",\"type\":\"string[]\",\"internalType\":\"string[]\"},{\"name\":\"env\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.EnvVar[]\",\"components\":[{\"name\":\"key\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"value\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"envOverride\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.EnvVar[]\",\"components\":[{\"name\":\"key\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"value\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"restartPolicy\",\"type\":\"string\",\"internalType\":\"string\"}]}]}],\"outputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"domainSeparator\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getActiveAppCount\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppCreator\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppLatestReleaseBlockNumber\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppOperatorSetId\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppPendingReleaseBlockNumber\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppStatus\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getApps\",\"inputs\":[{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"pendingReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsByBillingAccount\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"pendingReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsByCreator\",\"inputs\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"pendingReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getAppsByDeveloper\",\"inputs\":[{\"name\":\"developer\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"offset\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"},{\"name\":\"appConfigsMem\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.AppConfig[]\",\"components\":[{\"name\":\"creator\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"latestReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"pendingReleaseBlockNumber\",\"type\":\"uint32\",\"internalType\":\"uint32\"},{\"name\":\"status\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.AppStatus\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getBillingAccount\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getBillingType\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIAppController.BillingType\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getMaxActiveAppsPerUser\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getPendingOwner\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"globalActiveAppCount\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[{\"name\":\"admin\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"maxGlobalActiveApps\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"migrateAppsToAppAuthority\",\"inputs\":[{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"permissionController\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIPermissionController\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"releaseManager\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"contractIReleaseManager\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"setMaxActiveAppsPerUser\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"limit\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setMaxGlobalActiveApps\",\"inputs\":[{\"name\":\"limit\",\"type\":\"uint32\",\"internalType\":\"uint32\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"startApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"stopApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"supportsInterface\",\"inputs\":[{\"name\":\"interfaceId\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"pure\"},{\"type\":\"function\",\"name\":\"suspend\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"apps\",\"type\":\"address[]\",\"internalType\":\"contractIApp[]\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"terminateApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"terminateAppByAdmin\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"transferOwnership\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"},{\"name\":\"newOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"updateAppMetadataURI\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"},{\"name\":\"metadataURI\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"upgradeApp\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"internalType\":\"contractIApp\"},{\"name\":\"release\",\"type\":\"tuple\",\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"containerPolicy\",\"type\":\"tuple\",\"internalType\":\"structIAppController.ContainerPolicy\",\"components\":[{\"name\":\"args\",\"type\":\"string[]\",\"internalType\":\"string[]\"},{\"name\":\"cmdOverride\",\"type\":\"string[]\",\"internalType\":\"string[]\"},{\"name\":\"env\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.EnvVar[]\",\"components\":[{\"name\":\"key\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"value\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"envOverride\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.EnvVar[]\",\"components\":[{\"name\":\"key\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"value\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"restartPolicy\",\"type\":\"string\",\"internalType\":\"string\"}]}]}],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"version\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"AppCreated\",\"inputs\":[{\"name\":\"creator\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"operatorSetId\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppMetadataURIUpdated\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"metadataURI\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppOwnershipTransferred\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"previousOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"newOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppStarted\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppStopped\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppSuspended\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppTerminated\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppTerminatedByAdmin\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"AppUpgraded\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"rmsReleaseId\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"release\",\"type\":\"tuple\",\"indexed\":false,\"internalType\":\"structIAppController.Release\",\"components\":[{\"name\":\"rmsRelease\",\"type\":\"tuple\",\"internalType\":\"structIReleaseManagerTypes.Release\",\"components\":[{\"name\":\"artifacts\",\"type\":\"tuple[]\",\"internalType\":\"structIReleaseManagerTypes.Artifact[]\",\"components\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"registry\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"upgradeByTime\",\"type\":\"uint32\",\"internalType\":\"uint32\"}]},{\"name\":\"publicEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"encryptedEnv\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"containerPolicy\",\"type\":\"tuple\",\"internalType\":\"structIAppController.ContainerPolicy\",\"components\":[{\"name\":\"args\",\"type\":\"string[]\",\"internalType\":\"string[]\"},{\"name\":\"cmdOverride\",\"type\":\"string[]\",\"internalType\":\"string[]\"},{\"name\":\"env\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.EnvVar[]\",\"components\":[{\"name\":\"key\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"value\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"envOverride\",\"type\":\"tuple[]\",\"internalType\":\"structIAppController.EnvVar[]\",\"components\":[{\"name\":\"key\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"value\",\"type\":\"string\",\"internalType\":\"string\"}]},{\"name\":\"restartPolicy\",\"type\":\"string\",\"internalType\":\"string\"}]}]}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"GlobalMaxActiveAppsSet\",\"inputs\":[{\"name\":\"limit\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MaxActiveAppsSet\",\"inputs\":[{\"name\":\"user\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"limit\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OwnershipTransferCancelled\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"currentOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"cancelledOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OwnershipTransferProposed\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"currentOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"proposedOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"UpgradeConfirmed\",\"inputs\":[{\"name\":\"app\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"contractIApp\"},{\"name\":\"pendingReleaseBlockNumber\",\"type\":\"uint32\",\"indexed\":false,\"internalType\":\"uint32\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"AccountHasActiveApps\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"AppAlreadyExists\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"AppDoesNotExist\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"GlobalMaxActiveAppsExceeded\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidAppStatus\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidPermissions\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidReleaseMetadataURI\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidShortString\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidSignature\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidTeamRole\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"MaxActiveAppsExceeded\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"MoreThanOneArtifact\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NoPendingUpgrade\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotCreator\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotPendingOwner\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"SignatureExpired\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"StringTooLong\",\"inputs\":[{\"name\":\"str\",\"type\":\"string\",\"internalType\":\"string\"}]}]",
 	ID:  "AppController",
 }
 
@@ -97,9 +97,9 @@ func (c *AppController) Instance(backend bind.ContractBackend, addr common.Addre
 // PackConstructor is the Go binding used to pack the parameters required for
 // contract deployment.
 //
-// Solidity: constructor(string _version, address _permissionController, address _releaseManager, address _computeAVSRegistrar, address _computeOperator, address _appBeacon) returns()
-func (appController *AppController) PackConstructor(_version string, _permissionController common.Address, _releaseManager common.Address, _computeAVSRegistrar common.Address, _computeOperator common.Address, _appBeacon common.Address) []byte {
-	enc, err := appController.abi.Pack("", _version, _permissionController, _releaseManager, _computeAVSRegistrar, _computeOperator, _appBeacon)
+// Solidity: constructor(string _version, address _permissionController, address _releaseManager, address _computeAVSRegistrar, address _computeOperator, address _appBeacon, address _appAuthority) returns()
+func (appController *AppController) PackConstructor(_version string, _permissionController common.Address, _releaseManager common.Address, _computeAVSRegistrar common.Address, _computeOperator common.Address, _appBeacon common.Address, _appAuthority common.Address) []byte {
+	enc, err := appController.abi.Pack("", _version, _permissionController, _releaseManager, _computeAVSRegistrar, _computeOperator, _appBeacon, _appAuthority)
 	if err != nil {
 		panic(err)
 	}
@@ -138,6 +138,63 @@ func (appController *AppController) UnpackAPIPERMISSIONTYPEHASH(data []byte) ([3
 		return *new([32]byte), err
 	}
 	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+	return out0, nil
+}
+
+// PackAcceptOwnership is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x51710e45.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function acceptOwnership(address app) returns()
+func (appController *AppController) PackAcceptOwnership(app common.Address) []byte {
+	enc, err := appController.abi.Pack("acceptOwnership", app)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackAcceptOwnership is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x51710e45.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function acceptOwnership(address app) returns()
+func (appController *AppController) TryPackAcceptOwnership(app common.Address) ([]byte, error) {
+	return appController.abi.Pack("acceptOwnership", app)
+}
+
+// PackAppAuthority is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x8029bbca.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function appAuthority() view returns(address)
+func (appController *AppController) PackAppAuthority() []byte {
+	enc, err := appController.abi.Pack("appAuthority")
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackAppAuthority is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x8029bbca.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function appAuthority() view returns(address)
+func (appController *AppController) TryPackAppAuthority() ([]byte, error) {
+	return appController.abi.Pack("appAuthority")
+}
+
+// UnpackAppAuthority is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x8029bbca.
+//
+// Solidity: function appAuthority() view returns(address)
+func (appController *AppController) UnpackAppAuthority(data []byte) (common.Address, error) {
+	out, err := appController.abi.Unpack("appAuthority", data)
+	if err != nil {
+		return *new(common.Address), err
+	}
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
 	return out0, nil
 }
 
@@ -244,6 +301,63 @@ func (appController *AppController) UnpackCalculateAppId(data []byte) (common.Ad
 	}
 	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
 	return out0, nil
+}
+
+// PackCanCall is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x9614801b.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function canCall(address caller, bytes data) view returns(bool)
+func (appController *AppController) PackCanCall(caller common.Address, data []byte) []byte {
+	enc, err := appController.abi.Pack("canCall", caller, data)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackCanCall is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x9614801b.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function canCall(address caller, bytes data) view returns(bool)
+func (appController *AppController) TryPackCanCall(caller common.Address, data []byte) ([]byte, error) {
+	return appController.abi.Pack("canCall", caller, data)
+}
+
+// UnpackCanCall is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x9614801b.
+//
+// Solidity: function canCall(address caller, bytes data) view returns(bool)
+func (appController *AppController) UnpackCanCall(data []byte) (bool, error) {
+	out, err := appController.abi.Unpack("canCall", data)
+	if err != nil {
+		return *new(bool), err
+	}
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+	return out0, nil
+}
+
+// PackCancelOwnershipTransfer is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x7b37e561.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function cancelOwnershipTransfer(address app) returns()
+func (appController *AppController) PackCancelOwnershipTransfer(app common.Address) []byte {
+	enc, err := appController.abi.Pack("cancelOwnershipTransfer", app)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackCancelOwnershipTransfer is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x7b37e561.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function cancelOwnershipTransfer(address app) returns()
+func (appController *AppController) TryPackCancelOwnershipTransfer(app common.Address) ([]byte, error) {
+	return appController.abi.Pack("cancelOwnershipTransfer", app)
 }
 
 // PackComputeAVSRegistrar is the Go binding used to pack the parameters required for calling
@@ -934,6 +1048,41 @@ func (appController *AppController) UnpackGetMaxActiveAppsPerUser(data []byte) (
 	return out0, nil
 }
 
+// PackGetPendingOwner is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x66f6a5ed.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function getPendingOwner(address app) view returns(address)
+func (appController *AppController) PackGetPendingOwner(app common.Address) []byte {
+	enc, err := appController.abi.Pack("getPendingOwner", app)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackGetPendingOwner is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x66f6a5ed.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function getPendingOwner(address app) view returns(address)
+func (appController *AppController) TryPackGetPendingOwner(app common.Address) ([]byte, error) {
+	return appController.abi.Pack("getPendingOwner", app)
+}
+
+// UnpackGetPendingOwner is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x66f6a5ed.
+//
+// Solidity: function getPendingOwner(address app) view returns(address)
+func (appController *AppController) UnpackGetPendingOwner(data []byte) (common.Address, error) {
+	out, err := appController.abi.Unpack("getPendingOwner", data)
+	if err != nil {
+		return *new(common.Address), err
+	}
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+	return out0, nil
+}
+
 // PackGlobalActiveAppCount is the Go binding used to pack the parameters required for calling
 // the contract method with ID 0xa8aa2bd3.  This method will panic if any
 // invalid/nil inputs are passed.
@@ -1024,6 +1173,28 @@ func (appController *AppController) UnpackMaxGlobalActiveApps(data []byte) (uint
 	}
 	out0 := *abi.ConvertType(out[0], new(uint32)).(*uint32)
 	return out0, nil
+}
+
+// PackMigrateAppsToAppAuthority is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xa6a062cd.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function migrateAppsToAppAuthority(address[] apps) returns()
+func (appController *AppController) PackMigrateAppsToAppAuthority(apps []common.Address) []byte {
+	enc, err := appController.abi.Pack("migrateAppsToAppAuthority", apps)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackMigrateAppsToAppAuthority is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0xa6a062cd.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function migrateAppsToAppAuthority(address[] apps) returns()
+func (appController *AppController) TryPackMigrateAppsToAppAuthority(apps []common.Address) ([]byte, error) {
+	return appController.abi.Pack("migrateAppsToAppAuthority", apps)
 }
 
 // PackPermissionController is the Go binding used to pack the parameters required for calling
@@ -1184,6 +1355,41 @@ func (appController *AppController) TryPackStopApp(app common.Address) ([]byte, 
 	return appController.abi.Pack("stopApp", app)
 }
 
+// PackSupportsInterface is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x01ffc9a7.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function supportsInterface(bytes4 interfaceId) pure returns(bool)
+func (appController *AppController) PackSupportsInterface(interfaceId [4]byte) []byte {
+	enc, err := appController.abi.Pack("supportsInterface", interfaceId)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackSupportsInterface is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x01ffc9a7.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function supportsInterface(bytes4 interfaceId) pure returns(bool)
+func (appController *AppController) TryPackSupportsInterface(interfaceId [4]byte) ([]byte, error) {
+	return appController.abi.Pack("supportsInterface", interfaceId)
+}
+
+// UnpackSupportsInterface is the Go binding that unpacks the parameters returned
+// from invoking the contract method with ID 0x01ffc9a7.
+//
+// Solidity: function supportsInterface(bytes4 interfaceId) pure returns(bool)
+func (appController *AppController) UnpackSupportsInterface(data []byte) (bool, error) {
+	out, err := appController.abi.Unpack("supportsInterface", data)
+	if err != nil {
+		return *new(bool), err
+	}
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+	return out0, nil
+}
+
 // PackSuspend is the Go binding used to pack the parameters required for calling
 // the contract method with ID 0xcb1e6ff7.  This method will panic if any
 // invalid/nil inputs are passed.
@@ -1248,6 +1454,28 @@ func (appController *AppController) PackTerminateAppByAdmin(app common.Address) 
 // Solidity: function terminateAppByAdmin(address app) returns()
 func (appController *AppController) TryPackTerminateAppByAdmin(app common.Address) ([]byte, error) {
 	return appController.abi.Pack("terminateAppByAdmin", app)
+}
+
+// PackTransferOwnership is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x6d435421.  This method will panic if any
+// invalid/nil inputs are passed.
+//
+// Solidity: function transferOwnership(address app, address newOwner) returns()
+func (appController *AppController) PackTransferOwnership(app common.Address, newOwner common.Address) []byte {
+	enc, err := appController.abi.Pack("transferOwnership", app, newOwner)
+	if err != nil {
+		panic(err)
+	}
+	return enc
+}
+
+// TryPackTransferOwnership is the Go binding used to pack the parameters required for calling
+// the contract method with ID 0x6d435421.  This method will return an error
+// if any inputs are invalid/nil.
+//
+// Solidity: function transferOwnership(address app, address newOwner) returns()
+func (appController *AppController) TryPackTransferOwnership(app common.Address, newOwner common.Address) ([]byte, error) {
+	return appController.abi.Pack("transferOwnership", app, newOwner)
 }
 
 // PackUpdateAppMetadataURI is the Go binding used to pack the parameters required for calling
@@ -1409,6 +1637,49 @@ func (appController *AppController) UnpackAppMetadataURIUpdatedEvent(log *types.
 		return nil, errors.New("event signature mismatch")
 	}
 	out := new(AppControllerAppMetadataURIUpdated)
+	if len(log.Data) > 0 {
+		if err := appController.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
+			return nil, err
+		}
+	}
+	var indexed abi.Arguments
+	for _, arg := range appController.abi.Events[event].Inputs {
+		if arg.Indexed {
+			indexed = append(indexed, arg)
+		}
+	}
+	if err := abi.ParseTopics(out, indexed, log.Topics[1:]); err != nil {
+		return nil, err
+	}
+	out.Raw = log
+	return out, nil
+}
+
+// AppControllerAppOwnershipTransferred represents a AppOwnershipTransferred event raised by the AppController contract.
+type AppControllerAppOwnershipTransferred struct {
+	App           common.Address
+	PreviousOwner common.Address
+	NewOwner      common.Address
+	Raw           *types.Log // Blockchain specific contextual infos
+}
+
+const AppControllerAppOwnershipTransferredEventName = "AppOwnershipTransferred"
+
+// ContractEventName returns the user-defined event name.
+func (AppControllerAppOwnershipTransferred) ContractEventName() string {
+	return AppControllerAppOwnershipTransferredEventName
+}
+
+// UnpackAppOwnershipTransferredEvent is the Go binding that unpacks the event data emitted
+// by contract.
+//
+// Solidity: event AppOwnershipTransferred(address indexed app, address indexed previousOwner, address indexed newOwner)
+func (appController *AppController) UnpackAppOwnershipTransferredEvent(log *types.Log) (*AppControllerAppOwnershipTransferred, error) {
+	event := "AppOwnershipTransferred"
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
+	}
+	out := new(AppControllerAppOwnershipTransferred)
 	if len(log.Data) > 0 {
 		if err := appController.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
 			return nil, err
@@ -1799,6 +2070,92 @@ func (appController *AppController) UnpackMaxActiveAppsSetEvent(log *types.Log) 
 	return out, nil
 }
 
+// AppControllerOwnershipTransferCancelled represents a OwnershipTransferCancelled event raised by the AppController contract.
+type AppControllerOwnershipTransferCancelled struct {
+	App            common.Address
+	CurrentOwner   common.Address
+	CancelledOwner common.Address
+	Raw            *types.Log // Blockchain specific contextual infos
+}
+
+const AppControllerOwnershipTransferCancelledEventName = "OwnershipTransferCancelled"
+
+// ContractEventName returns the user-defined event name.
+func (AppControllerOwnershipTransferCancelled) ContractEventName() string {
+	return AppControllerOwnershipTransferCancelledEventName
+}
+
+// UnpackOwnershipTransferCancelledEvent is the Go binding that unpacks the event data emitted
+// by contract.
+//
+// Solidity: event OwnershipTransferCancelled(address indexed app, address indexed currentOwner, address indexed cancelledOwner)
+func (appController *AppController) UnpackOwnershipTransferCancelledEvent(log *types.Log) (*AppControllerOwnershipTransferCancelled, error) {
+	event := "OwnershipTransferCancelled"
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
+	}
+	out := new(AppControllerOwnershipTransferCancelled)
+	if len(log.Data) > 0 {
+		if err := appController.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
+			return nil, err
+		}
+	}
+	var indexed abi.Arguments
+	for _, arg := range appController.abi.Events[event].Inputs {
+		if arg.Indexed {
+			indexed = append(indexed, arg)
+		}
+	}
+	if err := abi.ParseTopics(out, indexed, log.Topics[1:]); err != nil {
+		return nil, err
+	}
+	out.Raw = log
+	return out, nil
+}
+
+// AppControllerOwnershipTransferProposed represents a OwnershipTransferProposed event raised by the AppController contract.
+type AppControllerOwnershipTransferProposed struct {
+	App           common.Address
+	CurrentOwner  common.Address
+	ProposedOwner common.Address
+	Raw           *types.Log // Blockchain specific contextual infos
+}
+
+const AppControllerOwnershipTransferProposedEventName = "OwnershipTransferProposed"
+
+// ContractEventName returns the user-defined event name.
+func (AppControllerOwnershipTransferProposed) ContractEventName() string {
+	return AppControllerOwnershipTransferProposedEventName
+}
+
+// UnpackOwnershipTransferProposedEvent is the Go binding that unpacks the event data emitted
+// by contract.
+//
+// Solidity: event OwnershipTransferProposed(address indexed app, address indexed currentOwner, address indexed proposedOwner)
+func (appController *AppController) UnpackOwnershipTransferProposedEvent(log *types.Log) (*AppControllerOwnershipTransferProposed, error) {
+	event := "OwnershipTransferProposed"
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
+	}
+	out := new(AppControllerOwnershipTransferProposed)
+	if len(log.Data) > 0 {
+		if err := appController.abi.UnpackIntoInterface(out, event, log.Data); err != nil {
+			return nil, err
+		}
+	}
+	var indexed abi.Arguments
+	for _, arg := range appController.abi.Events[event].Inputs {
+		if arg.Indexed {
+			indexed = append(indexed, arg)
+		}
+	}
+	if err := abi.ParseTopics(out, indexed, log.Topics[1:]); err != nil {
+		return nil, err
+	}
+	out.Raw = log
+	return out, nil
+}
+
 // AppControllerUpgradeConfirmed represents a UpgradeConfirmed event raised by the AppController contract.
 type AppControllerUpgradeConfirmed struct {
 	App                       common.Address
@@ -1871,6 +2228,9 @@ func (appController *AppController) UnpackError(raw []byte) (any, error) {
 	if bytes.Equal(raw[:4], appController.abi.Errors["InvalidSignature"].ID.Bytes()[:4]) {
 		return appController.UnpackInvalidSignatureError(raw[4:])
 	}
+	if bytes.Equal(raw[:4], appController.abi.Errors["InvalidTeamRole"].ID.Bytes()[:4]) {
+		return appController.UnpackInvalidTeamRoleError(raw[4:])
+	}
 	if bytes.Equal(raw[:4], appController.abi.Errors["MaxActiveAppsExceeded"].ID.Bytes()[:4]) {
 		return appController.UnpackMaxActiveAppsExceededError(raw[4:])
 	}
@@ -1879,6 +2239,12 @@ func (appController *AppController) UnpackError(raw []byte) (any, error) {
 	}
 	if bytes.Equal(raw[:4], appController.abi.Errors["NoPendingUpgrade"].ID.Bytes()[:4]) {
 		return appController.UnpackNoPendingUpgradeError(raw[4:])
+	}
+	if bytes.Equal(raw[:4], appController.abi.Errors["NotCreator"].ID.Bytes()[:4]) {
+		return appController.UnpackNotCreatorError(raw[4:])
+	}
+	if bytes.Equal(raw[:4], appController.abi.Errors["NotPendingOwner"].ID.Bytes()[:4]) {
+		return appController.UnpackNotPendingOwnerError(raw[4:])
 	}
 	if bytes.Equal(raw[:4], appController.abi.Errors["SignatureExpired"].ID.Bytes()[:4]) {
 		return appController.UnpackSignatureExpiredError(raw[4:])
@@ -2096,6 +2462,29 @@ func (appController *AppController) UnpackInvalidSignatureError(raw []byte) (*Ap
 	return out, nil
 }
 
+// AppControllerInvalidTeamRole represents a InvalidTeamRole error raised by the AppController contract.
+type AppControllerInvalidTeamRole struct {
+}
+
+// ErrorID returns the hash of canonical representation of the error's signature.
+//
+// Solidity: error InvalidTeamRole()
+func AppControllerInvalidTeamRoleErrorID() common.Hash {
+	return common.HexToHash("0x8a008e174a035e142dfc4a2bb0f04b943d719f4126df368adee849db4d07a5ac")
+}
+
+// UnpackInvalidTeamRoleError is the Go binding used to decode the provided
+// error data into the corresponding Go error struct.
+//
+// Solidity: error InvalidTeamRole()
+func (appController *AppController) UnpackInvalidTeamRoleError(raw []byte) (*AppControllerInvalidTeamRole, error) {
+	out := new(AppControllerInvalidTeamRole)
+	if err := appController.abi.UnpackIntoInterface(out, "InvalidTeamRole", raw); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AppControllerMaxActiveAppsExceeded represents a MaxActiveAppsExceeded error raised by the AppController contract.
 type AppControllerMaxActiveAppsExceeded struct {
 }
@@ -2160,6 +2549,52 @@ func AppControllerNoPendingUpgradeErrorID() common.Hash {
 func (appController *AppController) UnpackNoPendingUpgradeError(raw []byte) (*AppControllerNoPendingUpgrade, error) {
 	out := new(AppControllerNoPendingUpgrade)
 	if err := appController.abi.UnpackIntoInterface(out, "NoPendingUpgrade", raw); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AppControllerNotCreator represents a NotCreator error raised by the AppController contract.
+type AppControllerNotCreator struct {
+}
+
+// ErrorID returns the hash of canonical representation of the error's signature.
+//
+// Solidity: error NotCreator()
+func AppControllerNotCreatorErrorID() common.Hash {
+	return common.HexToHash("0x93687c0be1f4d8f5b3c5ab55b81e360246e6c249b742b9b16b45d7e97dfe5645")
+}
+
+// UnpackNotCreatorError is the Go binding used to decode the provided
+// error data into the corresponding Go error struct.
+//
+// Solidity: error NotCreator()
+func (appController *AppController) UnpackNotCreatorError(raw []byte) (*AppControllerNotCreator, error) {
+	out := new(AppControllerNotCreator)
+	if err := appController.abi.UnpackIntoInterface(out, "NotCreator", raw); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AppControllerNotPendingOwner represents a NotPendingOwner error raised by the AppController contract.
+type AppControllerNotPendingOwner struct {
+}
+
+// ErrorID returns the hash of canonical representation of the error's signature.
+//
+// Solidity: error NotPendingOwner()
+func AppControllerNotPendingOwnerErrorID() common.Hash {
+	return common.HexToHash("0x1853971cac2844d8fedc34d0d65cff78483e8a606ad8448df68a3af766d8a29d")
+}
+
+// UnpackNotPendingOwnerError is the Go binding used to decode the provided
+// error data into the corresponding Go error struct.
+//
+// Solidity: error NotPendingOwner()
+func (appController *AppController) UnpackNotPendingOwnerError(raw []byte) (*AppControllerNotPendingOwner, error) {
+	out := new(AppControllerNotPendingOwner)
+	if err := appController.abi.UnpackIntoInterface(out, "NotPendingOwner", raw); err != nil {
 		return nil, err
 	}
 	return out, nil
