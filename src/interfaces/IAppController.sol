@@ -29,8 +29,21 @@ interface IAppController {
     /// @notice Thrown when trying to suspend an account that still has active apps
     error AccountHasActiveApps();
 
+    /// @notice Thrown when a caller is not the current owner (creator) of an app.
+    ///         Critical ops (upgrade/transfer/terminate) are owner-gated.
+    error NotCreator();
+
+    /// @notice Thrown when a caller lacks the required operational role on an
+    ///         app. Operational roles (PAUSER, DEVELOPER) are queried from
+    ///         AppAuthority; this error is raised when the queried check fails.
+    error InvalidTeamRole();
+
     /// @notice Thrown when trying to confirm an upgrade with no pending release
     error NoPendingUpgrade();
+
+    /// @notice Thrown when `acceptOwnership` is called by an address that is
+    ///         not the current pending owner of the app.
+    error NotPendingOwner();
 
     /// @notice Emitted when a new app is successfully created
     event AppCreated(address indexed creator, IApp indexed app, uint32 operatorSetId);
@@ -64,6 +77,18 @@ interface IAppController {
 
     /// @notice Emitted when an app's metadata URI is updated
     event AppMetadataURIUpdated(IApp indexed app, string metadataURI);
+
+    /// @notice Emitted when app ownership is transferred to a new address
+    event AppOwnershipTransferred(IApp indexed app, address indexed previousOwner, address indexed newOwner);
+
+    /// @notice Emitted when the current owner proposes a new owner. The
+    ///         proposed owner must call `acceptOwnership` to complete.
+    event OwnershipTransferProposed(IApp indexed app, address indexed currentOwner, address indexed proposedOwner);
+
+    /// @notice Emitted when a pending ownership proposal is cancelled —
+    ///         either explicitly by the current owner, or implicitly by
+    ///         being superseded by a new proposal.
+    event OwnershipTransferCancelled(IApp indexed app, address indexed currentOwner, address indexed cancelledOwner);
 
     /// @notice Enum for app status
     enum AppStatus {
@@ -134,6 +159,10 @@ interface IAppController {
         uint32 pendingReleaseBlockNumber;
         AppStatus status;
         BillingType billingType;
+        // Pending owner for two-step transferOwnership. Zero means no
+        // pending proposal. Fits in the second storage slot alongside the
+        // first-slot packed fields above; does not shift prior layout.
+        address pendingOwner;
     }
 
     /// @notice User configuration and state
@@ -181,11 +210,15 @@ interface IAppController {
     function createAppWithIsolatedBilling(bytes32 salt, Release calldata release) external returns (IApp app);
 
     /**
-     * @notice Upgrades an app with a new release to the ReleaseManager
+     * @notice Upgrades an app with a new release to the ReleaseManager. Critical op.
      * @param app The app to upgrade with the release
      * @param release The release to upgrade to
      * @return releaseId The unique identifier for the published release
-     * @dev Caller must be UAM permissioned for the app
+     * @dev Caller must be the app's current owner (`creator`). If the owner
+     *      is a Timelock, the call is forced through schedule → execute;
+     *      if it's a Safe, through the multisig threshold; if it's an EOA,
+     *      directly. The governance mechanism is whatever the owner contract
+     *      is — AppController does not classify it. Co-ADMINs cannot upgrade.
      * @dev The rms release must have exactly one artifact, with the digest being the docker
      * image digest and the registry being the docker registry it is stored at.
      * @dev The env must be a JSON marshalled bytes representing the public environment variables for the app.
@@ -196,6 +229,55 @@ interface IAppController {
     function upgradeApp(IApp app, Release calldata release) external returns (uint256);
 
     /**
+     * @notice Propose transferring app ownership to a new address. Step 1
+     *         of a two-step transfer. The proposed owner must call
+     *         `acceptOwnership(app)` to complete the transfer — the current
+     *         owner cannot push ownership (and the associated billing / quota
+     *         consumption on DEFAULT-billed apps) onto an unwilling receiver.
+     * @param app The app to propose ownership transfer for
+     * @param newOwner The proposed new owner address
+     * @dev Caller must be the app's current owner (`creator`).
+     * @dev No state changes to AppAuthority or active-app counters at this
+     *      step — only the pending-owner field updates. If an older
+     *      proposal existed, it is silently superseded.
+     * @dev Use `cancelOwnershipTransfer(app)` to rescind a pending proposal.
+     */
+    function transferOwnership(IApp app, address newOwner) external;
+
+    /**
+     * @notice Accept a pending ownership transfer. Step 2 of the two-step
+     *         flow. Atomically rotates scope ownership and ADMIN in
+     *         AppAuthority, mirrors the owner into `creator`, migrates the
+     *         active-app counter (for DEFAULT-billed apps), and verifies
+     *         the receiver has capacity.
+     * @param app The app to accept ownership of
+     * @dev Caller must equal the current pending owner of `app`.
+     * @dev For DEFAULT-billed active apps, the caller's `activeAppCount`
+     *      must be strictly less than their `maxActiveApps` — same rule as
+     *      `createApp`. This prevents an unwilling receiver from exceeding
+     *      their quota or being force-billed above their cap.
+     * @dev The new owner's contract type (EOA / Safe / Timelock / other)
+     *      determines the governance mechanism for future critical ops.
+     *      AppController does not classify or enforce a choice here.
+     */
+    function acceptOwnership(IApp app) external;
+
+    /**
+     * @notice Rescind a pending ownership proposal. No-op if no proposal
+     *         exists for `app`.
+     * @param app The app whose pending ownership transfer should be cancelled
+     * @dev Caller must be the app's current owner (`creator`).
+     */
+    function cancelOwnershipTransfer(IApp app) external;
+
+    /**
+     * @notice Returns the address currently pending acceptance as the new
+     *         owner of `app`, or `address(0)` if no proposal exists.
+     * @param app The app to query
+     */
+    function getPendingOwner(IApp app) external view returns (address);
+
+    /**
      * @notice Confirms a pending upgrade, promoting the pending release to the confirmed (latest) release
      * @param app The app to confirm the upgrade for
      * @dev Caller must be UAM permissioned for the AppController (i.e., the Coordinator)
@@ -204,34 +286,35 @@ interface IAppController {
     function confirmUpgrade(IApp app) external;
 
     /**
-     * @notice Updates the metadata URI for an app
+     * @notice Updates the metadata URI for an app. Operational.
      * @param app The app to update the metadata URI for
      * @param metadataURI The new metadata URI
-     * @dev Caller must be UAM permissioned for the app
+     * @dev Permitted to ADMIN or DEVELOPER.
      */
     function updateAppMetadataURI(IApp app, string calldata metadataURI) external;
 
     /**
-     * @notice Starts an app, which starts the instance backing it
+     * @notice Starts an app, which starts the instance backing it.
      * @param app The app to start
-     * @dev Caller must be UAM permissioned for the app
-     * @dev App must be AppStatus.STOPPED
+     * @dev Permitted to ADMIN only — starting commits capacity; treated as
+     *      privileged. App must be STOPPED.
      */
     function startApp(IApp app) external;
 
     /**
-     * @notice Stops an app, which stops the instance backing it
+     * @notice Stops an app, which stops the instance backing it. Operational.
      * @param app The app to stop
-     * @dev Caller must be UAM permissioned for the app
-     * @dev App must be AppStatus.STARTED
+     * @dev Permitted to ADMIN or PAUSER.
+     * @dev App must be AppStatus.STARTED.
      */
     function stopApp(IApp app) external;
 
     /**
-     * @notice Terminates an app permanently
+     * @notice Terminates an app permanently. Critical op.
      * @param app The app to terminate
-     * @dev Caller must be UAM permissioned for the app
-     * @dev Once terminated, no further write operations are allowed
+     * @dev Caller must be the app's current owner (`creator`). Co-ADMINs
+     *      cannot terminate.
+     * @dev Once terminated, no further write operations are allowed.
      */
     function terminateApp(IApp app) external;
 
@@ -252,6 +335,21 @@ interface IAppController {
      * @dev Apps already suspended or terminated are silently skipped
      */
     function suspend(address account, IApp[] calldata apps) external;
+
+    /**
+     * @notice Migrate pre-v1.5.0 apps to AppAuthority-based RBAC. For each
+     *         app in `apps`:
+     *         - seeds AppAuthority.scopeOwner(app) from AppController.creator
+     *           if not already set;
+     *         - seeds AppAuthority.ADMIN role with the app's PermissionController
+     *           admins. ADMIN is an operational-only role — it does NOT
+     *           confer critical-op power (upgrade / transfer / terminate),
+     *           so migrated admins cannot replay pre-v1.5.0 critical ops.
+     * @dev Caller must be UAM permissioned for the AppController itself
+     *      (platform admin). Intended to be called once per app after the
+     *      v1.5.0 upgrade; safe to call again (idempotent per-(app, admin)).
+     */
+    function migrateAppsToAppAuthority(IApp[] calldata apps) external;
 
     /**
      * @notice Gets the maximum global active apps limit

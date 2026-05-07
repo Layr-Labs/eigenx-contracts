@@ -2,10 +2,14 @@
 pragma solidity ^0.8.27;
 
 import {IAppController} from "../src/interfaces/IAppController.sol";
+import {IAppAuthority} from "../src/interfaces/IAppAuthority.sol";
+import {AppController} from "../src/AppController.sol";
 import {ComputeDeployer} from "./utils/ComputeDeployer.sol";
 import {IApp} from "../src/interfaces/IApp.sol";
 import {PermissionControllerMixin} from "@eigenlayer-contracts/src/contracts/mixins/PermissionControllerMixin.sol";
 import {IReleaseManagerTypes} from "@eigenlayer-contracts/src/contracts/interfaces/IReleaseManager.sol";
+import {ICallValidator} from "../src/interfaces/ICallValidator.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 contract AppControllerTest is ComputeDeployer {
     bytes32 public constant SALT = keccak256("test_salt");
@@ -286,9 +290,11 @@ contract AppControllerTest is ComputeDeployer {
             rmsRelease: rmsRelease, publicEnv: "", encryptedEnv: "", containerPolicy: emptyPolicy
         });
 
-        // Try to upgrade as unauthorized user
+        // Try to upgrade as unauthorized user. Critical ops are owner-gated
+        // unconditionally now — not even an ADMIN other than the owner can
+        // trigger an upgrade.
         vm.prank(user);
-        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        vm.expectRevert(IAppController.NotCreator.selector);
         appController.upgradeApp(app, release);
     }
 
@@ -384,9 +390,12 @@ contract AppControllerTest is ComputeDeployer {
         // Verify this app doesn't exist
         assertEq(uint256(appController.getAppStatus(fakeApp)), uint256(IAppController.AppStatus.NONE));
 
-        // Try to start a non-existent app - should revert with InvalidAppStatus
+        // Try to start a non-existent app — now fails on the onlyAdmin
+        // check first (the caller holds no team role on an address whose
+        // team was never created). This is strictly stronger than the
+        // pre-RBAC InvalidAppStatus revert.
         vm.prank(fakeAppAddress);
-        vm.expectRevert(abi.encodeWithSelector(IAppController.InvalidAppStatus.selector));
+        vm.expectRevert(IAppController.InvalidTeamRole.selector);
         appController.startApp(fakeApp);
 
         // Verify status is still NONE
@@ -635,34 +644,41 @@ contract AppControllerTest is ComputeDeployer {
         assertEq(address(otherApps[1]), address(otherApp2));
     }
 
-    function test_getAppsByCreator_worksWithoutAdminRights() public {
+    function test_getAppsByDeveloper_filtersByAppAuthorityAdmin() public {
+        // Developer creates two apps; both auto-seed developer as ADMIN in
+        // AppAuthority at createApp time.
         vm.prank(developer);
         IApp app1 = appController.createApp(keccak256("admin_test_1"), _assembleRelease());
         vm.prank(developer);
         IApp app2 = appController.createApp(keccak256("admin_test_2"), _assembleRelease());
 
-        // Only accept admin on app1, leave app2 without accepting admin
-        vm.prank(developer);
-        permissionController.acceptAdmin(address(app1));
-
-        // getAppsByCreator should return BOTH apps (filters by creator, not admin)
+        // Both apps list developer as creator AND as ADMIN.
         (IApp[] memory creatorApps,) = appController.getAppsByCreator(developer, 0, 10);
         assertEq(creatorApps.length, 2);
-        assertEq(address(creatorApps[0]), address(app1));
-        assertEq(address(creatorApps[1]), address(app2));
 
-        // getAppsByDeveloper should only return app1 (developer only accepted admin on app1)
         (IApp[] memory devApps,) = appController.getAppsByDeveloper(developer, 0, 10);
+        assertEq(devApps.length, 2, "developer is ADMIN on every app they created");
+
+        // Transfer app2 to another owner via the two-step flow. The ADMIN
+        // rotation happens at accept time.
+        address newOwner = makeAddr("newOwner");
+        _setMaxActiveAppsPerUser(newOwner, 10);
+        vm.prank(developer);
+        appController.transferOwnership(app2, newOwner);
+        vm.prank(newOwner);
+        appController.acceptOwnership(app2);
+
+        // Now developer is ADMIN only on app1, but remains "creator" on
+        // app1 only (creator got overwritten on app2 transfer). So
+        // getAppsByDeveloper reflects the change.
+        (devApps,) = appController.getAppsByDeveloper(developer, 0, 10);
         assertEq(devApps.length, 1);
         assertEq(address(devApps[0]), address(app1));
 
-        // Verify the creator field is set correctly for both apps
-        assertEq(appController.getAppCreator(app1), developer);
-        assertEq(appController.getAppCreator(app2), developer);
-
-        // Verify developer is only admin of app1
-        assertTrue(permissionController.isAdmin(address(app1), developer));
-        assertFalse(permissionController.isAdmin(address(app2), developer));
+        // Sanity: app2's new owner is now ADMIN on app2.
+        (IApp[] memory newOwnerApps,) = appController.getAppsByDeveloper(newOwner, 0, 10);
+        assertEq(newOwnerApps.length, 1);
+        assertEq(address(newOwnerApps[0]), address(app2));
     }
 
     // ========== Helper Functions ==========
@@ -776,7 +792,7 @@ contract AppControllerTest is ComputeDeployer {
 
         // Try to update metadata as unauthorized user
         vm.prank(user);
-        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        vm.expectRevert(IAppController.InvalidTeamRole.selector);
         appController.updateAppMetadataURI(app, "https://example.com/metadata");
     }
 
@@ -808,9 +824,11 @@ contract AppControllerTest is ComputeDeployer {
         // Verify this app doesn't exist
         assertEq(uint256(appController.getAppStatus(fakeApp)), uint256(IAppController.AppStatus.NONE));
 
-        // Try to update metadata for a non-existent app - should revert
+        // Try to update metadata for a non-existent app — caller holds no
+        // DEVELOPER/ADMIN role on the fake team, so the outer role gate
+        // rejects first. Strictly stronger than the pre-RBAC behavior.
         vm.prank(fakeAppAddress);
-        vm.expectRevert(abi.encodeWithSelector(IAppController.InvalidAppStatus.selector));
+        vm.expectRevert(IAppController.InvalidTeamRole.selector);
         appController.updateAppMetadataURI(fakeApp, "https://example.com/fake-metadata");
     }
 
@@ -1452,5 +1470,645 @@ contract AppControllerTest is ComputeDeployer {
         assertEq(appController.getActiveAppCount(address(app)), 0);
         assertEq(appController.getActiveAppCount(developer), 0);
         assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.TERMINATED));
+    }
+
+    // ========== Owner-gated critical ops ==========
+    //
+    // These tests pin down the runtime invariant that sensitive ops on any
+    // app are gated on the current owner — not on ADMIN membership. If the
+    // owner happens to be a Timelock, critical ops naturally flow through
+    // schedule → execute; if a Safe, through the multisig; if an EOA,
+    // directly. AppController does not classify the owner contract.
+
+    function test_upgradeApp_blocksCoAdminNonOwner() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        // Owner grants ADMIN to a co-admin. Under the owner-gated model,
+        // holding ADMIN is the strongest authority a co-admin could
+        // plausibly have — but ADMIN does NOT convey upgrade power.
+        address coAdmin = makeAddr("coAdmin");
+        vm.prank(developer);
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
+
+        // Direct upgrade from the co-admin MUST revert with NotCreator —
+        // the owner-gate blocks everyone except the current owner, regardless
+        // of ADMIN membership.
+        vm.prank(coAdmin);
+        vm.expectRevert(IAppController.NotCreator.selector);
+        appController.upgradeApp(app, _assembleRelease());
+
+        // The owner can still upgrade directly.
+        vm.prank(developer);
+        appController.upgradeApp(app, _assembleRelease());
+    }
+
+    function test_terminateApp_blocksCoAdminNonOwner() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address coAdmin = makeAddr("coAdmin");
+        vm.prank(developer);
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
+
+        vm.prank(coAdmin);
+        vm.expectRevert(IAppController.NotCreator.selector);
+        appController.terminateApp(app);
+
+        // Owner can terminate.
+        vm.prank(developer);
+        appController.terminateApp(app);
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.TERMINATED));
+    }
+
+    function test_terminateAppByAdmin_worksOnAnyApp() public {
+        // Protocol admin can terminate any app uniformly. No longer gated on
+        // governance type. If the protocol wants its own termination actions
+        // to be delay-gated, that's an operational decision about the UAM
+        // admin multisig — not an AppController concern.
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        vm.prank(admin);
+        appController.terminateAppByAdmin(app);
+
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.TERMINATED));
+    }
+
+    // ========== transferOwnership (two-step) ==========
+
+    event AppOwnershipTransferred(IApp indexed app, address indexed previousOwner, address indexed newOwner);
+    event OwnershipTransferProposed(IApp indexed app, address indexed currentOwner, address indexed proposedOwner);
+    event OwnershipTransferCancelled(IApp indexed app, address indexed currentOwner, address indexed cancelledOwner);
+
+    function test_transferOwnership_proposeEmitsEvent() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address newOwner = makeAddr("newOwner");
+
+        vm.expectEmit(true, true, true, true);
+        emit OwnershipTransferProposed(app, developer, newOwner);
+
+        vm.prank(developer);
+        appController.transferOwnership(app, newOwner);
+
+        // Propose alone does NOT change creator; it only records the pending.
+        assertEq(appController.getAppCreator(app), developer);
+        assertEq(appController.getPendingOwner(app), newOwner);
+    }
+
+    function test_transferOwnership_fullTwoStepFlow() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address newOwner = makeAddr("newOwner");
+        _setMaxActiveAppsPerUser(newOwner, 10);
+
+        vm.prank(developer);
+        appController.transferOwnership(app, newOwner);
+
+        vm.expectEmit(true, true, true, true);
+        emit AppOwnershipTransferred(app, developer, newOwner);
+
+        vm.prank(newOwner);
+        appController.acceptOwnership(app);
+
+        assertEq(appController.getAppCreator(app), newOwner);
+        assertEq(appController.getPendingOwner(app), address(0));
+    }
+
+    function test_acceptOwnership_rejectsNonPendingCaller() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address proposed = makeAddr("proposed");
+        vm.prank(developer);
+        appController.transferOwnership(app, proposed);
+
+        address imposter = makeAddr("imposter");
+        vm.prank(imposter);
+        vm.expectRevert(IAppController.NotPendingOwner.selector);
+        appController.acceptOwnership(app);
+    }
+
+    function test_acceptOwnership_rejectsWhenNoProposalPending() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        // No proposal — any accept attempt reverts because pendingOwner == 0.
+        vm.prank(developer);
+        vm.expectRevert(IAppController.NotPendingOwner.selector);
+        appController.acceptOwnership(app);
+    }
+
+    function test_acceptOwnership_enforcesReceiverQuota() public {
+        // Receiver with no quota must not be able to accept a DEFAULT-billed
+        // active app — the counter bump would push them past maxActiveApps
+        // (which defaults to 0 for fresh accounts).
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address broke = makeAddr("broke"); // maxActiveApps == 0 (not provisioned)
+        vm.prank(developer);
+        appController.transferOwnership(app, broke);
+
+        vm.prank(broke);
+        vm.expectRevert(IAppController.MaxActiveAppsExceeded.selector);
+        appController.acceptOwnership(app);
+
+        // Once provisioned, accept succeeds.
+        _setMaxActiveAppsPerUser(broke, 1);
+        vm.prank(broke);
+        appController.acceptOwnership(app);
+        assertEq(appController.getAppCreator(app), broke);
+    }
+
+    function test_transferOwnership_blocksCoAdminNonOwner() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        // Owner grants ADMIN to coAdmin. ADMIN is the strongest role a
+        // co-admin could plausibly have; the owner-gate must still block
+        // them from proposing a transfer.
+        address coAdmin = makeAddr("coAdmin");
+        vm.prank(developer);
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
+
+        address attacker = makeAddr("attacker");
+        _setMaxActiveAppsPerUser(attacker, 10);
+
+        vm.prank(coAdmin);
+        vm.expectRevert(IAppController.NotCreator.selector);
+        appController.transferOwnership(app, attacker);
+
+        // Owner can propose + attacker-as-receiver accepts.
+        vm.prank(developer);
+        appController.transferOwnership(app, attacker);
+        vm.prank(attacker);
+        appController.acceptOwnership(app);
+        assertEq(appController.getAppCreator(app), attacker);
+    }
+
+    function test_transferOwnership_revertsZeroAddress() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        vm.prank(developer);
+        vm.expectRevert(PermissionControllerMixin.InvalidPermissions.selector);
+        appController.transferOwnership(app, address(0));
+    }
+
+    function test_transferOwnership_cancelByOwner() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address proposed = makeAddr("proposed");
+        vm.prank(developer);
+        appController.transferOwnership(app, proposed);
+        assertEq(appController.getPendingOwner(app), proposed);
+
+        vm.expectEmit(true, true, true, true);
+        emit OwnershipTransferCancelled(app, developer, proposed);
+
+        vm.prank(developer);
+        appController.cancelOwnershipTransfer(app);
+        assertEq(appController.getPendingOwner(app), address(0));
+
+        // Previously-proposed address can no longer accept.
+        vm.prank(proposed);
+        vm.expectRevert(IAppController.NotPendingOwner.selector);
+        appController.acceptOwnership(app);
+    }
+
+    function test_transferOwnership_resupercedesOldProposal() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address first = makeAddr("first");
+        vm.prank(developer);
+        appController.transferOwnership(app, first);
+
+        address second = makeAddr("second");
+        _setMaxActiveAppsPerUser(second, 10);
+
+        // Re-proposing should emit both Cancelled(first) and Proposed(second).
+        vm.expectEmit(true, true, true, true);
+        emit OwnershipTransferCancelled(app, developer, first);
+        vm.expectEmit(true, true, true, true);
+        emit OwnershipTransferProposed(app, developer, second);
+
+        vm.prank(developer);
+        appController.transferOwnership(app, second);
+
+        // First can no longer accept; second can.
+        vm.prank(first);
+        vm.expectRevert(IAppController.NotPendingOwner.selector);
+        appController.acceptOwnership(app);
+
+        vm.prank(second);
+        appController.acceptOwnership(app);
+        assertEq(appController.getAppCreator(app), second);
+    }
+
+    function test_transferOwnership_ownerRetainsAuthorityDuringPending() public {
+        // Pending proposal does NOT freeze the current owner's authority.
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address proposed = makeAddr("proposed");
+        vm.prank(developer);
+        appController.transferOwnership(app, proposed);
+
+        // Owner can still upgrade. Receiver has not accepted yet.
+        vm.prank(developer);
+        appController.upgradeApp(app, _assembleRelease());
+
+        // Owner can still terminate (which invalidates the pending).
+        vm.prank(developer);
+        appController.terminateApp(app);
+
+        // Receiver cannot accept a terminated app (appExists check fails
+        // at the top of acceptOwnership? Actually appExists allows TERMINATED;
+        // the accept will proceed but the downstream billing migration is
+        // a no-op since _isActive is false. The transfer of ownership on a
+        // terminated app is a degenerate but non-harmful case.)
+        // We only assert that the pending pointer wasn't cleared by terminate.
+        assertEq(appController.getPendingOwner(app), proposed);
+    }
+
+    function test_transferOwnership_defaultBilling_movesActiveCounter() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address newOwner = makeAddr("newOwner");
+        _setMaxActiveAppsPerUser(newOwner, 10);
+
+        uint32 beforeDev = appController.getActiveAppCount(developer);
+        uint32 beforeNew = appController.getActiveAppCount(newOwner);
+
+        vm.prank(developer);
+        appController.transferOwnership(app, newOwner);
+        // Propose alone must NOT touch counters — that's the whole point
+        // of the two-step flow.
+        assertEq(appController.getActiveAppCount(developer), beforeDev);
+        assertEq(appController.getActiveAppCount(newOwner), beforeNew);
+
+        vm.prank(newOwner);
+        appController.acceptOwnership(app);
+
+        // Accept migrates the counter.
+        assertEq(appController.getActiveAppCount(developer), beforeDev - 1);
+        assertEq(appController.getActiveAppCount(newOwner), beforeNew + 1);
+    }
+
+    function test_transferOwnership_isolatedBilling_doesNotMoveCounter() public {
+        _setMaxActiveAppsPerUser(address(appController.calculateAppId(developer, SALT)), 10);
+
+        vm.prank(developer);
+        IApp app = appController.createAppWithIsolatedBilling(SALT, _assembleRelease());
+
+        uint32 beforeApp = appController.getActiveAppCount(address(app));
+        uint32 beforeDev = appController.getActiveAppCount(developer);
+
+        address newOwner = makeAddr("newOwner");
+        // Isolated billing doesn't bill the user, so receiver quota is
+        // irrelevant — no provisioning needed.
+        vm.prank(developer);
+        appController.transferOwnership(app, newOwner);
+        vm.prank(newOwner);
+        appController.acceptOwnership(app);
+
+        assertEq(appController.getActiveAppCount(address(app)), beforeApp);
+        assertEq(appController.getActiveAppCount(developer), beforeDev);
+        assertEq(appController.getActiveAppCount(newOwner), 0);
+    }
+
+    // ========== ICallValidator / canCall ==========
+
+    function test_supportsInterface_advertisesCallValidator() public {
+        AppController ac = AppController(address(appController));
+        bytes4 callValidatorId = type(ICallValidator).interfaceId;
+        bytes4 erc165Id = type(IERC165).interfaceId;
+
+        assertTrue(ac.supportsInterface(callValidatorId), "AppController must advertise ICallValidator");
+        assertTrue(ac.supportsInterface(erc165Id), "AppController must advertise IERC165");
+        assertFalse(ac.supportsInterface(0xdeadbeef), "Unrelated interface must return false");
+    }
+
+    function test_canCall_returnsTrueForShortCalldata() public view {
+        // Fallback: anything under 4 bytes can't be a meaningful call; defer.
+        assertTrue(ICallValidator(address(appController)).canCall(address(this), ""));
+        assertTrue(ICallValidator(address(appController)).canCall(address(this), hex"00"));
+    }
+
+    function test_canCall_rejectsNonOwnerUpgradeApp() public {
+        // Owner-gated model: canCall rejects any non-owner schedule of a
+        // critical op. Schedule-time rejection matches the runtime
+        // onlyCreator gate.
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+        bytes memory callData = abi.encodeWithSelector(IAppController.upgradeApp.selector, app, _assembleRelease());
+
+        assertFalse(
+            ICallValidator(address(appController)).canCall(makeAddr("anyone"), callData),
+            "canCall must reject non-owner schedule"
+        );
+        assertTrue(
+            ICallValidator(address(appController)).canCall(developer, callData), "canCall must accept owner schedule"
+        );
+    }
+
+    // ========== Team-role RBAC ==========
+
+    function test_createApp_grantsAdminRoleToCreator() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        assertTrue(
+            appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, developer), "creator must be seeded as ADMIN on create"
+        );
+    }
+
+    function test_grantTeamRole_asAdmin() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address pauser = makeAddr("pauser");
+        vm.prank(developer);
+        appAuthority.grantRole(app, IAppAuthority.Role.PAUSER, pauser);
+
+        assertTrue(appAuthority.hasRole(app, IAppAuthority.Role.PAUSER, pauser));
+    }
+
+    function test_grantTeamRole_nonAdminCannotGrant() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address outsider = makeAddr("outsider");
+        vm.prank(outsider);
+        vm.expectRevert(IAppAuthority.InvalidRole.selector);
+        appAuthority.grantRole(app, IAppAuthority.Role.PAUSER, outsider);
+    }
+
+    function test_grantTeamRole_operationalRoleNotOwnerGated() public {
+        // PAUSER/DEVELOPER grants are NOT owner-gated — any existing ADMIN
+        // can grant these bounded operational roles.
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        // Give coAdmin ADMIN, then confirm coAdmin can grant PAUSER freely.
+        address coAdmin = makeAddr("coAdmin");
+        vm.prank(developer);
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
+
+        address pauser = makeAddr("pauser");
+        vm.prank(coAdmin);
+        appAuthority.grantRole(app, IAppAuthority.Role.PAUSER, pauser);
+        assertTrue(appAuthority.hasRole(app, IAppAuthority.Role.PAUSER, pauser));
+    }
+
+    function test_grantTeamRole_adminGrantGatedByOwner() public {
+        // Owner-gated model: ADMIN grants are owner-only regardless of
+        // whether the owner is an EOA, Safe, or Timelock. A co-ADMIN
+        // cannot mint another ADMIN.
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address coAdmin = makeAddr("coAdmin");
+        vm.prank(developer);
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
+
+        // coAdmin has ADMIN but is NOT the owner: grant attempt must fail.
+        address usurper = makeAddr("usurper");
+        vm.prank(coAdmin);
+        vm.expectRevert(IAppAuthority.NotScopeOwner.selector);
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, usurper);
+
+        // The owner can still grant.
+        vm.prank(developer);
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, usurper);
+        assertTrue(appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, usurper));
+    }
+
+    function test_revokeTeamRole_adminRevokeGatedByOwner() public {
+        // Mirror of grant: revoking ADMIN is owner-only unconditionally.
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address coAdmin = makeAddr("coAdmin");
+        vm.prank(developer);
+        appAuthority.grantRole(app, IAppAuthority.Role.ADMIN, coAdmin);
+
+        // coAdmin attempts to revoke the Timelock — MUST fail.
+        vm.prank(coAdmin);
+        vm.expectRevert(IAppAuthority.NotScopeOwner.selector);
+        appAuthority.revokeRole(app, IAppAuthority.Role.ADMIN, developer);
+
+        // The Timelock (creator) can revoke coAdmin.
+        vm.prank(developer);
+        appAuthority.revokeRole(app, IAppAuthority.Role.ADMIN, coAdmin);
+        assertFalse(appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, coAdmin));
+    }
+
+    function test_revokeTeamRole_creatorCannotRevokeSelf() public {
+        // The creator is the only address that can call revokeTeamRole(ADMIN),
+        // but they cannot revoke their own ADMIN — the invariant
+        // `creator ∈ ADMIN` must hold. transferOwnership is the only path that
+        // rotates.
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        vm.prank(developer);
+        vm.expectRevert(IAppAuthority.CannotRemoveOwnerAdmin.selector);
+        appAuthority.revokeRole(app, IAppAuthority.Role.ADMIN, developer);
+    }
+
+    function test_renounceTeamRole_creatorCannotRenounceAdmin() public {
+        // The creator cannot drop out of ADMIN via renounce — doing so would
+        // leave the owner slot pointing at an address that isn't ADMIN
+        // (though ADMIN is operational-only in this model, keeping the
+        // invariant still matters for startApp and role-management clarity).
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        vm.prank(developer);
+        vm.expectRevert(IAppAuthority.CannotRemoveOwnerAdmin.selector);
+        appAuthority.renounceRole(app, IAppAuthority.Role.ADMIN);
+    }
+
+    function test_renounceTeamRole_operationalRoleOk() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address pauser = makeAddr("pauser");
+        vm.prank(developer);
+        appAuthority.grantRole(app, IAppAuthority.Role.PAUSER, pauser);
+
+        vm.prank(pauser);
+        appAuthority.renounceRole(app, IAppAuthority.Role.PAUSER);
+        assertFalse(appAuthority.hasRole(app, IAppAuthority.Role.PAUSER, pauser));
+    }
+
+    function test_stopApp_pauserCanCall() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address pauser = makeAddr("pauser");
+        vm.prank(developer);
+        appAuthority.grantRole(app, IAppAuthority.Role.PAUSER, pauser);
+
+        vm.prank(pauser);
+        appController.stopApp(app);
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.STOPPED));
+    }
+
+    function test_stopApp_developerCannotCall() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address dev = makeAddr("dev");
+        vm.prank(developer);
+        appAuthority.grantRole(app, IAppAuthority.Role.DEVELOPER, dev);
+
+        vm.prank(dev);
+        vm.expectRevert(IAppController.InvalidTeamRole.selector);
+        appController.stopApp(app);
+    }
+
+    function test_updateAppMetadataURI_developerCanCall() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address dev = makeAddr("dev");
+        vm.prank(developer);
+        appAuthority.grantRole(app, IAppAuthority.Role.DEVELOPER, dev);
+
+        vm.prank(dev);
+        appController.updateAppMetadataURI(app, "ipfs://new");
+    }
+
+    function test_updateAppMetadataURI_pauserCannotCall() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address pauser = makeAddr("pauser");
+        vm.prank(developer);
+        appAuthority.grantRole(app, IAppAuthority.Role.PAUSER, pauser);
+
+        vm.prank(pauser);
+        vm.expectRevert(IAppController.InvalidTeamRole.selector);
+        appController.updateAppMetadataURI(app, "ipfs://new");
+    }
+
+    function test_transferOwnership_grantsAdminToNewOwner() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address newOwner = makeAddr("newOwner");
+        _setMaxActiveAppsPerUser(newOwner, 10);
+
+        vm.prank(developer);
+        appController.transferOwnership(app, newOwner);
+        vm.prank(newOwner);
+        appController.acceptOwnership(app);
+
+        assertTrue(
+            appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, newOwner), "new owner must be granted ADMIN on accept"
+        );
+    }
+
+    function test_transferOwnership_removesPreviousOwnerFromAdmin() public {
+        // Fix for audit A-3 / V-10: the previous owner must be removed from
+        // the ADMIN set on ownership handoff. Otherwise an old owner (EOA,
+        // Safe, or old Timelock post-handoff) retains operational powers
+        // and, if they remain ADMIN while the new owner holds a weaker key,
+        // they can re-grab the app.
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address newOwner = makeAddr("newOwner");
+        _setMaxActiveAppsPerUser(newOwner, 10);
+
+        vm.prank(developer);
+        appController.transferOwnership(app, newOwner);
+        vm.prank(newOwner);
+        appController.acceptOwnership(app);
+
+        assertFalse(
+            appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, developer),
+            "previous owner must be removed from ADMIN on accept"
+        );
+        assertTrue(appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, newOwner), "new owner must still be ADMIN");
+    }
+
+    function test_transferOwnership_previousOwnerLosesCriticalPower() public {
+        // After the transfer completes (accept), the previous owner cannot
+        // perform critical ops even though they used to. This is the direct
+        // user-visible consequence of the owner-gate + ADMIN cleanup.
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        address newOwner = makeAddr("newOwner");
+        _setMaxActiveAppsPerUser(newOwner, 10);
+
+        vm.prank(developer);
+        appController.transferOwnership(app, newOwner);
+        vm.prank(newOwner);
+        appController.acceptOwnership(app);
+
+        // Previous owner cannot upgrade, terminate, or propose a new transfer.
+        vm.prank(developer);
+        vm.expectRevert(IAppController.NotCreator.selector);
+        appController.upgradeApp(app, _assembleRelease());
+
+        vm.prank(developer);
+        vm.expectRevert(IAppController.NotCreator.selector);
+        appController.terminateApp(app);
+
+        vm.prank(developer);
+        vm.expectRevert(IAppController.NotCreator.selector);
+        appController.transferOwnership(app, makeAddr("someoneElse"));
+    }
+
+    function test_migrateAdmins_seedsAdminFromPermissionController() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        // Set up two UAM admins who are NOT yet in the team-role set.
+        address pcAdminA = makeAddr("pcAdminA");
+        address pcAdminB = makeAddr("pcAdminB");
+        vm.prank(developer);
+        permissionController.acceptAdmin(address(app));
+        vm.prank(developer);
+        permissionController.addPendingAdmin(address(app), pcAdminA);
+        vm.prank(pcAdminA);
+        permissionController.acceptAdmin(address(app));
+        vm.prank(developer);
+        permissionController.addPendingAdmin(address(app), pcAdminB);
+        vm.prank(pcAdminB);
+        permissionController.acceptAdmin(address(app));
+
+        assertFalse(appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, pcAdminA));
+        assertFalse(appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, pcAdminB));
+
+        IApp[] memory apps = new IApp[](1);
+        apps[0] = app;
+        vm.prank(admin);
+        appController.migrateAppsToAppAuthority(apps);
+
+        assertTrue(appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, pcAdminA));
+        assertTrue(appAuthority.hasRole(app, IAppAuthority.Role.ADMIN, pcAdminB));
+    }
+
+    function test_migrateAdmins_callerMustBePlatformAdmin() public {
+        vm.prank(developer);
+        IApp app = appController.createApp(SALT, _assembleRelease());
+
+        IApp[] memory apps = new IApp[](1);
+        apps[0] = app;
+        vm.prank(user);
+        vm.expectRevert();
+        appController.migrateAppsToAppAuthority(apps);
     }
 }

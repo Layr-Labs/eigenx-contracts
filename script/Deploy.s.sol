@@ -24,6 +24,10 @@ import {ComputeAVSRegistrar} from "../src/ComputeAVSRegistrar.sol";
 import {ComputeOperator} from "../src/ComputeOperator.sol";
 import {ImageAllowlist} from "../src/ImageAllowlist.sol";
 import {IImageAllowlist} from "../src/interfaces/IImageAllowlist.sol";
+import {SafeTimelockFactory} from "../src/factories/SafeTimelockFactory.sol";
+import {TimelockControllerImpl} from "../src/governance/TimelockControllerImpl.sol";
+import {IAppAuthority} from "../src/interfaces/IAppAuthority.sol";
+import {AppAuthority} from "../src/governance/AppAuthority.sol";
 
 contract Deploy is Parser {
     struct Proxies {
@@ -39,6 +43,7 @@ contract Deploy is Parser {
         ComputeOperator computeOperator;
         AppController appController;
         ImageAllowlist imageAllowlist;
+        AppAuthority appAuthority;
     }
 
     function run(string memory environment) public {
@@ -90,6 +95,35 @@ contract Deploy is Parser {
         UpgradeableBeacon appBeacon =
             new UpgradeableBeacon(address(new App(params.version, IPermissionController(params.permissionController))));
 
+        // SafeTimelockFactory for tests and local deploys that need to
+        // exercise the deployTimelock / deploySafe paths. Safe infra
+        // addresses (singleton / proxy factory / fallback handler) are zero
+        // here because local environments don't have canonical Safe
+        // deployments; deploySafe is not callable in that configuration but
+        // deployTimelock remains functional. Production deploys set real
+        // Safe addresses via zeus env in the release scripts.
+        TimelockControllerImpl timelockImpl = new TimelockControllerImpl();
+        SafeTimelockFactory safeTimelockFactoryImpl = new SafeTimelockFactory({
+            _safeSingleton: address(0),
+            _safeProxyFactory: address(0),
+            _safeFallbackHandler: address(0),
+            _timelockImplementation: address(timelockImpl)
+        });
+        new TransparentUpgradeableProxy(
+            address(safeTimelockFactoryImpl),
+            address(params.proxyAdmin),
+            abi.encodeCall(SafeTimelockFactory.initialize, ())
+        );
+
+        // Deploy AppAuthority (owns per-app RBAC state consumed by
+        // AppController). The consumer (AppController proxy) is already
+        // known — it's the proxy we just created above. The impl holds
+        // the consumer immutable; the proxy just fronts it.
+        AppAuthority appAuthorityImpl = new AppAuthority(address(proxies.appController));
+        TransparentUpgradeableProxy appAuthorityProxy = new TransparentUpgradeableProxy(
+            address(appAuthorityImpl), address(params.proxyAdmin), abi.encodeCall(AppAuthority.initialize, ())
+        );
+
         // Deploy implementation contracts
         Implementations memory impls = Implementations({
             app: App(appBeacon.implementation()),
@@ -114,9 +148,11 @@ contract Deploy is Parser {
                 _releaseManager: params.releaseManager,
                 _computeAVSRegistrar: IComputeAVSRegistrar(address(proxies.computeAVSRegistrar)),
                 _computeOperator: IComputeOperator(address(proxies.computeOperator)),
-                _appBeacon: appBeacon
+                _appBeacon: appBeacon,
+                _appAuthority: IAppAuthority(address(appAuthorityProxy))
             }),
-            imageAllowlist: new ImageAllowlist()
+            imageAllowlist: new ImageAllowlist(),
+            appAuthority: appAuthorityImpl
         });
 
         // Upgrade proxies using ProxyAdmin
@@ -171,7 +207,9 @@ contract Deploy is Parser {
             computeOperator: IComputeOperator(address(proxies.computeOperator)),
             computeOperatorImpl: impls.computeOperator,
             imageAllowlist: IImageAllowlist(address(proxies.imageAllowlist)),
-            imageAllowlistImpl: impls.imageAllowlist
+            imageAllowlistImpl: impls.imageAllowlist,
+            appAuthority: IAppAuthority(address(appAuthorityProxy)),
+            appAuthorityImpl: impls.appAuthority
         });
     }
 
@@ -194,7 +232,9 @@ contract Deploy is Parser {
         vm.serializeAddress(addresses, "computeOperator", address(deployedContracts.computeOperator));
         vm.serializeAddress(addresses, "computeOperatorImpl", address(deployedContracts.computeOperatorImpl));
         vm.serializeAddress(addresses, "imageAllowlist", address(deployedContracts.imageAllowlist));
-        addresses = vm.serializeAddress(addresses, "imageAllowlistImpl", address(deployedContracts.imageAllowlistImpl));
+        vm.serializeAddress(addresses, "imageAllowlistImpl", address(deployedContracts.imageAllowlistImpl));
+        vm.serializeAddress(addresses, "appAuthority", address(deployedContracts.appAuthority));
+        addresses = vm.serializeAddress(addresses, "appAuthorityImpl", address(deployedContracts.appAuthorityImpl));
 
         // Add the chainInfo object
         string memory chainInfo = "chainInfo";
