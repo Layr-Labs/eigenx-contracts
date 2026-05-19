@@ -11,3 +11,9 @@ docs/
 .env
 .idea
 CLAUDE.md
+
+# Local agent worktrees
+.claude/
+
+# Foundry lockfile
+foundry.lock
