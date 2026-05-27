@@ -335,8 +335,11 @@ func (ComputeOperatorInitialized) ContractEventName() string {
 // Solidity: event Initialized(uint8 version)
 func (computeOperator *ComputeOperator) UnpackInitializedEvent(log *types.Log) (*ComputeOperatorInitialized, error) {
 	event := "Initialized"
-	if len(log.Topics) == 0 || log.Topics[0] != computeOperator.abi.Events[event].ID {
-		return nil, errors.New("event signature mismatch")
+	if len(log.Topics) == 0 {
+		return nil, bind.ErrNoEventSignature
+	}
+	if log.Topics[0] != computeOperator.abi.Events[event].ID {
+		return nil, bind.ErrEventSignatureMismatch
 	}
 	out := new(ComputeOperatorInitialized)
 	if len(log.Data) > 0 {
