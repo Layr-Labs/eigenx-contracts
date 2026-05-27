@@ -926,6 +926,65 @@ contract AppControllerTest is ComputeDeployer {
         vm.stopPrank();
     }
 
+    // ========== Create Empty App With Isolated Billing Tests ==========
+
+    function test_createEmptyAppWithIsolatedBilling() public {
+        vm.startPrank(developer);
+
+        IApp app = appController.createEmptyAppWithIsolatedBilling(SALT);
+
+        assertTrue(address(app) != address(0));
+        IApp predictedApp = appController.calculateAppId(developer, SALT);
+        assertEq(address(app), address(predictedApp));
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.CREATED));
+        assertEq(appController.getAppLatestReleaseBlockNumber(app), 0);
+        assertEq(appController.getBillingAccount(app), address(app));
+        assertEq(uint256(appController.getBillingType(app)), uint256(IAppController.BillingType.ISOLATED));
+
+        // Active count NOT incremented for the app's billing account
+        assertEq(appController.getActiveAppCount(address(app)), 0);
+
+        vm.stopPrank();
+    }
+
+    function test_createEmptyAppWithIsolatedBilling_canStartAfterQuotaSet() public {
+        vm.startPrank(developer);
+        IApp app = appController.createEmptyAppWithIsolatedBilling(SALT);
+
+        // Accept admin on the app so we can call upgradeApp/startApp
+        permissionController.acceptAdmin(address(app));
+
+        // Upgrade
+        appController.upgradeApp(app, _assembleRelease());
+        vm.stopPrank();
+
+        // Admin sets quota for the app's billing account (the app address for ISOLATED)
+        vm.prank(admin);
+        appController.setMaxActiveAppsPerUser(address(app), 1);
+
+        // Developer starts — capacity checked against app's own address
+        vm.prank(developer);
+        appController.startApp(app);
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.STARTED));
+        assertEq(appController.getActiveAppCount(address(app)), 1);
+    }
+
+    function test_createEmptyAppWithIsolatedBilling_startRevertsWithoutQuota() public {
+        vm.startPrank(developer);
+        IApp app = appController.createEmptyAppWithIsolatedBilling(SALT);
+
+        // Accept admin on the app
+        permissionController.acceptAdmin(address(app));
+
+        appController.upgradeApp(app, _assembleRelease());
+        vm.stopPrank();
+
+        // No quota set for app address — should revert on start
+        vm.prank(developer);
+        vm.expectRevert(IAppController.MaxActiveAppsExceeded.selector);
+        appController.startApp(app);
+    }
+
     function _assembleRelease() internal view returns (IAppController.Release memory) {
         IReleaseManagerTypes.Artifact[] memory artifacts = new IReleaseManagerTypes.Artifact[](1);
         artifacts[0] =
