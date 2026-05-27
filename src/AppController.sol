@@ -100,13 +100,11 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
     /// @inheritdoc IAppController
     function createApp(bytes32 salt, Release calldata release) external returns (IApp app) {
-        _checkAndIncrementActiveApps(msg.sender);
         app = _deployApp(salt, release, BillingType.DEFAULT);
     }
 
     /// @inheritdoc IAppController
     function createAppWithIsolatedBilling(bytes32 salt, Release calldata release) external returns (IApp app) {
-        _checkAndIncrementActiveApps(address(calculateAppId(msg.sender, salt)));
         app = _deployApp(salt, release, BillingType.ISOLATED);
     }
 
@@ -114,9 +112,11 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     function upgradeApp(IApp app, Release calldata release)
         external
         checkCanCall(address(app))
-        appIsActive(app)
+        appExists(app)
         returns (uint256)
     {
+        AppStatus status = _appConfigs[app].status;
+        require(status != AppStatus.TERMINATED, InvalidAppStatus());
         return _upgradeApp(app, release);
     }
 
@@ -194,13 +194,12 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     /// INTERNAL FUNCTIONS
 
     /**
-     * @notice Deploys an app, configures it, publishes the initial release, and starts it
+     * @notice Deploys app infrastructure: Create2 proxy, operator set, and config storage
      * @param salt The salt for deterministic deployment
-     * @param release The initial release to upgrade to
      * @param _billingType The billing type for the app (DEFAULT or ISOLATED)
      * @return app The deployed app instance
      */
-    function _deployApp(bytes32 salt, Release calldata release, BillingType _billingType) internal returns (IApp app) {
+    function _createApp(bytes32 salt, BillingType _billingType) internal returns (IApp app) {
         uint32 operatorSetId = computeAVSRegistrar.assignOperatorSetId();
         releaseManager.publishMetadataURI(
             OperatorSet({avs: address(computeAVSRegistrar), id: operatorSetId}), "https://eigencloud.xyz"
@@ -211,9 +210,21 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         _appConfigs[app].latestReleaseBlockNumber = 0;
         _appConfigs[app].creator = msg.sender;
         _appConfigs[app].billingType = _billingType;
+        _appConfigs[app].status = AppStatus.CREATED;
         _allApps.add(address(app));
 
         emit AppCreated(msg.sender, app, operatorSetId);
+    }
+
+    /**
+     * @notice Deploys an app, configures it, publishes the initial release, and starts it
+     * @param salt The salt for deterministic deployment
+     * @param release The initial release to upgrade to
+     * @param _billingType The billing type for the app (DEFAULT or ISOLATED)
+     * @return app The deployed app instance
+     */
+    function _deployApp(bytes32 salt, Release calldata release, BillingType _billingType) internal returns (IApp app) {
+        app = _createApp(salt, _billingType);
 
         // Upgrade the app with the initial release and auto-confirm it
         _upgradeApp(app, release);
@@ -305,8 +316,8 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         AppConfigStorage storage config = _appConfigs[app];
         require(config.status != AppStatus.TERMINATED, InvalidAppStatus());
 
-        // If resuming from suspended, re-check limits and increment active app counters
-        if (config.status == AppStatus.SUSPENDED) {
+        // If starting from CREATED or resuming from SUSPENDED, check limits and increment active app counters
+        if (config.status == AppStatus.CREATED || config.status == AppStatus.SUSPENDED) {
             _checkAndIncrementActiveApps(getBillingAccount(app));
         }
         config.status = AppStatus.STARTED;
