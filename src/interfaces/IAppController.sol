@@ -68,6 +68,7 @@ interface IAppController {
     /// @notice Enum for app status
     enum AppStatus {
         NONE, // App has not been created yet
+        CREATED, // App has been created but has no release and is not billing
         STARTED, // App has been started
         STOPPED, // App has been stopped but can be restarted
         TERMINATED, // App is permanently terminated
