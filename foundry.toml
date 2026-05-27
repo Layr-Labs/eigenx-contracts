@@ -36,3 +36,6 @@ ignored_error_codes = [
     # 2394, # transient-storage
     4591, # too-many-warnings
 ]
+
+[rpc_endpoints]
+base_sepolia = "${BASE_SEPOLIA_RPC_URL}"

@@ -1,0 +1,91 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity ^0.8.27;
+
+import {EOADeployer} from "zeus-templates/templates/EOADeployer.sol";
+import "../Env.sol";
+
+import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {USDCCredits} from "../../../src/USDCCredits.sol";
+
+contract DeployUSDCCredits is EOADeployer {
+    using Env for *;
+
+    function _runAsEOA() internal override {
+        vm.startBroadcast();
+
+        // Deploy ProxyAdmin (fresh chain, nothing exists yet)
+        ProxyAdmin proxyAdmin = new ProxyAdmin();
+
+        // Deploy USDCCredits implementation
+        USDCCredits impl = new USDCCredits({_usdc: IERC20(Env.USDC_TOKEN()), _treasury: Env.USDC_TREASURY()});
+
+        // Deploy proxy with initialization
+        TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
+            address(impl),
+            address(proxyAdmin),
+            abi.encodeCall(USDCCredits.initialize, (Env.computeOpsMultisig(), Env.USDC_MINIMUM_PURCHASE()))
+        );
+
+        // Transfer ProxyAdmin ownership to ops multisig
+        proxyAdmin.transferOwnership(Env.computeOpsMultisig());
+
+        // Register in Zeus Env system
+        deployContract({name: type(ProxyAdmin).name, deployedTo: address(proxyAdmin)});
+        deployImpl({name: type(USDCCredits).name, deployedTo: address(impl)});
+        deployProxy({name: type(USDCCredits).name, deployedTo: address(proxy)});
+
+        vm.stopBroadcast();
+    }
+
+    function testScript() public virtual {
+        runAsEOA();
+
+        _validateNewAddresses();
+        _validateConstructors();
+        _validateState();
+    }
+
+    function _validateNewAddresses() internal view {
+        assertTrue(address(Env.impl.usdcCredits()) != address(0), "USDCCredits impl is zero");
+        assertTrue(address(Env.proxy.usdcCredits()) != address(0), "USDCCredits proxy is zero");
+        assertTrue(address(Env.proxyAdmin()) != address(0), "ProxyAdmin is zero");
+
+        assertEq(
+            _getProxyImpl(address(Env.proxy.usdcCredits())),
+            address(Env.impl.usdcCredits()),
+            "USDCCredits proxy->impl mismatch"
+        );
+
+        assertEq(
+            _getProxyAdmin(address(Env.proxy.usdcCredits())),
+            address(Env.proxyAdmin()),
+            "USDCCredits proxyAdmin mismatch"
+        );
+    }
+
+    function _validateConstructors() internal view {
+        USDCCredits usdcCredits = Env.impl.usdcCredits();
+
+        assertEq(address(usdcCredits.usdc()), Env.USDC_TOKEN(), "USDCCredits usdc mismatch");
+        assertEq(usdcCredits.treasury(), Env.USDC_TREASURY(), "USDCCredits treasury mismatch");
+    }
+
+    function _validateState() internal view {
+        USDCCredits usdcCredits = Env.proxy.usdcCredits();
+
+        assertEq(usdcCredits.owner(), Env.computeOpsMultisig(), "USDCCredits owner mismatch");
+        assertEq(usdcCredits.minimumPurchase(), Env.USDC_MINIMUM_PURCHASE(), "USDCCredits minimumPurchase mismatch");
+        assertEq(Env.proxyAdmin().owner(), Env.computeOpsMultisig(), "ProxyAdmin owner mismatch");
+    }
+
+    function _getProxyImpl(address proxy) internal view returns (address) {
+        return Env.proxyAdmin().getProxyImplementation(ITransparentUpgradeableProxy(proxy));
+    }
+
+    function _getProxyAdmin(address proxy) internal view returns (address) {
+        return Env.proxyAdmin().getProxyAdmin(ITransparentUpgradeableProxy(proxy));
+    }
+}
