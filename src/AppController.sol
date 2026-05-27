@@ -109,6 +109,16 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// @inheritdoc IAppController
+    function createEmptyApp(bytes32 salt) external returns (IApp app) {
+        app = _createApp(salt, BillingType.DEFAULT);
+    }
+
+    /// @inheritdoc IAppController
+    function createEmptyAppWithIsolatedBilling(bytes32 salt) external returns (IApp app) {
+        app = _createApp(salt, BillingType.ISOLATED);
+    }
+
+    /// @inheritdoc IAppController
     function upgradeApp(IApp app, Release calldata release)
         external
         checkCanCall(address(app))
