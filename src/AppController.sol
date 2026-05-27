@@ -100,21 +100,25 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
 
     /// @inheritdoc IAppController
     function createApp(bytes32 salt, Release calldata release) external returns (IApp app) {
+        _checkAndIncrementActiveApps(msg.sender);
         app = _deployApp(salt, release, BillingType.DEFAULT);
     }
 
     /// @inheritdoc IAppController
     function createAppWithIsolatedBilling(bytes32 salt, Release calldata release) external returns (IApp app) {
+        _checkAndIncrementActiveApps(address(calculateAppId(msg.sender, salt)));
         app = _deployApp(salt, release, BillingType.ISOLATED);
     }
 
     /// @inheritdoc IAppController
     function createEmptyApp(bytes32 salt) external returns (IApp app) {
+        _checkAndIncrementActiveApps(msg.sender);
         app = _createApp(salt, BillingType.DEFAULT);
     }
 
     /// @inheritdoc IAppController
     function createEmptyAppWithIsolatedBilling(bytes32 salt) external returns (IApp app) {
+        _checkAndIncrementActiveApps(address(calculateAppId(msg.sender, salt)));
         app = _createApp(salt, BillingType.ISOLATED);
     }
 
@@ -328,8 +332,8 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         AppConfigStorage storage config = _appConfigs[app];
         require(config.status != AppStatus.TERMINATED, InvalidAppStatus());
 
-        // If starting from CREATED or resuming from SUSPENDED, check limits and increment active app counters
-        if (config.status == AppStatus.CREATED || config.status == AppStatus.SUSPENDED) {
+        // If resuming from suspended, re-check limits and increment active app counters
+        if (config.status == AppStatus.SUSPENDED) {
             _checkAndIncrementActiveApps(getBillingAccount(app));
         }
         config.status = AppStatus.STARTED;
@@ -343,8 +347,8 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     function _terminateApp(IApp app) internal {
         AppStatus currentStatus = _appConfigs[app].status;
         _appConfigs[app].status = AppStatus.TERMINATED;
-        // Only decrement if the app was actually counted (STARTED or STOPPED)
-        if (_isActive(currentStatus)) {
+        // Decrement if capacity was counted (CREATED, STARTED, or STOPPED — not SUSPENDED which already decremented)
+        if (currentStatus == AppStatus.CREATED || _isActive(currentStatus)) {
             _decrementActiveApps(app);
         }
         emit AppTerminated(app);

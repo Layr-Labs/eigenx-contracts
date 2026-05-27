@@ -832,8 +832,8 @@ contract AppControllerTest is ComputeDeployer {
         // Verify the app was created at the predicted address
         assertEq(address(app), address(appController.calculateAppId(developer, SALT)));
 
-        // Verify active app count was NOT incremented
-        assertEq(appController.getActiveAppCount(developer), 0);
+        // Verify active app count was incremented at creation
+        assertEq(appController.getActiveAppCount(developer), 1);
 
         vm.stopPrank();
     }
@@ -849,18 +849,14 @@ contract AppControllerTest is ComputeDeployer {
         vm.stopPrank();
     }
 
-    function test_createEmptyApp_doesNotCheckCapacity() public {
-        // Set capacity to 0 — createEmptyApp should still succeed
+    function test_createEmptyApp_checksCapacityAtCreation() public {
+        // Set capacity to 0 — createEmptyApp should revert
         vm.prank(admin);
         appController.setMaxActiveAppsPerUser(developer, 0);
 
-        _setGlobalMaxActiveApps(0);
-
         vm.prank(developer);
-        IApp app = appController.createEmptyApp(SALT);
-
-        // App created despite zero capacity
-        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.CREATED));
+        vm.expectRevert(IAppController.MaxActiveAppsExceeded.selector);
+        appController.createEmptyApp(SALT);
     }
 
     function test_createEmptyApp_canUpgradeConfirmAndStart() public {
@@ -869,6 +865,9 @@ contract AppControllerTest is ComputeDeployer {
         IApp app = appController.createEmptyApp(SALT);
         assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.CREATED));
 
+        // Active count incremented at creation
+        assertEq(appController.getActiveAppCount(developer), 1);
+
         // Accept admin so we can call upgradeApp/startApp
         permissionController.acceptAdmin(address(app));
 
@@ -876,7 +875,7 @@ contract AppControllerTest is ComputeDeployer {
         appController.upgradeApp(app, _assembleRelease());
         assertEq(appController.getAppPendingReleaseBlockNumber(app), uint32(block.number));
 
-        // Start the app — this transitions CREATED -> STARTED and checks capacity
+        // Start the app — transitions CREATED -> STARTED (no additional capacity check)
         appController.startApp(app);
         assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.STARTED));
 
@@ -887,26 +886,16 @@ contract AppControllerTest is ComputeDeployer {
         appController.confirmUpgrade(app);
         assertEq(appController.getAppLatestReleaseBlockNumber(app), uint32(block.number));
 
-        // NOW active app count is incremented
+        // Active count unchanged — was counted at creation
         assertEq(appController.getActiveAppCount(developer), 1);
     }
 
-    function test_createEmptyApp_startRevertsIfCapacityExceeded() public {
-        vm.prank(admin);
-        appController.setMaxActiveAppsPerUser(developer, 0);
+    function test_createEmptyApp_rejectsExceedingGlobalMaxActiveApps() public {
+        _setGlobalMaxActiveApps(0);
 
-        vm.startPrank(developer);
-
-        IApp app = appController.createEmptyApp(SALT);
-
-        // Accept admin so we can call startApp
-        permissionController.acceptAdmin(address(app));
-
-        // Start should revert — capacity is 0
-        vm.expectRevert(IAppController.MaxActiveAppsExceeded.selector);
-        appController.startApp(app);
-
-        vm.stopPrank();
+        vm.prank(developer);
+        vm.expectRevert(IAppController.GlobalMaxActiveAppsExceeded.selector);
+        appController.createEmptyApp(SALT);
     }
 
     function test_createEmptyApp_canTerminateBeforeStart() public {
@@ -920,7 +909,7 @@ contract AppControllerTest is ComputeDeployer {
         appController.terminateApp(app);
 
         assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.TERMINATED));
-        // Active count should still be 0 — was never incremented
+        // Active count decremented back to 0
         assertEq(appController.getActiveAppCount(developer), 0);
 
         vm.stopPrank();
@@ -929,25 +918,34 @@ contract AppControllerTest is ComputeDeployer {
     // ========== Create Empty App With Isolated Billing Tests ==========
 
     function test_createEmptyAppWithIsolatedBilling() public {
+        // Pre-compute app address and set quota before creation
+        IApp predictedApp = appController.calculateAppId(developer, SALT);
+        vm.prank(admin);
+        appController.setMaxActiveAppsPerUser(address(predictedApp), 1);
+
         vm.startPrank(developer);
 
         IApp app = appController.createEmptyAppWithIsolatedBilling(SALT);
 
         assertTrue(address(app) != address(0));
-        IApp predictedApp = appController.calculateAppId(developer, SALT);
         assertEq(address(app), address(predictedApp));
         assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.CREATED));
         assertEq(appController.getAppLatestReleaseBlockNumber(app), 0);
         assertEq(appController.getBillingAccount(app), address(app));
         assertEq(uint256(appController.getBillingType(app)), uint256(IAppController.BillingType.ISOLATED));
 
-        // Active count NOT incremented for the app's billing account
-        assertEq(appController.getActiveAppCount(address(app)), 0);
+        // Active count incremented at creation for the app's billing account
+        assertEq(appController.getActiveAppCount(address(app)), 1);
 
         vm.stopPrank();
     }
 
-    function test_createEmptyAppWithIsolatedBilling_canStartAfterQuotaSet() public {
+    function test_createEmptyAppWithIsolatedBilling_canUpgradeAndStart() public {
+        // Pre-compute app address and set quota before creation
+        IApp predictedApp = appController.calculateAppId(developer, SALT);
+        vm.prank(admin);
+        appController.setMaxActiveAppsPerUser(address(predictedApp), 1);
+
         vm.startPrank(developer);
         IApp app = appController.createEmptyAppWithIsolatedBilling(SALT);
 
@@ -956,33 +954,20 @@ contract AppControllerTest is ComputeDeployer {
 
         // Upgrade
         appController.upgradeApp(app, _assembleRelease());
-        vm.stopPrank();
 
-        // Admin sets quota for the app's billing account (the app address for ISOLATED)
-        vm.prank(admin);
-        appController.setMaxActiveAppsPerUser(address(app), 1);
-
-        // Developer starts — capacity checked against app's own address
-        vm.prank(developer);
+        // Start — no additional capacity check needed (already counted at creation)
         appController.startApp(app);
         assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.STARTED));
         assertEq(appController.getActiveAppCount(address(app)), 1);
+
+        vm.stopPrank();
     }
 
-    function test_createEmptyAppWithIsolatedBilling_startRevertsWithoutQuota() public {
-        vm.startPrank(developer);
-        IApp app = appController.createEmptyAppWithIsolatedBilling(SALT);
-
-        // Accept admin on the app
-        permissionController.acceptAdmin(address(app));
-
-        appController.upgradeApp(app, _assembleRelease());
-        vm.stopPrank();
-
-        // No quota set for app address — should revert on start
+    function test_createEmptyAppWithIsolatedBilling_revertsWithoutQuota() public {
+        // No quota set for the app address — creation should revert
         vm.prank(developer);
         vm.expectRevert(IAppController.MaxActiveAppsExceeded.selector);
-        appController.startApp(app);
+        appController.createEmptyAppWithIsolatedBilling(SALT);
     }
 
     function _assembleRelease() internal view returns (IAppController.Release memory) {
