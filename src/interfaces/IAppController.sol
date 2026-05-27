@@ -182,6 +182,23 @@ interface IAppController {
     function createAppWithIsolatedBilling(bytes32 salt, Release calldata release) external returns (IApp app);
 
     /**
+     * @notice Creates a new app instance without a release, in CREATED status (no billing)
+     * @param salt The salt to use for the app
+     * @return app The address of the newly created app
+     * @dev The app will be in CREATED status. Call upgradeApp + confirmUpgrade + startApp to bring it live.
+     * @dev Capacity limits are not checked until startApp is called.
+     */
+    function createEmptyApp(bytes32 salt) external returns (IApp app);
+
+    /**
+     * @notice Creates a new app with isolated billing and no release, in CREATED status (no billing)
+     * @param salt The salt to use for the app
+     * @return app The address of the newly created app
+     * @dev The app address is pre-computed. Quota must be set via setMaxActiveAppsPerUser before startApp.
+     */
+    function createEmptyAppWithIsolatedBilling(bytes32 salt) external returns (IApp app);
+
+    /**
      * @notice Upgrades an app with a new release to the ReleaseManager
      * @param app The app to upgrade with the release
      * @param release The release to upgrade to
