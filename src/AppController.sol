@@ -164,12 +164,14 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// @inheritdoc IAppController
-    function terminateApp(IApp app) external checkCanCall(address(app)) appIsActive(app) {
+    function terminateApp(IApp app) external checkCanCall(address(app)) appExists(app) {
+        require(_appConfigs[app].status != AppStatus.TERMINATED, InvalidAppStatus());
         _terminateApp(app);
     }
 
     /// @inheritdoc IAppController
-    function terminateAppByAdmin(IApp app) external checkCanCall(address(this)) appIsActive(app) {
+    function terminateAppByAdmin(IApp app) external checkCanCall(address(this)) appExists(app) {
+        require(_appConfigs[app].status != AppStatus.TERMINATED, InvalidAppStatus());
         _terminateApp(app);
         emit AppTerminatedByAdmin(app);
     }
@@ -335,12 +337,16 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /**
-     * @notice Terminates an app and decrements active app counters
+     * @notice Terminates an app and decrements active app counters if the app was active
      * @param app The app instance to terminate
      */
     function _terminateApp(IApp app) internal {
+        AppStatus currentStatus = _appConfigs[app].status;
         _appConfigs[app].status = AppStatus.TERMINATED;
-        _decrementActiveApps(app);
+        // Only decrement if the app was actually counted (STARTED or STOPPED)
+        if (_isActive(currentStatus)) {
+            _decrementActiveApps(app);
+        }
         emit AppTerminated(app);
     }
 
