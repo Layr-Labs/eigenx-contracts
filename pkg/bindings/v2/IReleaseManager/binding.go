@@ -364,11 +364,8 @@ func (IReleaseManagerMetadataURIPublished) ContractEventName() string {
 // Solidity: event MetadataURIPublished((address,uint32) indexed operatorSet, string metadataURI)
 func (iReleaseManager *IReleaseManager) UnpackMetadataURIPublishedEvent(log *types.Log) (*IReleaseManagerMetadataURIPublished, error) {
 	event := "MetadataURIPublished"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != iReleaseManager.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != iReleaseManager.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(IReleaseManagerMetadataURIPublished)
 	if len(log.Data) > 0 {
@@ -410,11 +407,8 @@ func (IReleaseManagerReleasePublished) ContractEventName() string {
 // Solidity: event ReleasePublished((address,uint32) indexed operatorSet, uint256 indexed releaseId, ((bytes32,string)[],uint32) release)
 func (iReleaseManager *IReleaseManager) UnpackReleasePublishedEvent(log *types.Log) (*IReleaseManagerReleasePublished, error) {
 	event := "ReleasePublished"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != iReleaseManager.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != iReleaseManager.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(IReleaseManagerReleasePublished)
 	if len(log.Data) > 0 {

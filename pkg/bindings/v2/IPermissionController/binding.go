@@ -491,11 +491,8 @@ func (IPermissionControllerAdminRemoved) ContractEventName() string {
 // Solidity: event AdminRemoved(address indexed account, address admin)
 func (iPermissionController *IPermissionController) UnpackAdminRemovedEvent(log *types.Log) (*IPermissionControllerAdminRemoved, error) {
 	event := "AdminRemoved"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != iPermissionController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != iPermissionController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(IPermissionControllerAdminRemoved)
 	if len(log.Data) > 0 {
@@ -536,11 +533,8 @@ func (IPermissionControllerAdminSet) ContractEventName() string {
 // Solidity: event AdminSet(address indexed account, address admin)
 func (iPermissionController *IPermissionController) UnpackAdminSetEvent(log *types.Log) (*IPermissionControllerAdminSet, error) {
 	event := "AdminSet"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != iPermissionController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != iPermissionController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(IPermissionControllerAdminSet)
 	if len(log.Data) > 0 {
@@ -583,11 +577,8 @@ func (IPermissionControllerAppointeeRemoved) ContractEventName() string {
 // Solidity: event AppointeeRemoved(address indexed account, address indexed appointee, address target, bytes4 selector)
 func (iPermissionController *IPermissionController) UnpackAppointeeRemovedEvent(log *types.Log) (*IPermissionControllerAppointeeRemoved, error) {
 	event := "AppointeeRemoved"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != iPermissionController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != iPermissionController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(IPermissionControllerAppointeeRemoved)
 	if len(log.Data) > 0 {
@@ -630,11 +621,8 @@ func (IPermissionControllerAppointeeSet) ContractEventName() string {
 // Solidity: event AppointeeSet(address indexed account, address indexed appointee, address target, bytes4 selector)
 func (iPermissionController *IPermissionController) UnpackAppointeeSetEvent(log *types.Log) (*IPermissionControllerAppointeeSet, error) {
 	event := "AppointeeSet"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != iPermissionController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != iPermissionController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(IPermissionControllerAppointeeSet)
 	if len(log.Data) > 0 {
@@ -675,11 +663,8 @@ func (IPermissionControllerPendingAdminAdded) ContractEventName() string {
 // Solidity: event PendingAdminAdded(address indexed account, address admin)
 func (iPermissionController *IPermissionController) UnpackPendingAdminAddedEvent(log *types.Log) (*IPermissionControllerPendingAdminAdded, error) {
 	event := "PendingAdminAdded"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != iPermissionController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != iPermissionController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(IPermissionControllerPendingAdminAdded)
 	if len(log.Data) > 0 {
@@ -720,11 +705,8 @@ func (IPermissionControllerPendingAdminRemoved) ContractEventName() string {
 // Solidity: event PendingAdminRemoved(address indexed account, address admin)
 func (iPermissionController *IPermissionController) UnpackPendingAdminRemovedEvent(log *types.Log) (*IPermissionControllerPendingAdminRemoved, error) {
 	event := "PendingAdminRemoved"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != iPermissionController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != iPermissionController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(IPermissionControllerPendingAdminRemoved)
 	if len(log.Data) > 0 {
