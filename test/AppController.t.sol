@@ -814,6 +814,162 @@ contract AppControllerTest is ComputeDeployer {
         appController.updateAppMetadataURI(fakeApp, "https://example.com/fake-metadata");
     }
 
+    // ========== Create Empty App Tests ==========
+
+    function test_createEmptyApp() public {
+        vm.startPrank(developer);
+
+        IApp app = appController.createEmptyApp(SALT);
+
+        assertTrue(address(app) != address(0));
+        assertEq(appController.getAppOperatorSetId(app), 1);
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.CREATED));
+        assertEq(appController.getAppLatestReleaseBlockNumber(app), 0);
+        assertEq(appController.getAppPendingReleaseBlockNumber(app), 0);
+        assertEq(appController.getAppCreator(app), developer);
+        assertEq(appController.getBillingAccount(app), developer);
+
+        // Verify the app was created at the predicted address
+        assertEq(address(app), address(appController.calculateAppId(developer, SALT)));
+
+        // Verify active app count was incremented at creation
+        assertEq(appController.getActiveAppCount(developer), 1);
+
+        vm.stopPrank();
+    }
+
+    function test_createEmptyApp_emitsAppCreated() public {
+        vm.startPrank(developer);
+
+        vm.expectEmit(true, true, true, true);
+        emit AppCreated(developer, appController.calculateAppId(developer, SALT), 1);
+
+        appController.createEmptyApp(SALT);
+
+        vm.stopPrank();
+    }
+
+    function test_createEmptyApp_checksCapacityAtCreation() public {
+        // Set capacity to 0 — createEmptyApp should revert
+        vm.prank(admin);
+        appController.setMaxActiveAppsPerUser(developer, 0);
+
+        vm.prank(developer);
+        vm.expectRevert(IAppController.MaxActiveAppsExceeded.selector);
+        appController.createEmptyApp(SALT);
+    }
+
+    function test_createEmptyApp_canUpgradeConfirmAndStart() public {
+        vm.startPrank(developer);
+
+        IApp app = appController.createEmptyApp(SALT);
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.CREATED));
+
+        // Active count incremented at creation
+        assertEq(appController.getActiveAppCount(developer), 1);
+
+        // Accept admin so we can call upgradeApp/startApp
+        permissionController.acceptAdmin(address(app));
+
+        // Upgrade with a release
+        appController.upgradeApp(app, _assembleRelease());
+        assertEq(appController.getAppPendingReleaseBlockNumber(app), uint32(block.number));
+
+        // Start the app — transitions CREATED -> STARTED (no additional capacity check)
+        appController.startApp(app);
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.STARTED));
+
+        vm.stopPrank();
+
+        // Admin confirms the upgrade (requires app to be active i.e. STARTED or STOPPED)
+        vm.prank(admin);
+        appController.confirmUpgrade(app);
+        assertEq(appController.getAppLatestReleaseBlockNumber(app), uint32(block.number));
+
+        // Active count unchanged — was counted at creation
+        assertEq(appController.getActiveAppCount(developer), 1);
+    }
+
+    function test_createEmptyApp_rejectsExceedingGlobalMaxActiveApps() public {
+        _setGlobalMaxActiveApps(0);
+
+        vm.prank(developer);
+        vm.expectRevert(IAppController.GlobalMaxActiveAppsExceeded.selector);
+        appController.createEmptyApp(SALT);
+    }
+
+    function test_createEmptyApp_canTerminateBeforeStart() public {
+        vm.startPrank(developer);
+
+        IApp app = appController.createEmptyApp(SALT);
+
+        // Accept admin so we can call terminateApp
+        permissionController.acceptAdmin(address(app));
+
+        appController.terminateApp(app);
+
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.TERMINATED));
+        // Active count decremented back to 0
+        assertEq(appController.getActiveAppCount(developer), 0);
+
+        vm.stopPrank();
+    }
+
+    // ========== Create Empty App With Isolated Billing Tests ==========
+
+    function test_createEmptyAppWithIsolatedBilling() public {
+        // Pre-compute app address and set quota before creation
+        IApp predictedApp = appController.calculateAppId(developer, SALT);
+        vm.prank(admin);
+        appController.setMaxActiveAppsPerUser(address(predictedApp), 1);
+
+        vm.startPrank(developer);
+
+        IApp app = appController.createEmptyAppWithIsolatedBilling(SALT);
+
+        assertTrue(address(app) != address(0));
+        assertEq(address(app), address(predictedApp));
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.CREATED));
+        assertEq(appController.getAppLatestReleaseBlockNumber(app), 0);
+        assertEq(appController.getBillingAccount(app), address(app));
+        assertEq(uint256(appController.getBillingType(app)), uint256(IAppController.BillingType.ISOLATED));
+
+        // Active count incremented at creation for the app's billing account
+        assertEq(appController.getActiveAppCount(address(app)), 1);
+
+        vm.stopPrank();
+    }
+
+    function test_createEmptyAppWithIsolatedBilling_canUpgradeAndStart() public {
+        // Pre-compute app address and set quota before creation
+        IApp predictedApp = appController.calculateAppId(developer, SALT);
+        vm.prank(admin);
+        appController.setMaxActiveAppsPerUser(address(predictedApp), 1);
+
+        vm.startPrank(developer);
+        IApp app = appController.createEmptyAppWithIsolatedBilling(SALT);
+
+        // Accept admin on the app so we can call upgradeApp/startApp
+        permissionController.acceptAdmin(address(app));
+
+        // Upgrade
+        appController.upgradeApp(app, _assembleRelease());
+
+        // Start — no additional capacity check needed (already counted at creation)
+        appController.startApp(app);
+        assertEq(uint256(appController.getAppStatus(app)), uint256(IAppController.AppStatus.STARTED));
+        assertEq(appController.getActiveAppCount(address(app)), 1);
+
+        vm.stopPrank();
+    }
+
+    function test_createEmptyAppWithIsolatedBilling_revertsWithoutQuota() public {
+        // No quota set for the app address — creation should revert
+        vm.prank(developer);
+        vm.expectRevert(IAppController.MaxActiveAppsExceeded.selector);
+        appController.createEmptyAppWithIsolatedBilling(SALT);
+    }
+
     function _assembleRelease() internal view returns (IAppController.Release memory) {
         IReleaseManagerTypes.Artifact[] memory artifacts = new IReleaseManagerTypes.Artifact[](1);
         artifacts[0] =

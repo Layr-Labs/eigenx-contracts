@@ -462,8 +462,11 @@ func (ImageAllowlistImageAdded) ContractEventName() string {
 // Solidity: event ImageAdded(uint8 indexed platform, bytes32 indexed key, string version, string description)
 func (imageAllowlist *ImageAllowlist) UnpackImageAddedEvent(log *types.Log) (*ImageAllowlistImageAdded, error) {
 	event := "ImageAdded"
-	if len(log.Topics) == 0 || log.Topics[0] != imageAllowlist.abi.Events[event].ID {
-		return nil, errors.New("event signature mismatch")
+	if len(log.Topics) == 0 {
+		return nil, bind.ErrNoEventSignature
+	}
+	if log.Topics[0] != imageAllowlist.abi.Events[event].ID {
+		return nil, bind.ErrEventSignatureMismatch
 	}
 	out := new(ImageAllowlistImageAdded)
 	if len(log.Data) > 0 {
@@ -504,8 +507,11 @@ func (ImageAllowlistImageRemoved) ContractEventName() string {
 // Solidity: event ImageRemoved(uint8 indexed platform, bytes32 indexed key)
 func (imageAllowlist *ImageAllowlist) UnpackImageRemovedEvent(log *types.Log) (*ImageAllowlistImageRemoved, error) {
 	event := "ImageRemoved"
-	if len(log.Topics) == 0 || log.Topics[0] != imageAllowlist.abi.Events[event].ID {
-		return nil, errors.New("event signature mismatch")
+	if len(log.Topics) == 0 {
+		return nil, bind.ErrNoEventSignature
+	}
+	if log.Topics[0] != imageAllowlist.abi.Events[event].ID {
+		return nil, bind.ErrEventSignatureMismatch
 	}
 	out := new(ImageAllowlistImageRemoved)
 	if len(log.Data) > 0 {
@@ -545,8 +551,11 @@ func (ImageAllowlistInitialized) ContractEventName() string {
 // Solidity: event Initialized(uint8 version)
 func (imageAllowlist *ImageAllowlist) UnpackInitializedEvent(log *types.Log) (*ImageAllowlistInitialized, error) {
 	event := "Initialized"
-	if len(log.Topics) == 0 || log.Topics[0] != imageAllowlist.abi.Events[event].ID {
-		return nil, errors.New("event signature mismatch")
+	if len(log.Topics) == 0 {
+		return nil, bind.ErrNoEventSignature
+	}
+	if log.Topics[0] != imageAllowlist.abi.Events[event].ID {
+		return nil, bind.ErrEventSignatureMismatch
 	}
 	out := new(ImageAllowlistInitialized)
 	if len(log.Data) > 0 {
@@ -587,8 +596,11 @@ func (ImageAllowlistMinimumTCBUpdated) ContractEventName() string {
 // Solidity: event MinimumTCBUpdated(uint8 indexed platform, uint64 tcb)
 func (imageAllowlist *ImageAllowlist) UnpackMinimumTCBUpdatedEvent(log *types.Log) (*ImageAllowlistMinimumTCBUpdated, error) {
 	event := "MinimumTCBUpdated"
-	if len(log.Topics) == 0 || log.Topics[0] != imageAllowlist.abi.Events[event].ID {
-		return nil, errors.New("event signature mismatch")
+	if len(log.Topics) == 0 {
+		return nil, bind.ErrNoEventSignature
+	}
+	if log.Topics[0] != imageAllowlist.abi.Events[event].ID {
+		return nil, bind.ErrEventSignatureMismatch
 	}
 	out := new(ImageAllowlistMinimumTCBUpdated)
 	if len(log.Data) > 0 {
@@ -629,8 +641,11 @@ func (ImageAllowlistOwnershipTransferred) ContractEventName() string {
 // Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
 func (imageAllowlist *ImageAllowlist) UnpackOwnershipTransferredEvent(log *types.Log) (*ImageAllowlistOwnershipTransferred, error) {
 	event := "OwnershipTransferred"
-	if len(log.Topics) == 0 || log.Topics[0] != imageAllowlist.abi.Events[event].ID {
-		return nil, errors.New("event signature mismatch")
+	if len(log.Topics) == 0 {
+		return nil, bind.ErrNoEventSignature
+	}
+	if log.Topics[0] != imageAllowlist.abi.Events[event].ID {
+		return nil, bind.ErrEventSignatureMismatch
 	}
 	out := new(ImageAllowlistOwnershipTransferred)
 	if len(log.Data) > 0 {

@@ -71,7 +71,8 @@ interface IAppController {
         STARTED, // App has been started
         STOPPED, // App has been stopped but can be restarted
         TERMINATED, // App is permanently terminated
-        SUSPENDED // App is suspended and can be started again, but does not have reserved capacity
+        SUSPENDED, // App is suspended and can be started again, but does not have reserved capacity
+        CREATED // App has been created but has no release and is not billing
     }
 
     /// @notice Billing type for an app
@@ -179,6 +180,23 @@ interface IAppController {
      * @dev The app address is pre-computed and must have quota set via setMaxActiveAppsPerUser before calling
      */
     function createAppWithIsolatedBilling(bytes32 salt, Release calldata release) external returns (IApp app);
+
+    /**
+     * @notice Creates a new app instance without a release, in CREATED status (no billing)
+     * @param salt The salt to use for the app
+     * @return app The address of the newly created app
+     * @dev The app will be in CREATED status. Call upgradeApp + confirmUpgrade + startApp to bring it live.
+     * @dev Capacity limits are not checked until startApp is called.
+     */
+    function createEmptyApp(bytes32 salt) external returns (IApp app);
+
+    /**
+     * @notice Creates a new app with isolated billing and no release, in CREATED status (no billing)
+     * @param salt The salt to use for the app
+     * @return app The address of the newly created app
+     * @dev The app address is pre-computed. Quota must be set via setMaxActiveAppsPerUser before startApp.
+     */
+    function createEmptyAppWithIsolatedBilling(bytes32 salt) external returns (IApp app);
 
     /**
      * @notice Upgrades an app with a new release to the ReleaseManager

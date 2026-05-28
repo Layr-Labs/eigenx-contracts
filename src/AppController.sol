@@ -111,12 +111,26 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// @inheritdoc IAppController
+    function createEmptyApp(bytes32 salt) external returns (IApp app) {
+        _checkAndIncrementActiveApps(msg.sender);
+        app = _createApp(salt, BillingType.DEFAULT);
+    }
+
+    /// @inheritdoc IAppController
+    function createEmptyAppWithIsolatedBilling(bytes32 salt) external returns (IApp app) {
+        _checkAndIncrementActiveApps(address(calculateAppId(msg.sender, salt)));
+        app = _createApp(salt, BillingType.ISOLATED);
+    }
+
+    /// @inheritdoc IAppController
     function upgradeApp(IApp app, Release calldata release)
         external
         checkCanCall(address(app))
-        appIsActive(app)
+        appExists(app)
         returns (uint256)
     {
+        AppStatus status = _appConfigs[app].status;
+        require(status != AppStatus.TERMINATED, InvalidAppStatus());
         return _upgradeApp(app, release);
     }
 
@@ -154,12 +168,14 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /// @inheritdoc IAppController
-    function terminateApp(IApp app) external checkCanCall(address(app)) appIsActive(app) {
+    function terminateApp(IApp app) external checkCanCall(address(app)) appExists(app) {
+        require(_appConfigs[app].status != AppStatus.TERMINATED, InvalidAppStatus());
         _terminateApp(app);
     }
 
     /// @inheritdoc IAppController
-    function terminateAppByAdmin(IApp app) external checkCanCall(address(this)) appIsActive(app) {
+    function terminateAppByAdmin(IApp app) external checkCanCall(address(this)) appExists(app) {
+        require(_appConfigs[app].status != AppStatus.TERMINATED, InvalidAppStatus());
         _terminateApp(app);
         emit AppTerminatedByAdmin(app);
     }
@@ -194,13 +210,12 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     /// INTERNAL FUNCTIONS
 
     /**
-     * @notice Deploys an app, configures it, publishes the initial release, and starts it
+     * @notice Deploys app infrastructure: Create2 proxy, operator set, and config storage
      * @param salt The salt for deterministic deployment
-     * @param release The initial release to upgrade to
      * @param _billingType The billing type for the app (DEFAULT or ISOLATED)
      * @return app The deployed app instance
      */
-    function _deployApp(bytes32 salt, Release calldata release, BillingType _billingType) internal returns (IApp app) {
+    function _createApp(bytes32 salt, BillingType _billingType) internal returns (IApp app) {
         uint32 operatorSetId = computeAVSRegistrar.assignOperatorSetId();
         releaseManager.publishMetadataURI(
             OperatorSet({avs: address(computeAVSRegistrar), id: operatorSetId}), "https://eigencloud.xyz"
@@ -211,9 +226,21 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
         _appConfigs[app].latestReleaseBlockNumber = 0;
         _appConfigs[app].creator = msg.sender;
         _appConfigs[app].billingType = _billingType;
+        _appConfigs[app].status = AppStatus.CREATED;
         _allApps.add(address(app));
 
         emit AppCreated(msg.sender, app, operatorSetId);
+    }
+
+    /**
+     * @notice Deploys an app, configures it, publishes the initial release, and starts it
+     * @param salt The salt for deterministic deployment
+     * @param release The initial release to upgrade to
+     * @param _billingType The billing type for the app (DEFAULT or ISOLATED)
+     * @return app The deployed app instance
+     */
+    function _deployApp(bytes32 salt, Release calldata release, BillingType _billingType) internal returns (IApp app) {
+        app = _createApp(salt, _billingType);
 
         // Upgrade the app with the initial release and auto-confirm it
         _upgradeApp(app, release);
@@ -314,12 +341,16 @@ contract AppController is Initializable, SignatureUtilsMixin, PermissionControll
     }
 
     /**
-     * @notice Terminates an app and decrements active app counters
+     * @notice Terminates an app and decrements active app counters if the app was active
      * @param app The app instance to terminate
      */
     function _terminateApp(IApp app) internal {
+        AppStatus currentStatus = _appConfigs[app].status;
         _appConfigs[app].status = AppStatus.TERMINATED;
-        _decrementActiveApps(app);
+        // Decrement if capacity was counted (CREATED, STARTED, or STOPPED — not SUSPENDED which already decremented)
+        if (currentStatus == AppStatus.CREATED || _isActive(currentStatus)) {
+            _decrementActiveApps(app);
+        }
         emit AppTerminated(app);
     }
 
