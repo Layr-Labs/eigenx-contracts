@@ -7,7 +7,7 @@ JSON_DIR=./out
 
 # Install latest abigen
 echo "Installing latest abigen..."
-go install github.com/ethereum/go-ethereum/cmd/abigen@latest
+go install github.com/ethereum/go-ethereum/cmd/abigen@v1.17.2
 
 function create_binding {
     contract_name=$1
