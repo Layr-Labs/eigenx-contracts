@@ -1,0 +1,9 @@
+{
+    "name": "storage-layout-fix",
+    "from": "1.5.0",
+    "to": "1.5.1",
+    "phases": [
+        { "type": "eoa", "filename": "1-deployAppControllerImpl.s.sol" },
+        { "type": "multisig", "filename": "2-upgradeAppController.s.sol" }
+    ]
+}

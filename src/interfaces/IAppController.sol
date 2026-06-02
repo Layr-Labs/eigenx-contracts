@@ -128,13 +128,19 @@ interface IAppController {
     }
 
     /// @notice Internal storage config for an app, extends AppConfig with additional fields
+    /// @dev Field order is storage-layout-sensitive and MUST NOT change for existing fields. New
+    /// fields must be appended to the end. `creator`/`operatorSetId`/`latestReleaseBlockNumber`/
+    /// `status`/`billingType` retain their original packed offsets (single slot) so that upgrades
+    /// preserve already-stored values. `pendingReleaseBlockNumber` is appended last (spilling into
+    /// the next slot) rather than inserted before `status`, which would shift `status`/`billingType`
+    /// into a fresh zeroed slot and reset every existing app to AppStatus.NONE on upgrade.
     struct AppConfigStorage {
         address creator;
         uint32 operatorSetId;
         uint32 latestReleaseBlockNumber;
-        uint32 pendingReleaseBlockNumber;
         AppStatus status;
         BillingType billingType;
+        uint32 pendingReleaseBlockNumber;
     }
 
     /// @notice User configuration and state
