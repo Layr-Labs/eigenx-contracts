@@ -11,3 +11,6 @@ docs/
 .env
 .idea
 CLAUDE.md
+
+# Claude Code worktrees and local files
+.claude/
