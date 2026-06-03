@@ -1433,11 +1433,8 @@ func (AppControllerAppCreated) ContractEventName() string {
 // Solidity: event AppCreated(address indexed creator, address indexed app, uint32 operatorSetId)
 func (appController *AppController) UnpackAppCreatedEvent(log *types.Log) (*AppControllerAppCreated, error) {
 	event := "AppCreated"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != appController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(AppControllerAppCreated)
 	if len(log.Data) > 0 {
@@ -1478,11 +1475,8 @@ func (AppControllerAppMetadataURIUpdated) ContractEventName() string {
 // Solidity: event AppMetadataURIUpdated(address indexed app, string metadataURI)
 func (appController *AppController) UnpackAppMetadataURIUpdatedEvent(log *types.Log) (*AppControllerAppMetadataURIUpdated, error) {
 	event := "AppMetadataURIUpdated"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != appController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(AppControllerAppMetadataURIUpdated)
 	if len(log.Data) > 0 {
@@ -1522,11 +1516,8 @@ func (AppControllerAppStarted) ContractEventName() string {
 // Solidity: event AppStarted(address indexed app)
 func (appController *AppController) UnpackAppStartedEvent(log *types.Log) (*AppControllerAppStarted, error) {
 	event := "AppStarted"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != appController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(AppControllerAppStarted)
 	if len(log.Data) > 0 {
@@ -1566,11 +1557,8 @@ func (AppControllerAppStopped) ContractEventName() string {
 // Solidity: event AppStopped(address indexed app)
 func (appController *AppController) UnpackAppStoppedEvent(log *types.Log) (*AppControllerAppStopped, error) {
 	event := "AppStopped"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != appController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(AppControllerAppStopped)
 	if len(log.Data) > 0 {
@@ -1610,11 +1598,8 @@ func (AppControllerAppSuspended) ContractEventName() string {
 // Solidity: event AppSuspended(address indexed app)
 func (appController *AppController) UnpackAppSuspendedEvent(log *types.Log) (*AppControllerAppSuspended, error) {
 	event := "AppSuspended"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != appController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(AppControllerAppSuspended)
 	if len(log.Data) > 0 {
@@ -1654,11 +1639,8 @@ func (AppControllerAppTerminated) ContractEventName() string {
 // Solidity: event AppTerminated(address indexed app)
 func (appController *AppController) UnpackAppTerminatedEvent(log *types.Log) (*AppControllerAppTerminated, error) {
 	event := "AppTerminated"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != appController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(AppControllerAppTerminated)
 	if len(log.Data) > 0 {
@@ -1698,11 +1680,8 @@ func (AppControllerAppTerminatedByAdmin) ContractEventName() string {
 // Solidity: event AppTerminatedByAdmin(address indexed app)
 func (appController *AppController) UnpackAppTerminatedByAdminEvent(log *types.Log) (*AppControllerAppTerminatedByAdmin, error) {
 	event := "AppTerminatedByAdmin"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != appController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(AppControllerAppTerminatedByAdmin)
 	if len(log.Data) > 0 {
@@ -1744,11 +1723,8 @@ func (AppControllerAppUpgraded) ContractEventName() string {
 // Solidity: event AppUpgraded(address indexed app, uint256 rmsReleaseId, (((bytes32,string)[],uint32),bytes,bytes,(string[],string[],(string,string)[],(string,string)[],string)) release)
 func (appController *AppController) UnpackAppUpgradedEvent(log *types.Log) (*AppControllerAppUpgraded, error) {
 	event := "AppUpgraded"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != appController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(AppControllerAppUpgraded)
 	if len(log.Data) > 0 {
@@ -1788,11 +1764,8 @@ func (AppControllerGlobalMaxActiveAppsSet) ContractEventName() string {
 // Solidity: event GlobalMaxActiveAppsSet(uint32 limit)
 func (appController *AppController) UnpackGlobalMaxActiveAppsSetEvent(log *types.Log) (*AppControllerGlobalMaxActiveAppsSet, error) {
 	event := "GlobalMaxActiveAppsSet"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != appController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(AppControllerGlobalMaxActiveAppsSet)
 	if len(log.Data) > 0 {
@@ -1832,11 +1805,8 @@ func (AppControllerInitialized) ContractEventName() string {
 // Solidity: event Initialized(uint8 version)
 func (appController *AppController) UnpackInitializedEvent(log *types.Log) (*AppControllerInitialized, error) {
 	event := "Initialized"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != appController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(AppControllerInitialized)
 	if len(log.Data) > 0 {
@@ -1877,11 +1847,8 @@ func (AppControllerMaxActiveAppsSet) ContractEventName() string {
 // Solidity: event MaxActiveAppsSet(address indexed user, uint32 limit)
 func (appController *AppController) UnpackMaxActiveAppsSetEvent(log *types.Log) (*AppControllerMaxActiveAppsSet, error) {
 	event := "MaxActiveAppsSet"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != appController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(AppControllerMaxActiveAppsSet)
 	if len(log.Data) > 0 {
@@ -1922,11 +1889,8 @@ func (AppControllerUpgradeConfirmed) ContractEventName() string {
 // Solidity: event UpgradeConfirmed(address indexed app, uint32 pendingReleaseBlockNumber)
 func (appController *AppController) UnpackUpgradeConfirmedEvent(log *types.Log) (*AppControllerUpgradeConfirmed, error) {
 	event := "UpgradeConfirmed"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != appController.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != appController.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(AppControllerUpgradeConfirmed)
 	if len(log.Data) > 0 {

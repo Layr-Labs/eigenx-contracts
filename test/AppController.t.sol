@@ -665,6 +665,40 @@ contract AppControllerTest is ComputeDeployer {
         assertFalse(permissionController.isAdmin(address(app2), developer));
     }
 
+    function test_getAppsByCreator_returnsCreatedApps() public {
+        vm.startPrank(developer);
+        IApp startedApp = appController.createApp(keccak256("started"), _assembleRelease());
+        IApp createdApp = appController.createEmptyApp(keccak256("created"));
+        vm.stopPrank();
+
+        (IApp[] memory apps, IAppController.AppConfig[] memory configs) =
+            appController.getAppsByCreator(developer, 0, 10);
+        assertEq(apps.length, 2);
+        assertEq(address(apps[0]), address(startedApp));
+        assertEq(address(apps[1]), address(createdApp));
+        assertEq(uint256(configs[0].status), uint256(IAppController.AppStatus.STARTED));
+        assertEq(uint256(configs[1].status), uint256(IAppController.AppStatus.CREATED));
+    }
+
+    function test_getAppsByDeveloper_returnsCreatedApps() public {
+        vm.startPrank(developer);
+        IApp startedApp = appController.createApp(keccak256("started"), _assembleRelease());
+        IApp createdApp = appController.createEmptyApp(keccak256("created"));
+
+        // Accept admin on both so getAppsByDeveloper returns them
+        permissionController.acceptAdmin(address(startedApp));
+        permissionController.acceptAdmin(address(createdApp));
+        vm.stopPrank();
+
+        (IApp[] memory apps, IAppController.AppConfig[] memory configs) =
+            appController.getAppsByDeveloper(developer, 0, 10);
+        assertEq(apps.length, 2);
+        assertEq(address(apps[0]), address(startedApp));
+        assertEq(address(apps[1]), address(createdApp));
+        assertEq(uint256(configs[0].status), uint256(IAppController.AppStatus.STARTED));
+        assertEq(uint256(configs[1].status), uint256(IAppController.AppStatus.CREATED));
+    }
+
     // ========== Helper Functions ==========
 
     function _acceptAppAdmin(IApp app) internal {

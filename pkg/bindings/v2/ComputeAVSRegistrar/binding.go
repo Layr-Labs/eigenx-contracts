@@ -683,11 +683,8 @@ func (ComputeAVSRegistrarInitialized) ContractEventName() string {
 // Solidity: event Initialized(uint8 version)
 func (computeAVSRegistrar *ComputeAVSRegistrar) UnpackInitializedEvent(log *types.Log) (*ComputeAVSRegistrarInitialized, error) {
 	event := "Initialized"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != computeAVSRegistrar.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != computeAVSRegistrar.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(ComputeAVSRegistrarInitialized)
 	if len(log.Data) > 0 {
@@ -728,11 +725,8 @@ func (ComputeAVSRegistrarOperatorAddedToAllowlist) ContractEventName() string {
 // Solidity: event OperatorAddedToAllowlist((address,uint32) indexed operatorSet, address indexed operator)
 func (computeAVSRegistrar *ComputeAVSRegistrar) UnpackOperatorAddedToAllowlistEvent(log *types.Log) (*ComputeAVSRegistrarOperatorAddedToAllowlist, error) {
 	event := "OperatorAddedToAllowlist"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != computeAVSRegistrar.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != computeAVSRegistrar.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(ComputeAVSRegistrarOperatorAddedToAllowlist)
 	if len(log.Data) > 0 {
@@ -773,11 +767,8 @@ func (ComputeAVSRegistrarOperatorDeregistered) ContractEventName() string {
 // Solidity: event OperatorDeregistered(address indexed operator, uint32[] operatorSetIds)
 func (computeAVSRegistrar *ComputeAVSRegistrar) UnpackOperatorDeregisteredEvent(log *types.Log) (*ComputeAVSRegistrarOperatorDeregistered, error) {
 	event := "OperatorDeregistered"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != computeAVSRegistrar.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != computeAVSRegistrar.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(ComputeAVSRegistrarOperatorDeregistered)
 	if len(log.Data) > 0 {
@@ -818,11 +809,8 @@ func (ComputeAVSRegistrarOperatorRegistered) ContractEventName() string {
 // Solidity: event OperatorRegistered(address indexed operator, uint32[] operatorSetIds)
 func (computeAVSRegistrar *ComputeAVSRegistrar) UnpackOperatorRegisteredEvent(log *types.Log) (*ComputeAVSRegistrarOperatorRegistered, error) {
 	event := "OperatorRegistered"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != computeAVSRegistrar.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != computeAVSRegistrar.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(ComputeAVSRegistrarOperatorRegistered)
 	if len(log.Data) > 0 {
@@ -863,11 +851,8 @@ func (ComputeAVSRegistrarOperatorRemovedFromAllowlist) ContractEventName() strin
 // Solidity: event OperatorRemovedFromAllowlist((address,uint32) indexed operatorSet, address indexed operator)
 func (computeAVSRegistrar *ComputeAVSRegistrar) UnpackOperatorRemovedFromAllowlistEvent(log *types.Log) (*ComputeAVSRegistrarOperatorRemovedFromAllowlist, error) {
 	event := "OperatorRemovedFromAllowlist"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != computeAVSRegistrar.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != computeAVSRegistrar.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(ComputeAVSRegistrarOperatorRemovedFromAllowlist)
 	if len(log.Data) > 0 {
@@ -908,11 +893,8 @@ func (ComputeAVSRegistrarOwnershipTransferred) ContractEventName() string {
 // Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
 func (computeAVSRegistrar *ComputeAVSRegistrar) UnpackOwnershipTransferredEvent(log *types.Log) (*ComputeAVSRegistrarOwnershipTransferred, error) {
 	event := "OwnershipTransferred"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != computeAVSRegistrar.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != computeAVSRegistrar.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(ComputeAVSRegistrarOwnershipTransferred)
 	if len(log.Data) > 0 {

@@ -377,11 +377,8 @@ func (USDCCreditsCreditsPurchased) ContractEventName() string {
 // Solidity: event CreditsPurchased(address indexed purchaser, address indexed account, uint256 amount)
 func (uSDCCredits *USDCCredits) UnpackCreditsPurchasedEvent(log *types.Log) (*USDCCreditsCreditsPurchased, error) {
 	event := "CreditsPurchased"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != uSDCCredits.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != uSDCCredits.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(USDCCreditsCreditsPurchased)
 	if len(log.Data) > 0 {
@@ -421,11 +418,8 @@ func (USDCCreditsInitialized) ContractEventName() string {
 // Solidity: event Initialized(uint8 version)
 func (uSDCCredits *USDCCredits) UnpackInitializedEvent(log *types.Log) (*USDCCreditsInitialized, error) {
 	event := "Initialized"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != uSDCCredits.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != uSDCCredits.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(USDCCreditsInitialized)
 	if len(log.Data) > 0 {
@@ -466,11 +460,8 @@ func (USDCCreditsMinimumPurchaseSet) ContractEventName() string {
 // Solidity: event MinimumPurchaseSet(uint256 oldMinimum, uint256 newMinimum)
 func (uSDCCredits *USDCCredits) UnpackMinimumPurchaseSetEvent(log *types.Log) (*USDCCreditsMinimumPurchaseSet, error) {
 	event := "MinimumPurchaseSet"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != uSDCCredits.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != uSDCCredits.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(USDCCreditsMinimumPurchaseSet)
 	if len(log.Data) > 0 {
@@ -511,11 +502,8 @@ func (USDCCreditsOwnershipTransferred) ContractEventName() string {
 // Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
 func (uSDCCredits *USDCCredits) UnpackOwnershipTransferredEvent(log *types.Log) (*USDCCreditsOwnershipTransferred, error) {
 	event := "OwnershipTransferred"
-	if len(log.Topics) == 0 {
-		return nil, bind.ErrNoEventSignature
-	}
-	if log.Topics[0] != uSDCCredits.abi.Events[event].ID {
-		return nil, bind.ErrEventSignatureMismatch
+	if len(log.Topics) == 0 || log.Topics[0] != uSDCCredits.abi.Events[event].ID {
+		return nil, errors.New("event signature mismatch")
 	}
 	out := new(USDCCreditsOwnershipTransferred)
 	if len(log.Data) > 0 {
