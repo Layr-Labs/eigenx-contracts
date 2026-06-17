@@ -2,10 +2,7 @@
     "ENV": "base",
     "COMMIT": "",
     "VERSION": "0.0.0",
-    "executorMultisig": "0x369e6F597e22EaB55fFb173C6d9cD234BD699111",
     "computeOpsMultisig": "0x684cf8978c2815716c85eAa237E311f5a44e9e09",
-    "computeWhitelisterMultisig": "0xDECf19D1551e77DEfBe53eE2c38205A3f852163C",
-    "billingAdmin": "0xb844fB34bc8CDa92ccE73F9ce9BBbe60Ead9cDD4",
     "USDC_TOKEN": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
     "USDC_TREASURY": "0x83fa243203f1B9B4F0D2806154095Cd765b9cA21",
     "USDC_MINIMUM_PURCHASE": "1000000"
