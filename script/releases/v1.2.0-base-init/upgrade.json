@@ -1,0 +1,11 @@
+{
+    "name": "base-init",
+    "from": "0.0.0",
+    "to": "1.2.0",
+    "phases": [
+        {
+            "type": "eoa",
+            "filename": "1-deployProxyAdmin.s.sol"
+        }
+    ]
+}
